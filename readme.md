@@ -1,6 +1,6 @@
 # Pure
 
-Minimal and fast ZSH prompt
+Pretty, minimal and fast ZSH prompt
 
 ![screenshot](https://raw.github.com/sindresorhus/pure/master/screenshot.png)
 
@@ -8,13 +8,13 @@ Minimal and fast ZSH prompt
 
 Most prompts are ugly, cluttered and slow. I wanted something visually pleasing that stayed out of my way.
 
-Pure only shows the current user if it's not the default. It shows the current git branch, but not dirty status since that is awfully slow. And the prompt symbol turns red if the last command exited with 0.
+Pure only shows the current user if it's not the default. It shows the current git branch and if it's dirty using the fastest method possible. And the prompt symbol turns red if the last command exited with 0.
 
 
 ## Getting Started
 
-- Download or git submodule it into your dotfiles folder
-- In your `.zshrc` add `. prompt.zsh`
+- Download `prompt.zsh` or submodule this repo
+- In your `.zshrc` add `. path/to/prompt.zsh`
 - Add your username to the `default_username` variable
 
 
