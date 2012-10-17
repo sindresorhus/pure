@@ -1,11 +1,11 @@
 # Pure
 # by Sindre Sorhus
-# https://github.com/sindresorhus/pure/
+# https://github.com/sindresorhus/pure
 # MIT License
 
 
 # Change this to your own username
-local default_username='sindresorhus'
+DEFAULT_USERNAME='sindresorhus'
 
 # Threshold (sec) for showing cmd exec time
 CMD_MAX_EXEC_TIME=5
@@ -30,7 +30,7 @@ zstyle ':vcs_info:git*' formats ' %b'
 zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 # Only show username if not default
-[ $USER != $default_username ] && local username='%n@%m '
+[ $USER != $DEFAULT_USERNAME ] && local username='%n@%m '
 
 # Fastest possible way to check if repo is dirty
 git_dirty() {
@@ -51,13 +51,13 @@ preexec() {
 
 precmd() {
 	vcs_info
-	# Add `%*` to show the time
+	# Add `%*` to display the time
 	print -P '\n%F{blue}%~%F{236}$vcs_info_msg_0_`git_dirty` $username%f %F{yellow}`cmd_exec_time`%f'
 	# Reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
 }
 
-# Turns the prompt red if the last command exited with 0
+# Prompt turns red if the previous command didn't exit with 0
 PROMPT='%(?.%F{magenta}.%F{red})❯%f '
 # Can be disabled:
 # PROMPT='%F{magenta}❯%f '

@@ -23,7 +23,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 - Download `prompt.zsh` or submodule this repo
 - In your `.zshrc` add `. path/to/prompt.zsh`
-- Add your username to the `default_username` variable
+- Add your username to `DEFAULT_USERNAME`
 
 
 ## Tip
