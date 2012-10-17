@@ -7,6 +7,9 @@
 # Change this to your own username
 local default_username='sindresorhus'
 
+# Threshold (sec) for showing cmd exec time
+CMD_MAX_EXEC_TIME=5
+
 
 # For my own and others sanity
 # git:
@@ -34,11 +37,24 @@ git_dirty() {
 	git diff --quiet --ignore-submodules HEAD 2>/dev/null; [ $? -eq 1 ] && echo '*'
 }
 
+# Displays the exec time of the last command if set threshold was exceeded
+cmd_exec_time() {
+	local stop=`date +%s`
+	local start=${cmd_timestamp:-$stop}
+	let local elapsed=$stop-$start
+	[ $elapsed -gt $CMD_MAX_EXEC_TIME ] && echo ${elapsed}s
+}
+
+preexec() {
+	cmd_timestamp=`date +%s`
+}
 
 precmd() {
 	vcs_info
-	# Remove `%*` to hide the time
-	print -P '\n%F{blue}%~%F{236}$vcs_info_msg_0_ $username%*%f'
+	# Add `%*` to show the time
+	print -P '\n%F{blue}%~%F{236}$vcs_info_msg_0_`git_dirty` $username%f %F{yellow}`cmd_exec_time`%f'
+	# Reset value since `preexec` isn't always triggered
+	unset cmd_timestamp
 }
 
 # Turns the prompt red if the last command exited with 0

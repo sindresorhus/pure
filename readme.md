@@ -4,11 +4,19 @@ Pretty, minimal and fast ZSH prompt
 
 ![screenshot](https://raw.github.com/sindresorhus/pure/master/screenshot.png)
 
+
 ## Overview
 
-Most prompts are ugly, cluttered and slow. I wanted something visually pleasing that stayed out of my way.
+Most prompts are cluttered, ugly and slow. I wanted something visually pleasing that stayed out of my way.
 
-Pure only shows the current user if it's not the default. It shows the current git branch and if it's dirty using the fastest method possible. And the prompt symbol turns red if the last command exited with 0.
+### Why?
+
+- Comes with the perfect prompt character. Author went through the whole Unicode range to find it.
+- Username is only displayed if not default
+- Shows git branch and if it's dirty using the [fastest](https://gist.github.com/3898739) method available
+- Prompt character turns red if the last command didn't exit with 0
+- Command execution time will be displayed if it exceeds the set threshold
+- Can easily be used as a starting point for your own custom prompt
 
 
 ## Getting Started
