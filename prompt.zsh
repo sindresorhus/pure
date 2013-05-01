@@ -29,6 +29,9 @@ zstyle ':vcs_info:*' enable git # You can add hg too if needed: `git hg`
 zstyle ':vcs_info:git*' formats ' %b'
 zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
+# enable prompt substitution
+setopt PROMPT_SUBST
+
 # Only show username if not default
 [ $USER != $DEFAULT_USERNAME ] && local username='%n@%m '
 
