@@ -4,10 +4,10 @@
 # MIT License
 
 
-# Change this to your own username
+# change this to your own username
 DEFAULT_USERNAME='sindresorhus'
 
-# Threshold (sec) for showing cmd exec time
+# threshold (sec) for showing cmd exec time
 CMD_MAX_EXEC_TIME=5
 
 
@@ -32,10 +32,11 @@ zstyle ':vcs_info:git*' actionformats ' %b|%a'
 # enable prompt substitution
 setopt PROMPT_SUBST
 
-# Only show username if not default
+# only show username if not default
 [ $USER != $DEFAULT_USERNAME ] && local username='%n@%m '
 
-# Fastest possible way to check if repo is dirty
+
+# fastest possible way to check if repo is dirty
 git_dirty() {
 	# check if we're in a git repo
 	command git rev-parse --is-inside-work-tree &>/dev/null || return
@@ -43,7 +44,7 @@ git_dirty() {
 	command git diff --quiet --ignore-submodules HEAD &>/dev/null; [ $? -eq 1 ] && echo '*'
 }
 
-# Displays the exec time of the last command if set threshold was exceeded
+# displays the exec time of the last command if set threshold was exceeded
 cmd_exec_time() {
 	local stop=`date +%s`
 	local start=${cmd_timestamp:-$stop}
@@ -57,9 +58,9 @@ preexec() {
 
 precmd() {
 	vcs_info
-	# Add `%*` to display the time
-	print -P '\n%F{blue}%~%F{236}$vcs_info_msg_0_`git_dirty` $username%f %F{yellow}`cmd_exec_time`%f'
-	# Reset value since `preexec` isn't always triggered
+	# add `%*` to display the time
+	print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`git_dirty` $username%f %F{yellow}`cmd_exec_time`%f'
+	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
 }
 
@@ -72,7 +73,7 @@ function prompt_pull() {
 
 add-zsh-hook precmd prompt_pull
 
-# Prompt turns red if the previous command didn't exit with 0
+# prompt turns red if the previous command didn't exit with 0
 PROMPT='%(?.%F{magenta}.%F{red})❯%f '
-# Can be disabled:
+# can be disabled:
 # PROMPT='%F{magenta}❯%f '
