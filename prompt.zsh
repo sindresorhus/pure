@@ -65,14 +65,15 @@ precmd() {
 }
 
 # Auto notify git pull!
-function chpwd() {
-    emulate -L zsh
+function prompt_pull() {
     git rev-parse --is-inside-work-tree &>/dev/null &&
     [[ $(git rev-list HEAD...origin/master --count) > 0 ]] &&
     echo "You have stuff to pull..."
 }
 
-# Prompt turns red if the previous command didn't exit with 0
+add-zsh-hook precmd prompt_pull
+
+# prompt turns red if the previous command didn't exit with 0
 PROMPT='%(?.%F{magenta}.%F{red})❯%f '
 # can be disabled:
 # PROMPT='%F{magenta}❯%f '
