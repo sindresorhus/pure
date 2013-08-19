@@ -21,8 +21,8 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Getting Started
 
-- Download `prompt.zsh` or submodule this repo
-- In your `.zshrc` add `. path/to/prompt.zsh`
+- Download `pure.zsh` or submodule this repo
+- In your `.zshrc` add `. path/to/pure.zsh`
 - Add your username to `DEFAULT_USERNAME`
 
 
@@ -33,5 +33,4 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## License
 
-[MIT License](http://en.wikipedia.org/wiki/MIT_License)
-(c) [Sindre Sorhus](http://sindresorhus.com)
+MIT © [Sindre Sorhus](http://sindresorhus.com)
