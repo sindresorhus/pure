@@ -5,7 +5,7 @@
 
 
 # change this to your own username
-DEFAULT_USERNAME='sindresorhus'
+[[ -z "$DEFAULT_USERNAME" ]] && DEFAULT_USERNAME='sindresorhus'
 
 # threshold (sec) for showing cmd exec time
 CMD_MAX_EXEC_TIME=5
