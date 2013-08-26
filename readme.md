@@ -36,6 +36,20 @@ Define your username if you want to hide it from the prompt when it matches the 
 The max execution time of a process before its run time is shown when it exits. Defaults to `5` seconds.
 
 
+## Example
+
+```sh
+# .zshrc
+
+# optionally define some options
+PURE_DEFAULT_USERNAME='sindresorhus'
+PURE_CMD_MAX_EXEC_TIME=10
+
+# import the prompt
+. pure.zsh
+```
+
+
 ## Tip
 
 [Tomorrow Night](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.
