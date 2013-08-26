@@ -17,7 +17,12 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
+autoload -Uz add-zsh-hook
 autoload -Uz vcs_info
+
+add-zsh-hook precmd pure_precmd
+add-zsh-hook preexec pure_preexec
+
 zstyle ':vcs_info:*' enable git # You can add hg too if needed: `git hg`
 zstyle ':vcs_info:git*' formats ' %b'
 zstyle ':vcs_info:git*' actionformats ' %b|%a'
@@ -44,11 +49,11 @@ cmd_exec_time() {
 	[ $elapsed -gt "${PURE_CMD_MAX_EXEC_TIME:=5}" ] && echo ${elapsed}s
 }
 
-preexec() {
+pure_preexec() {
 	cmd_timestamp=`date +%s`
 }
 
-precmd() {
+pure_precmd() {
 	vcs_info
 	# add `%*` to display the time
 	print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`git_dirty` $username%f %F{yellow}`cmd_exec_time`%f'
