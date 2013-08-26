@@ -4,13 +4,6 @@
 # MIT License
 
 
-# change this to your own username
-DEFAULT_USERNAME='sindresorhus'
-
-# threshold (sec) for showing cmd exec time
-CMD_MAX_EXEC_TIME=5
-
-
 # For my own and others sanity
 # git:
 # %b => current branch
@@ -33,8 +26,7 @@ zstyle ':vcs_info:git*' actionformats ' %b|%a'
 setopt PROMPT_SUBST
 
 # only show username if not default
-[ $USER != $DEFAULT_USERNAME ] && local username='%n@%m '
-
+[ $USER != "$PURE_DEFAULT_USERNAME" ] && local username='%n@%m '
 
 # fastest possible way to check if repo is dirty
 git_dirty() {
@@ -49,7 +41,7 @@ cmd_exec_time() {
 	local stop=`date +%s`
 	local start=${cmd_timestamp:-$stop}
 	let local elapsed=$stop-$start
-	[ $elapsed -gt $CMD_MAX_EXEC_TIME ] && echo ${elapsed}s
+	[ $elapsed -gt "${PURE_CMD_MAX_EXEC_TIME:=5}" ] && echo ${elapsed}s
 }
 
 preexec() {

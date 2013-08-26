@@ -19,11 +19,21 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Can easily be used as a starting point for your own custom prompt
 
 
-## Getting Started
+## Getting started
 
-- Download `pure.zsh` or submodule this repo
-- In your `.zshrc` add `. path/to/pure.zsh`
-- Add your username to `DEFAULT_USERNAME`
+- Download `pure.zsh` or submodule this repo.
+- In your `.zshrc` add any of the below options, then import pure `. path/to/pure.zsh`.
+
+
+## Options
+
+### `PURE_DEFAULT_USERNAME`
+
+Define your username if you want to hide it from the prompt when it matches the current username.
+
+### `PURE_CMD_MAX_EXEC_TIME`
+
+The max execution time of a process before its run time is shown when it exits. Defaults to `5` seconds.
 
 
 ## Tip
