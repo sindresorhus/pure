@@ -30,7 +30,7 @@
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# enable prompt substitution
-	setopt PROMPT_SUBST
+	setopt local_options prompt_subst
 
 	# only show username if not default
 	[ $USER != "$PURE_DEFAULT_USERNAME" ] && local username='%n@%m '
