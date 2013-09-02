@@ -33,7 +33,13 @@
 	setopt PROMPT_SUBST
 
 	# only show username if not default
-	[ $USER != "$PURE_DEFAULT_USERNAME" ] && local username='%n@%m '
+	if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+	  local username='%n@%m '
+	else
+	  case $(ps -o comm= -p $PPID) in
+	    sshd|*/sshd) local username='%n@%m ';;
+	  esac
+	fi
 
 	# fastest possible way to check if repo is dirty
 	pure_git_dirty() {
@@ -68,3 +74,5 @@
 	# can be disabled:
 	# PROMPT='%F{magenta}❯%f '
 }
+
+pure_precmd
