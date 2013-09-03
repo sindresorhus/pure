@@ -34,7 +34,7 @@
 
 	# only show username if not default.
 	# if SSH_CLIENT or SSH_TTY is defined, it's an ssh session.
-	if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+	if [[ "$SSH_CLIENT" ]] || [[ "$SSH_TTY" ]]; then
 	  local username='%n@%m '
 	fi
 
