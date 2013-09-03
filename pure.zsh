@@ -32,13 +32,10 @@
 	# enable prompt substitution
 	setopt PROMPT_SUBST
 
-	# only show username if not default
+	# only show username if not default.
+	# if SSH_CLIENT or SSH_TTY is defined, it's an ssh session.
 	if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
 	  local username='%n@%m '
-	else
-	  case $(ps -o comm= -p $PPID) in
-	    sshd|*/sshd) local username='%n@%m ';;
-	  esac
 	fi
 
 	# fastest possible way to check if repo is dirty
@@ -74,5 +71,3 @@
 	# can be disabled:
 	# PROMPT='%F{magenta}❯%f '
 }
-
-pure_precmd
