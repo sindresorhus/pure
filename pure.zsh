@@ -32,10 +32,9 @@
 	# enable prompt substitution
 	setopt PROMPT_SUBST
 
-	# only show username if not default.
-	# if SSH_CLIENT or SSH_TTY is defined, it's an ssh session.
-	if [[ "$SSH_CLIENT" ]] || [[ "$SSH_TTY" ]]; then
-	  local username='%n@%m '
+	# show username@host if logged in through SSH
+	if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+		local username='%n@%m '
 	fi
 
 	# fastest possible way to check if repo is dirty
