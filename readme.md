@@ -22,7 +22,8 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Getting started
 
-- Download `pure.zsh` or submodule this repo. Submodule recommended as it makes it easy to keep it up to date.
+- Submodule this repo or download `pure.zsh`.  
+  *Submodule is recommended as it makes it easy to keep it up to date.*
 - In your `.zshrc` add any of the below options, then import pure `. path/to/pure.zsh`.
 
 
@@ -48,7 +49,7 @@ PURE_CMD_MAX_EXEC_TIME=10
 
 ## Tip
 
-[Tomorrow Night](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.
+[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.
 
 
 ## License
