@@ -49,8 +49,8 @@
 	pure_cmd_exec_time() {
 		local stop=`date +%s`
 		local start=${cmd_timestamp:-$stop}
-		let local elapsed=$stop-$start
-		[ $elapsed -gt "${PURE_CMD_MAX_EXEC_TIME:=5}" ] && echo ${elapsed}s
+		integer elapsed=$stop-$start
+		[[ $elapsed -gt ${PURE_CMD_MAX_EXEC_TIME:=5} ]] && echo ${elapsed}s
 	}
 
 	pure_preexec() {
