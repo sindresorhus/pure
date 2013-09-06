@@ -16,7 +16,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Prompt character turns red if the last command didn't exit with 0.
 - Command execution time will be displayed if it exceeds the set threshold.
 - Username and host is only displayed when in an SSH session.
-- Shows the current path in the title and the current directory and command when a process is running.
+- Shows the current path in the title and the [current directory and command](screenshot-title-cmd.png) when a process is running.
 - Can easily be used as a starting point for your own custom prompt.
 
 
