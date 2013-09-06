@@ -1,6 +1,6 @@
 # Pure
 
-Pretty, minimal and fast ZSH prompt
+> Pretty, minimal and fast ZSH prompt
 
 ![screenshot](https://raw.github.com/sindresorhus/pure/master/screenshot.png)
 
@@ -12,24 +12,20 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 ### Why?
 
 - Comes with the perfect prompt character. Author went through the whole Unicode range to find it.
-- Username is only displayed if not default
-- Shows git branch and if it's dirty using the [fastest](https://gist.github.com/3898739) method available
-- Prompt character turns red if the last command didn't exit with 0
-- Command execution time will be displayed if it exceeds the set threshold
-- Can easily be used as a starting point for your own custom prompt
+- Shows git branch and whether it's dirty using the [fastest](https://gist.github.com/3898739) method available.
+- Prompt character turns red if the last command didn't exit with 0.
+- Command execution time will be displayed if it exceeds the set threshold.
+- Username and host is only displayed when in an SSH session.
+- Can easily be used as a starting point for your own custom prompt.
 
 
 ## Getting started
 
-- Download `pure.zsh` or submodule this repo.
+- Download `pure.zsh` or submodule this repo. Submodule recommended as it makes it easy to keep it up to date.
 - In your `.zshrc` add any of the below options, then import pure `. path/to/pure.zsh`.
 
 
 ## Options
-
-### `PURE_DEFAULT_USERNAME`
-
-Define your username if you want to hide it from the prompt when it matches the current username.
 
 ### `PURE_CMD_MAX_EXEC_TIME`
 
@@ -42,7 +38,6 @@ The max execution time of a process before its run time is shown when it exits. 
 # .zshrc
 
 # optionally define some options
-PURE_DEFAULT_USERNAME='sindresorhus'
 PURE_CMD_MAX_EXEC_TIME=10
 
 # import the prompt
