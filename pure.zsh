@@ -25,12 +25,12 @@
 	add-zsh-hook precmd pure_precmd
 	add-zsh-hook preexec pure_preexec
 
-	zstyle ':vcs_info:*' enable git # You can add hg too if needed: `git hg`
+	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:git*' formats ' %b'
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# enable prompt substitution
-	setopt PROMPT_SUBST
+	setopt prompt_subst
 
 	# show username@host if logged in through SSH
 	if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
@@ -67,6 +67,4 @@
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT='%(?.%F{magenta}.%F{red})❯%f '
-	# can be disabled:
-	# PROMPT='%F{magenta}❯%f '
 }
