@@ -33,7 +33,7 @@
 	setopt prompt_subst
 
 	# show username@host if logged in through SSH
-	if [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]; then
+	if [[ $SSH_CLIENT != '' || $SSH_TTY != '' ]]; then
 		local username='%n@%m '
 	fi
 
