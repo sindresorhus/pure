@@ -55,12 +55,21 @@
 
 	pure_preexec() {
 		cmd_timestamp=`date +%s`
+
+		# shows the current dir and executed command in the title when a process is active
+		print -Pn "\e]0;$PWD:t: $2\a"
 	}
 
 	pure_precmd() {
+		# shows the full path in the title
+		print -Pn '\e]0;%~\a'
+
+		# git info
 		vcs_info
+
 		# add `%*` to display the time
 		print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`pure_git_dirty` $username%f %F{yellow}`pure_cmd_exec_time`%f'
+
 		# reset value since `preexec` isn't always triggered
 		unset cmd_timestamp
 	}
