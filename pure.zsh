@@ -49,7 +49,7 @@ prompt_pure_precmd() {
         vcs_info
 
         # add `%*` to display the time
-        print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
+        print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
 
         # reset value since `preexec` isn't always triggered
         unset cmd_timestamp
@@ -57,7 +57,7 @@ prompt_pure_precmd() {
 
 
 prompt_pure_setup() {
-        set -g username
+        set -g prompt_pure_username
 
         prompt_opts=( cr subst percent )
 
@@ -72,9 +72,7 @@ prompt_pure_setup() {
         zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
         # show username@host if logged in through SSH
-        if [[ $SSH_CLIENT != '' || $SSH_TTY != '' ]]; then
-                username='%n@%m '
-        fi
+        [[ -n "$SSH_CONNECTION" ]] && prompt_pure_username='%n@%m '
 
         # prompt turns red if the previous command didn't exit with 0
         PROMPT='%(?.%F{magenta}.%F{red})❯%f '
