@@ -22,20 +22,22 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Getting started
 
-- Place this file somewhere in `$fpath` with the name `prompt_pure_setup`
+- Clone this repo, add it as a submodule, or just download `pure.zsh`.
 
-For example:
+- Symlink `pure.zsh` to somewhere in `$fpath` with the name `prompt_pure_setup`.
 
+Example:
+
+```sh
+$ ln -s ./pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
 ```
-$ sudo cp ./pure.zsh /usr/share/zsh/functions/Prompts/prompt_pure_setup
-```
+*Run `echo $fpath` to see possible locations.*
 
 - Initialize the prompt system (if not so already):
 
 ```sh
 # .zshrc
-autoload -U promptinit
-promptinit
+autoload -U promptinit && promptinit
 ```
 
 - Choose this prompt:
@@ -57,6 +59,8 @@ The max execution time of a process before its run time is shown when it exits. 
 
 ```sh
 # .zshrc
+
+autoload -U promptinit && promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
