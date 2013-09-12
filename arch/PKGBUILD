@@ -3,9 +3,9 @@
 pkgname=pure
 pkgver=0.0.1
 pkgrel=1
-pkgdesc="pure prompt for zsh"
+pkgdesc='pure prompt for zsh'
 arch=('any')
-url="https://github.com/sindresorhus/pure"
+url='https://github.com/sindresorhus/pure'
 license=('MIT')
 source=(pure.zsh)
 
