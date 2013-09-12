@@ -22,9 +22,28 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Getting started
 
-- Submodule this repo or download `pure.zsh`.  
-  *Submodule is recommended as it makes it easy to keep it up to date.*
-- In your `.zshrc` add any of the below options, then import pure `. path/to/pure.zsh`.
+- Place this file somewhere in `$fpath` with the name `prompt_pure_setup`
+
+For example:
+
+```
+$ sudo cp ./pure.zsh /usr/share/zsh/functions/Prompts/prompt_pure_setup
+```
+
+- Initialize the prompt system (if not so already):
+
+```sh
+# .zshrc
+autoload -U promptinit
+promptinit
+```
+
+- Choose this prompt:
+
+```sh
+# .zshrc
+prompt pure
+```
 
 
 ## Options
@@ -42,8 +61,7 @@ The max execution time of a process before its run time is shown when it exits. 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
 
-# import the prompt
-. pure.zsh
+prompt pure
 ```
 
 
