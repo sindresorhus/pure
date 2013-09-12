@@ -57,8 +57,6 @@ prompt_pure_precmd() {
 
 
 prompt_pure_setup() {
-        set -g prompt_pure_username
-
         prompt_opts=( cr subst percent )
 
         autoload -Uz add-zsh-hook
