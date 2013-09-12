@@ -24,12 +24,12 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 - Clone this repo, add it as a submodule, or just download `pure.zsh`.
 
-- Symlink `pure.zsh` to somewhere in `$fpath` with the name `prompt_pure_setup`.
+- Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
 
 Example:
 
 ```sh
-$ ln -s ./pure.zsh /usr/local/share/zsh/site-functions/prompt_pure_setup
+$ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
 ```
 *Run `echo $fpath` to see possible locations.*
 

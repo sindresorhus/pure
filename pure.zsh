@@ -23,7 +23,7 @@ prompt_pure_git_dirty() {
 	# check if it's dirty
 	command git diff --quiet --ignore-submodules HEAD &>/dev/null
 
-	(( $? == 1 )) && echo '*'
+	(($? == 1)) && echo '*'
 }
 
 # displays the exec time of the last command if set threshold was exceeded
@@ -31,7 +31,7 @@ prompt_pure_cmd_exec_time() {
 	local stop=`date +%s`
 	local start=${cmd_timestamp:-$stop}
 	integer elapsed=$stop-$start
-	(( $elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5} )) && echo ${elapsed}s
+	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && echo ${elapsed}s
 }
 
 prompt_pure_preexec() {
@@ -48,7 +48,6 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	# add `%*` to display the time
 	print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
 
 	# reset value since `preexec` isn't always triggered
@@ -57,7 +56,7 @@ prompt_pure_precmd() {
 
 
 prompt_pure_setup() {
-	prompt_opts=( cr subst percent )
+	prompt_opts=(cr subst percent)
 
 	autoload -Uz add-zsh-hook
 	autoload -Uz vcs_info
@@ -70,7 +69,7 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# show username@host if logged in through SSH
-	[[ -n "$SSH_CONNECTION" ]] && prompt_pure_username='%n@%m '
+	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT='%(?.%F{magenta}.%F{red})❯%f '
