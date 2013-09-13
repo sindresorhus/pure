@@ -78,6 +78,7 @@ prompt_pure_setup() {
 # Auto notify git pull!
 function prompt_pull() {
     git rev-parse --is-inside-work-tree &>/dev/null &&
+    git fetch &&
     [[ $(git rev-list HEAD...origin/master --count 2>/dev/null) > 0 ]] &&
     echo "You have stuff to pull..."
 }
