@@ -1,6 +1,6 @@
 # Author: Sindre Sorhus
 # Maintainer: Pat Brisbin <pbrisbin@gmail.com>
-pkgname=pure
+pkgname=pure-zsh-prompt
 pkgver=0.0.1
 pkgrel=1
 pkgdesc='pure prompt for zsh'
