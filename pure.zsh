@@ -41,6 +41,11 @@ prompt_pure_preexec() {
 	printf "\e]0;$PWD:t: $2\a"
 }
 
+# string length ignoring ansi escapes
+prompt_pure_string_length() {
+	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
+}
+
 prompt_pure_precmd() {
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
@@ -48,7 +53,18 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	print -P "\n%F{blue}%~%F{8}$vcs_info_msg_0_$(prompt_pure_git_dirty) $prompt_pure_username%f %F{yellow}$(prompt_pure_cmd_exec_time)%f"
+	local prompt_pure_preprompt='\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
+	print -P $prompt_pure_preprompt
+
+	# check async if there is anything to pull
+	{
+		# check if we're in a git repo
+		command git rev-parse --is-inside-work-tree &>/dev/null || return
+		# check check if there is anything to pull
+		command git fetch && (($(git rev-list --count HEAD...$(git rev-parse --abbrev-ref @{u})) > 0)) &&
+		# some crazy ansi magic to inject the symbol into the previous line
+		printf "\e[A\e[`prompt_pure_string_length $prompt_pure_preprompt`C\e[90m⇣\e[0m\n\e[2C"
+	} &!
 
 	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
