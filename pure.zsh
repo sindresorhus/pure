@@ -48,7 +48,7 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	print -P '\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
+	print -P "\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
 
 	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
