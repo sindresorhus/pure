@@ -61,7 +61,7 @@ prompt_pure_precmd() {
 		# check if we're in a git repo
 		command git rev-parse --is-inside-work-tree &>/dev/null || return
 		# check check if there is anything to pull
-		command git fetch && [[ `git rev-list --count HEAD...@'{u}'` > 0 ]] &&
+		command git fetch && [[ $(git rev-list --count HEAD...@'{u}' 2>/dev/null) > 0 ]] &&
 		# some crazy ansi magic to inject the symbol into the previous line
 		printf "\e[A\e[`prompt_pure_string_length $prompt_pure_preprompt`C\e[90m⇣\e[0m\n\e[2C"
 	} &!
