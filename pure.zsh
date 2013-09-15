@@ -28,14 +28,14 @@ prompt_pure_git_dirty() {
 
 # displays the exec time of the last command if set threshold was exceeded
 prompt_pure_cmd_exec_time() {
-	local stop=`date +%s`
+	local stop=$(date +%s)
 	local start=${cmd_timestamp:-$stop}
 	integer elapsed=$stop-$start
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && echo ${elapsed}s
 }
 
 prompt_pure_preexec() {
-	cmd_timestamp=`date +%s`
+	cmd_timestamp=$(date +%s)
 
 	# shows the current dir and executed command in the title when a process is active
 	print -Pn "\e]0;$PWD:t: $2\a"
@@ -48,7 +48,7 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	print -P "\n%F{blue}%~%F{8}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
+	print -P "\n%F{blue}%~%F{8}$vcs_info_msg_0_$(prompt_pure_git_dirty) $prompt_pure_username%f %F{yellow}$(prompt_pure_cmd_exec_time)%f"
 
 	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
