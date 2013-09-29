@@ -38,7 +38,7 @@ prompt_pure_preexec() {
 	cmd_timestamp=$(date +%s)
 
 	# shows the current dir and executed command in the title when a process is active
-	print -Pn "\e]0;$PWD:t: $2\a"
+	printf "\e]0;$PWD:t: $2\a"
 }
 
 prompt_pure_precmd() {
