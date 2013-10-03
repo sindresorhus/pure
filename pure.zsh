@@ -23,7 +23,7 @@ prompt_pure_git_dirty() {
 	# check if it's dirty
 	command git diff --quiet --ignore-submodules HEAD &>/dev/null
 
-	(($? == 1)) && echo '*'
+	(($? == 1)) && echo ' %{$fg[yellow]%}✗%{$reset_color%}'
 }
 
 # displays the exec time of the last command if set threshold was exceeded
@@ -41,14 +41,15 @@ prompt_pure_preexec() {
 	printf "\e]0;$PWD:t: $2\a"
 }
 
+prompt_git_branch() {
+	vcs_info
+	print "%{$fg[red]%}$vcs_info_msg_0_%{$reset_color%}"
+}
+
 prompt_pure_precmd() {
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
-
-	# git info
-	vcs_info
-
-	print -P "\n%F{blue}%~%F{8}$vcs_info_msg_0_$(prompt_pure_git_dirty) $prompt_pure_username%f %F{yellow}$(prompt_pure_cmd_exec_time)%f"
+	print -P "\n%F{blue}%~%F{8}$(prompt_git_branch)$(prompt_pure_git_dirty) $prompt_pure_username%f %F{yellow}$(prompt_pure_cmd_exec_time)%f"
 
 	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
