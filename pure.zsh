@@ -66,7 +66,7 @@ prompt_pure_precmd() {
 		command git fetch &>/dev/null &&
 		(( $(command git rev-list --count HEAD...@'{u}' 2>/dev/null) > 0 )) &&
 		# some crazy ansi magic to inject the symbol into the previous line
-		printf "\e[A\e[`prompt_pure_string_length $prompt_pure_preprompt`C\e[90m⇣\e[0m\n\e[2C"
+		print -Pn "\e[A\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{yellow}⇣%f\n\e[2C"
 	} &!
 
 	# reset value since `preexec` isn't always triggered
