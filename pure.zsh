@@ -38,7 +38,9 @@ prompt_pure_preexec() {
 	cmd_timestamp=`date +%s`
 
 	# shows the current dir and executed command in the title when a process is active
-	print -Pn "\e]0;$PWD:t: $2\a"
+	print -Pn "\e]0;"
+	echo -nE "$PWD:t: $2"
+	print -Pn "\a"
 }
 
 # string length ignoring ansi escapes
