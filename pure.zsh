@@ -38,7 +38,9 @@ prompt_pure_preexec() {
 	cmd_timestamp=$(date +%s)
 
 	# shows the current dir and executed command in the title when a process is active
-	printf "\e]0;$PWD:t: $2\a"
+	print -Pn "\e]0;"
+	echo -nE "$PWD:t: $2"
+	print -Pn "\a"
 }
 
 # string length ignoring ansi escapes
@@ -62,9 +64,11 @@ prompt_pure_precmd() {
 		command git rev-parse --is-inside-work-tree &>/dev/null &&
 		# check check if there is anything to pull
 		command git fetch &>/dev/null &&
+		# check if there is an upstream configured for this branch
+		command git rev-parse --abbrev-ref @'{u}' &>/dev/null &&
 		(( $(command git rev-list --count HEAD...@'{u}' 2>/dev/null) > 0 )) &&
 		# some crazy ansi magic to inject the symbol into the previous line
-		printf "\e[A\e[`prompt_pure_string_length $prompt_pure_preprompt`C\e[90m⇣\e[0m\n\e[2C"
+		print -Pn "\e[s\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}⇣%f\e[u"
 	} &!
 
 	# reset value since `preexec` isn't always triggered
