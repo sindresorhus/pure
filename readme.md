@@ -54,6 +54,9 @@ prompt pure
 
 The max execution time of a process before its run time is shown when it exits. Defaults to `5` seconds.
 
+### `PURE_GIT_PULL`
+
+Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remote has been updated.
 
 ## Example
 
