@@ -59,7 +59,7 @@ prompt_pure_precmd() {
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
-	[[ -n $PURE_DISABLE_GIT_PULL ]] || {
+	[[ -n $PURE_GIT_PULL ]] || {
 		# check if we're in a git repo
 		command git rev-parse --is-inside-work-tree &>/dev/null &&
 		# check check if there is anything to pull
