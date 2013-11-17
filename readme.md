@@ -77,6 +77,11 @@ prompt pure
 [Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.
 
 
+## oh-my-zsh
+
+Save `prompt_pure_setup` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
+
+
 ## License
 
 MIT © [Sindre Sorhus](http://sindresorhus.com)
