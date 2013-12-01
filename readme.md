@@ -82,6 +82,11 @@ prompt pure
 Save `prompt_pure_setup` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
 
 
+## [antigen](https://github.com/zsh-users/antigen)
+
+Add `antigen theme sindresorhus/pure pure` to your .zshrc file.
+
+
 ## License
 
 MIT © [Sindre Sorhus](http://sindresorhus.com)
