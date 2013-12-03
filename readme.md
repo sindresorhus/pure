@@ -79,7 +79,7 @@ prompt pure
 
 ## oh-my-zsh
 
-Save `prompt_pure_setup` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
+Copy or link `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
 
 
 ## License
