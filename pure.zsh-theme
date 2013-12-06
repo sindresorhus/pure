@@ -1,3 +1,5 @@
+# proxy file for oh-my-zsh and antigen
+
 # ${0:A:h} is the current file (0)
 # with symbolic links resolved (A)
 # with truncated final path component (h)
