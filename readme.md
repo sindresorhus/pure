@@ -92,15 +92,18 @@ prompt pure
 
 ## [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-Symlink (or copy) `pure.zsh-theme` into `~/.oh-my-zsh/custom` and add `ZSH_THEME="pure"` to your .zshrc file.
+Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
+
 
 ## [prezto](https://github.com/sorin-ionescu/prezto)
 
+
 Symlink (or copy) `pure.zsh` to `~/.prezto/modules/prompt/functions/prompt_pure_setup` alongside Prezto's other prompts. Then `set zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
+
 
 ## [antigen](https://github.com/zsh-users/antigen)
 
-Add `antigen theme sindresorhus/pure pure` to your .zshrc file.
+Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `antigen theme` function).
 
 
 ## License
