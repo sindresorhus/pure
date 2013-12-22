@@ -18,7 +18,7 @@
 
 
 # turns seconds into human readable time
-# 165392 => 1d 21h 56h 32s
+# 165392 => 1d 21h 56m 32s
 prompt_pure_human_time() {
 	local tmp=$1
 	local days=$(( tmp / 60 / 60 / 24 ))
@@ -27,7 +27,7 @@ prompt_pure_human_time() {
 	local seconds=$(( tmp % 60 ))
 	(( $days > 0 )) && echo -n "${days}d "
 	(( $hours > 0 )) && echo -n "${hours}h "
-	(( $minutes > 0 )) && echo -n "${minutes}h "
+	(( $minutes > 0 )) && echo -n "${minutes}m "
 	echo "${seconds}s"
 }
 
