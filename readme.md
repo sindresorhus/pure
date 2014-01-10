@@ -87,18 +87,20 @@ prompt pure
 
 ## Tips
 
-[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.
+[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above. Just make sure you have anti-aliasing enabled in your Terminal.
 
 
-## [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
+## Integration
+
+### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
 Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your .zshrc file.
 
-## [prezto](https://github.com/sorin-ionescu/prezto)
+### [prezto](https://github.com/sorin-ionescu/prezto)
 
 Symlink (or copy) `pure.zsh` to `~/.zprezto/modules/prompt/functions/prompt_pure_setup` alongside Prezto's other prompts. Then `set zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
-## [antigen](https://github.com/zsh-users/antigen)
+### [antigen](https://github.com/zsh-users/antigen)
 
 Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `antigen theme` function).
 
