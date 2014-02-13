@@ -58,11 +58,6 @@ prompt_pure_preexec() {
 	print -Pn "\a"
 }
 
-# string length ignoring ansi escapes
-prompt_pure_string_length() {
-	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
-}
-
 prompt_pure_precmd() {
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
@@ -70,7 +65,7 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	local prompt_pure_preprompt='\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
+	local prompt_pure_preprompt='%{\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f}%'
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
@@ -83,7 +78,7 @@ prompt_pure_precmd() {
 		command git rev-parse --abbrev-ref @'{u}' &>/dev/null &&
 		(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) &&
 		# some crazy ansi magic to inject the symbol into the previous line
-		print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}⇣%f\e8"
+		print -Pn "\e7\e[A\e[1G\e[`${#prompt_pure_preprompt}`C%F{cyan}⇣%f\e8"
 	} &!
 
 	# reset value since `preexec` isn't always triggered
