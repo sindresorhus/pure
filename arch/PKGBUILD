@@ -1,18 +1,20 @@
 # Author: Sindre Sorhus
 # Maintainer: Pat Brisbin <pbrisbin@gmail.com>
-pkgname=pure-zsh-prompt
+# Contributor: Emil Falk <emph@emph.se>
+pkgname=pure-zsh-prompt-git
 pkgver=0.0.1
 pkgrel=1
-pkgdesc='pure prompt for zsh'
+pkgdesc='A minimal and simple prompt for zsh.'
 arch=('any')
 url='https://github.com/sindresorhus/pure'
 license=('MIT')
-source=($pkgname::${url//https/git})
-md5sums=('SKIP')
+depends=('zsh' 'git')
+source=('git://github.com/sindresorhus/pure.git')
+sha256sums=('SKIP')
 
 pkgver() {
-  cd "$srcdir/$pkgname"
-  git describe --long | sed -r 's/([^-]*-g)/r\1/;s/-/./g'
+  cd $srcdir/$pkgname
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 package() {
