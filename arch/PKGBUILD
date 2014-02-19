@@ -1,15 +1,15 @@
 # Author: Sindre Sorhus
 # Maintainer: Pat Brisbin <pbrisbin@gmail.com>
 # Contributor: Emil Falk <emph@emph.se>
-pkgname=pure-zsh-prompt-git
-pkgver=0.0.1
+pkgname=zsh-pure-prompt-git
+pkgver=r61.7d3b317
 pkgrel=1
-pkgdesc='A minimal and simple prompt for zsh.'
+pkgdesc='A minimal and pure prompt for zsh.'
 arch=('any')
 url='https://github.com/sindresorhus/pure'
 license=('MIT')
 depends=('zsh' 'git')
-source=('git://github.com/sindresorhus/pure.git')
+source=("$pkgname::git://github.com/sindresorhus/pure.git")
 sha256sums=('SKIP')
 
 pkgver() {
