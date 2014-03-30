@@ -13,7 +13,7 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "postinstall": "ln -sf \"$PWD/pure.zsh\" /usr/local/share/zsh/site-functions/prompt_pure_setup || Could not automagically symlink the prompt. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually"
+    "postinstall": "dest=/usr/local/share/zsh/site-functions/; mkdir -p $dest && ln -sf \"$PWD/pure.zsh\" $dest/prompt_pure_setup || Could not automagically symlink the prompt. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually"
   },
   "files": [
     "pure.zsh"
