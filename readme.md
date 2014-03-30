@@ -20,13 +20,21 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Can easily be used as a starting point for your own custom prompt.
 
 
-## Getting started
+## Install
+
+### npm
+
+```sh
+$ npm install --global pure-prompt
+```
+
+### Manually
 
 - Clone this repo, add it as a submodule, or just download `pure.zsh`.
 
 - Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
 
-Example:
+#### Example
 
 ```sh
 $ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
@@ -46,17 +54,14 @@ Then install the theme there:
 $ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
 ```
 
-- Initialize the prompt system (if not so already):
+
+## Getting started
+
+Initialize the prompt system (if not so already) and choose `pure`:
 
 ```sh
 # .zshrc
 autoload -U promptinit && promptinit
-```
-
-- Choose this prompt:
-
-```sh
-# .zshrc
 prompt pure
 ```
 

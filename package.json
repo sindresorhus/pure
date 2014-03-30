@@ -1,0 +1,30 @@
+{
+  "name": "pure-prompt",
+  "version": "0.1.0",
+  "description": "Pretty, minimal and fast ZSH prompt",
+  "license": "MIT",
+  "repository": "sindresorhus/pure",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "http://sindresorhus.com"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "postinstall": "ln -sf \"$PWD/pure.zsh\" /usr/local/share/zsh/site-functions/prompt_pure_setup || Could not automagically symlink the prompt. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually"
+  },
+  "files": [
+    "pure.zsh"
+  ],
+  "keywords": [
+    "zsh",
+    "sh",
+    "shell",
+    "bash",
+    "pure",
+    "prompt",
+    "theme"
+  ]
+}
