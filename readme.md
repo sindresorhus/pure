@@ -22,11 +22,15 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Install
 
+Install with npm or manually.
+
 ### npm
 
 ```sh
 $ npm install --global pure-prompt
 ```
+
+That's it. Skip to [Getting started](#getting-started).
 
 ### Manually
 
