@@ -116,4 +116,4 @@ Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `anti
 
 ## License
 
-MIT © [Sindre Sorhus](http://sindresorhus.com)
+[MIT](http://opensource.org/licenses/MIT) © [Sindre Sorhus](http://sindresorhus.com)
