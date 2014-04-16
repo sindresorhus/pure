@@ -73,18 +73,17 @@ prompt_pure_precmd() {
 	local prompt_pure_preprompt='\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f'
 	print -P $prompt_pure_preprompt
 
+	# check if we're in a git repo
+	command git rev-parse --is-inside-work-tree &>/dev/null &&
 	# check async if there is anything to pull
 	(( ${PURE_GIT_PULL:-1} )) && {
-		# check if we're in a git repo
-		command git rev-parse --is-inside-work-tree &>/dev/null &&
-		# check check if there is anything to pull
 		command git fetch &>/dev/null &&
-		# check if there is an upstream configured for this branch
-		command git rev-parse --abbrev-ref @'{u}' &>/dev/null &&
-		(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) &&
-		# some crazy ansi magic to inject the symbol into the previous line
-		print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}⇣%f\e8"
 	} &!
+	# check if there is an upstream configured for this branch
+	command git rev-parse --abbrev-ref @'{u}' &>/dev/null &&
+	(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) &&
+	# some crazy ansi magic to inject the symbol into the previous line
+	print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}⇣%f\e8"
 
 	# reset value since `preexec` isn't always triggered
 	unset cmd_timestamp
