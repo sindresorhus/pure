@@ -16,6 +16,7 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
+
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
 prompt_pure_human_time() {
