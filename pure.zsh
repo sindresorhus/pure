@@ -16,8 +16,6 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
-zmodload zsh/datetime
-
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
 prompt_pure_human_time() {
@@ -99,6 +97,7 @@ prompt_pure_setup() {
 
 	prompt_opts=(cr subst percent)
 
+	zmodload zsh/datetime
 	autoload -Uz add-zsh-hook
 	autoload -Uz vcs_info
 
