@@ -16,6 +16,7 @@
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
 
+zmodload zsh/datetime
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
@@ -43,14 +44,14 @@ prompt_pure_git_dirty() {
 
 # displays the exec time of the last command if set threshold was exceeded
 prompt_pure_cmd_exec_time() {
-	local stop=$(date +%s)
+	local stop=$EPOCHSECONDS
 	local start=${cmd_timestamp:-$stop}
 	integer elapsed=$stop-$start
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
 prompt_pure_preexec() {
-	cmd_timestamp=$(date +%s)
+	cmd_timestamp=$EPOCHSECONDS
 
 	# shows the current dir and executed command in the title when a process is active
 	print -Pn "\e]0;"
