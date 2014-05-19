@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast ZSH prompt
 
-![screenshot](screenshot.png)
+![screenshot](https://raw.githubusercontent.com/sindresorhus/pure/master/screenshot.png)
 
 
 ## Overview
