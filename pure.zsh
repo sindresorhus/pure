@@ -81,9 +81,9 @@ prompt_pure_precmd() {
 		command git fetch &>/dev/null &&
 		# check if there is an upstream configured for this branch
 		command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
-			local arrows=""
-			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows="⇣"
-			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+="⇡"
+			local arrows=''
+			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
+			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
 			print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}${arrows}%f\e8"
 		}
 	} &!
