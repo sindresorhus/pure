@@ -13,6 +13,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 - Comes with the perfect prompt character. Author went through the whole Unicode range to find it.
 - Shows `git` branch and whether it's dirty using the [fastest](https://gist.github.com/3898739) method available.
+- Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
 - Prompt character turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
 - Username and host only displayed when in an SSH session.
@@ -36,7 +37,7 @@ That's it. Skip to [Getting started](#getting-started).
 
 1. Either…
   - Clone this repo
-  - add it as a submodule, or 
+  - add it as a submodule, or
   - just download `pure.zsh`
 
 2. Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
