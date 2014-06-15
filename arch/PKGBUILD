@@ -19,6 +19,6 @@ pkgver() {
 
 package() {
   cd $srcdir/$pkgname
-  install -Dm644 pure.zsh \
+  install -Dm644 pure.plugin.zsh \
     "$pkgdir/usr/share/zsh/functions/Prompts/prompt_pure_setup"
 }
