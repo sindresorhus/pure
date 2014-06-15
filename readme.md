@@ -38,14 +38,14 @@ That's it. Skip to [Getting started](#getting-started).
 1. Either…
   - Clone this repo
   - add it as a submodule, or
-  - just download `pure.zsh`
+  - just download `pure.plugin.zsh`
 
-2. Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
+2. Symlink `pure.plugin.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
 
 #### Example
 
 ```sh
-$ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
+$ ln -s "$PWD/pure.plugin.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
 ```
 *Run `echo $fpath` to see possible locations.*
 
@@ -59,7 +59,7 @@ fpath=( "$HOME/.zfunctions" $fpath )
 Then install the theme there:
 
 ```sh
-$ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
+$ ln -s "$PWD/pure.plugin.zsh" "$HOME/.zfunctions/prompt_pure_setup"
 ```
 
 
@@ -109,11 +109,11 @@ To have commands colorized as seen in the screenshot install [zsh-syntax-highlig
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your `.zshrc` file.
+Symlink (or copy) `pure.plugin.zsh` to `~/.oh-my-zsh/custom/pure.plugin.zsh-theme` and add `ZSH_THEME="pure"` to your `.zshrc` file.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
-Symlink (or copy) `pure.zsh` to `~/.zprezto/modules/prompt/functions/prompt_pure_setup` alongside Prezto's other prompts. Then `set zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
+Symlink (or copy) `pure.plugin.zsh` to `~/.zprezto/modules/prompt/functions/prompt_pure_setup` alongside Prezto's other prompts. Then `set zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
 ### [antigen](https://github.com/zsh-users/antigen)
 
