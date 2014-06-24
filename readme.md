@@ -12,7 +12,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 ### Why?
 
 - Comes with the perfect prompt character. Author went through the whole Unicode range to find it.
-- Shows `git` branch and whether it's dirty using the [fastest](https://gist.github.com/3898739) method available.
+- Shows `git` branch and whether it's dirty (with a `*`) using the [fastest](https://gist.github.com/3898739) method available.
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
 - Prompt character turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
