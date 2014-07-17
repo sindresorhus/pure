@@ -84,6 +84,10 @@ The max execution time of a process before its run time is shown when it exits. 
 
 Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remote has been updated.
 
+### `PURE_GIT_UNTRACKED_DIRTY`
+
+Set `PURE_GIT_UNTRACKED_DIRTY=1` to include untracked files in dirtiness check.
+
 ## Example
 
 ```sh
