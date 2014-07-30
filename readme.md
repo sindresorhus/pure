@@ -86,7 +86,7 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 ### `PURE_GIT_UNTRACKED_DIRTY`
 
-Set `PURE_GIT_UNTRACKED_DIRTY=1` to include untracked files in dirtiness check.
+Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check.
 
 ## Example
 
