@@ -36,9 +36,10 @@ prompt_pure_git_dirty() {
 	# check if we're in a git repo
 	command git rev-parse --is-inside-work-tree &>/dev/null || return
 	# check if it's dirty
-	command git diff --quiet --ignore-submodules HEAD &>/dev/null
+	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
+	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
 
-	(($? == 1)) && echo '*'
+	(($? == 0)) && echo '*'
 }
 
 # displays the exec time of the last command if set threshold was exceeded
