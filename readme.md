@@ -12,7 +12,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 ### Why?
 
 - Comes with the perfect prompt character. Author went through the whole Unicode range to find it.
-- Shows `git` branch and whether it's dirty (with a `*`) using the [fastest](https://gist.github.com/3898739) method available.
+- Shows `git` branch and whether it's dirty (with a `*`).
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
 - Prompt character turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
@@ -86,7 +86,7 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 ### `PURE_GIT_UNTRACKED_DIRTY`
 
-Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check.
+Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
 ## Example
 
