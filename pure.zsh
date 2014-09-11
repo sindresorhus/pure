@@ -124,7 +124,7 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
+	[[ -n "$SSH_CONNECTION" && -z "$PURE_NO_SSH_USER" ]] && prompt_pure_username='%n@%m '
 
 
   # default colors
