@@ -37,7 +37,7 @@ prompt_pure_git_dirty() {
 	command git rev-parse --is-inside-work-tree &>/dev/null || return
 	# check if it's dirty
 	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
-	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
+	command test -n "$(git diff --quiet --ignore-submodules HEAD)"
 
 	(($? == 0)) && echo '*'
 }
