@@ -71,7 +71,18 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
+  # default colors
+  if [ -z "$PROMPT_PURE_DIR_COLOR" ]; then
+    PROMPT_PURE_DIR_COLOR="%F{blue}"
+  fi
+  if [ -z "$PROMPT_PURE_VCS_COLOR" ]; then
+    PROMPT_PURE_VCS_COLOR="%F{242}"
+  fi
+  if [ -z "$prompt_pure_exec_time_color" ]; then
+    PROMPT_PURE_EXEC_TIME_COLOR="%F{yellow}"
+  fi
+
+	local prompt_pure_preprompt="\n$PROMPT_PURE_DIR_COLOR%~$PROMPT_PURE_VCS_COLOR$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f $PROMPT_PURE_EXEC_TIME_COLOR`prompt_pure_cmd_exec_time`%f"
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
@@ -115,8 +126,17 @@ prompt_pure_setup() {
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
 
+
+  # default colors
+  if [ -z "$PROMPT_PURE_SUCCESS_COLOR" ]; then
+    PROMPT_PURE_SUCCESS_COLOR="%F{magenta}"
+  fi
+  if [ -z "$PROMPT_PURE_FAILURE_COLOR" ]; then
+    PROMPT_PURE_FAILURE_COLOR="%F{red}"
+  fi
+
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT='%(?.%F{magenta}.%F{red})❯%f '
+	PROMPT="%(?.$PROMPT_PURE_SUCCESS_COLOR.$PROMPT_PURE_FAILURE_COLOR)❯%f "
 }
 
 prompt_pure_setup "$@"

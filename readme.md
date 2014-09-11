@@ -89,6 +89,11 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
+### `PROMPT_PURE_DIR_COLOR`, `PROMPT_PURE_VCS_COLOR`, `PROMPT_PURE_EXEC_TIME_COLOR`, `PROMPT_PURE_SUCCESS_COLOR`,  and `PROMPT_PURE_FAILURE_COLOR`
+
+Use these options to control the colors of various parts of the prompt. They take arguments of the form `"%F{...}"` where `...` is some color string. Usage examples: `"%F{blue}"` (i.e., one of the 8 ANSI color names), or `"%F{242}"` (i.e., an xterm256 color code).
+
+
 ## Example
 
 ```sh
