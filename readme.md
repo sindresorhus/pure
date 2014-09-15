@@ -1,6 +1,6 @@
 # Pure
 
-> Pretty, minimal and fast ZSH prompt
+> Pretty, minimal and fast ZSH/Bash prompt
 
 ![screenshot](screenshot.png)
 
@@ -11,7 +11,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ### Why?
 
-- Comes with the perfect prompt character.  
+- Comes with the perfect prompt character.
   Author went through the whole Unicode range to find it.
 - Shows `git` branch and whether it's dirty (with a `*`).
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
@@ -35,6 +35,8 @@ $ npm install --global pure-prompt
 That's it. Skip to [Getting started](#getting-started).
 
 ### Manually
+
+### For zsh
 
 1. Either…
   - Clone this repo
@@ -63,6 +65,14 @@ Then install the theme there:
 $ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
 ```
 
+### For bash
+
+1. Either…
+  - Clone this repo
+  - add it as a submodule, or
+  - just download `pure.bash`
+
+2. Put it on anywhere you like.
 
 ## Getting started
 
@@ -74,6 +84,10 @@ autoload -U promptinit && promptinit
 prompt pure
 ```
 
+```sh
+# .bashrc
+source "pure.bash"
+```
 
 ## Options
 
@@ -100,6 +114,15 @@ autoload -U promptinit && promptinit
 PURE_CMD_MAX_EXEC_TIME=10
 
 prompt pure
+```
+
+```sh
+# .bashrc
+
+# optionally define some options
+PURE_CMD_MAX_EXEC_TIME=10
+
+source "pure.bash"
 ```
 
 
