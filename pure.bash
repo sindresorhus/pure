@@ -58,7 +58,8 @@ prompt_pure_preexec() {
 
 # string length ignoring ansi escapes
 prompt_pure_string_length() {
-	echo ${#1}
+	local str=$(echo -e "${1}")
+	echo ${#str}
 }
 
 prompt_pure_precmd() {
@@ -67,7 +68,8 @@ prompt_pure_precmd() {
 	# shows the full path in the title
 	echo -en "\e]0;${cwd}\a"
 
-	local prompt_pure_preprompt="\n\033[0;34m${cwd} \033[0;37m$(__git_ps1 "%s")$(prompt_pure_git_dirty) $prompt_pure_username\033[0m \033[0;33m$(prompt_pure_cmd_exec_time)\033[0m"
+	local exec_time=$(prompt_pure_cmd_exec_time)
+	local prompt_pure_preprompt="\n\033[0;34m${cwd} \033[0;37m$(__git_ps1 "%s")$(prompt_pure_git_dirty) $prompt_pure_username\033[0m \033[0;33m${exec_time}\033[0m"
 	echo -e $prompt_pure_preprompt
 
 	# check async if there is anything to pull
