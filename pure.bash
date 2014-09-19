@@ -37,18 +37,13 @@ prompt_pure_cmd_exec_time() {
 }
 
 prompt_pure_preexec() {
+	# don't cause a preexec for $PROMPT_COMMAND
+	[ "$BASH_COMMAND" = "$PROMPT_COMMAND" ] && return
+
 	cmd_timestamp=${cmd_timestamp:-$SECONDS}
 
 	local cwd=$(pwd | sed "s|^${HOME}|~|")
-
-	local hist_ent="$(history 1)";
-	local prev_hist_ent="${last_hist_ent}";
-	local last_hist_ent="${hist_ent}";
-	if [[ "${prev_hist_ent}" != "${hist_ent}" ]]; then
-		local this_command="$(echo "${hist_ent}" | sed -e "s/^[ ]*[0-9]*[ ]*//g")";
-	else
-		local this_command="";
-	fi;
+	local this_command=$(HISTTIMEFORMAT= history 1 | sed -e "s/^[ ]*[0-9]*[ ]*//");
 
 	# shows the current dir and executed command in the title when a process is active
 	echo -en "\e]0;"
