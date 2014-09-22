@@ -65,8 +65,10 @@ prompt_pure_string_length() {
 }
 
 prompt_pure_precmd() {
-	# shows the full path in the title
-	print -Pn '\e]0;%~\a'
+	if [[ "$DISABLE_AUTO_TITLE" != "true" ]] && [[ "$EMACS" != *term* ]]; then
+		# shows the full path in the title
+		print -Pn '\e]0;%~\a'
+	fi
 
 	# git info
 	vcs_info
@@ -106,7 +108,9 @@ prompt_pure_setup() {
 	autoload -Uz vcs_info
 
 	add-zsh-hook precmd prompt_pure_precmd
-	add-zsh-hook preexec prompt_pure_preexec
+	if [[ "$DISABLE_AUTO_TITLE" != "true" ]] && [[ "$EMACS" != *term* ]]; then
+		add-zsh-hook preexec prompt_pure_preexec
+	fi
 
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:git*' formats ' %b'
