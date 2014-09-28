@@ -24,7 +24,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Install
 
-Can be installed with `npm` or manually.
+Can be installed with `npm` or manually. Requires git 2.0.0+ and ZSH 5.0.0+.
 
 ### npm
 
