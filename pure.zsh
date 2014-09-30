@@ -78,6 +78,8 @@ prompt_pure_precmd() {
 	(( ${PURE_GIT_PULL:-1} )) && {
 		# check if we're in a git repo
 		command git rev-parse --is-inside-work-tree &>/dev/null &&
+		# make sure working tree is not $HOME
+		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
 		command git fetch &>/dev/null &&
 		# check if there is an upstream configured for this branch
