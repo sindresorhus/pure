@@ -15,7 +15,11 @@
 # %n => username
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
+# $(prompt_pwd) => condensed current path
 
+function prompt_pwd() {
+	echo $PWD | sed -e "s|^$HOME|~|" -e 's|^/private||' -e 's-\([^/.]\)[^/]*/-\1/-g'
+}
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
@@ -66,12 +70,12 @@ prompt_pure_string_length() {
 
 prompt_pure_precmd() {
 	# shows the full path in the title
-	print -Pn '\e]0;%~\a'
+	print -Pn '\e]0;$(prompt_pwd)\a'
 
 	# git info
 	vcs_info
 
-	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
+	local prompt_pure_preprompt="\n%F{blue}$(prompt_pwd)%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
