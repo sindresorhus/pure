@@ -89,6 +89,10 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
+### `PURE_PROMPT_PWD`
+
+Set `PURE_PROMPT_PWD` to custumize the way the current path is shown. Default is `%~`.
+
 ## Example
 
 ```sh
