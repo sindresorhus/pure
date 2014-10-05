@@ -46,7 +46,7 @@ function propmpt_pwd() {
 	if [ -z "$PURE_PROMPT_PWD" ]; then
 		echo "%~"
 	else
-		echo "$PURE_PROMPT_PWD"
+		echo "$($PURE_PROMPT_PWD)"
 	fi
 }
 
