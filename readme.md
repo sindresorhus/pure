@@ -114,7 +114,7 @@ To have commands colorized as seen in the screenshot install [zsh-syntax-highlig
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your `.zshrc` file.
+Pure is one of many themes that comes bundled with oh-my-zsh. The only thing you need to do after installing it is to add `ZSH_THEME="pure"` to your `.zshrc` file.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
