@@ -46,14 +46,14 @@ prompt_pure_preexec() {
 	local this_command=$(HISTTIMEFORMAT= history 1 | sed -e "s/^[ ]*[0-9]*[ ]*//");
 
 	# shows the current dir and executed command in the title when a process is active
-	echo -en "\e]0;"
+	echo -en "\033]0;"
 	echo -nE "${cwd}: ${this_command}"
 	echo -en "\a"
 }
 
 # string length ignoring ansi escapes
 prompt_pure_string_length() {
-	local str=$(echo -E "${1}" | sed 's/\\\e\[\([0-9]\+;\)\?[0-9]\+m\|\\n//g')
+	local str=$(echo -E "${1}" | sed 's/\\\033\[\([0-9]\+;\)\?[0-9]\+m\|\\n//g')
 	echo ${#str}
 }
 
@@ -61,9 +61,9 @@ prompt_pure_precmd() {
 	local cwd=$(pwd | sed "s|^${HOME}|~|")
 
 	# shows the full path in the title
-	echo -en "\e]0;${cwd}\a"
+	echo -en "\033]0;${cwd}\a"
 
-	local prompt_pure_preprompt="\n\e[0;34m${cwd} \e[0;37m$(__git_ps1 "%s")$(prompt_pure_git_dirty) $prompt_pure_username\e[0m \e[0;33m$(prompt_pure_cmd_exec_time)\e[0m"
+	local prompt_pure_preprompt="\n\033[0;34m${cwd} \033[0;37m$(__git_ps1 "%s")$(prompt_pure_git_dirty) $prompt_pure_username\033[0m \033[0;33m$(prompt_pure_cmd_exec_time)\033[0m"
 	echo -e $prompt_pure_preprompt
 
 	# check async if there is anything to pull
@@ -77,7 +77,7 @@ prompt_pure_precmd() {
 			local arrows=''
 			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
 			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
-			echo -en "\e7\e[A\e[1G\e[$(prompt_pure_string_length "$prompt_pure_preprompt")C\e[0;36m${arrows}\e[0m\e8"
+			echo -en "\033\033[A\033[1G\033[$(prompt_pure_string_length "$prompt_pure_preprompt")C\033[0;36m${arrows}\033[0m\033"
 		}
 	} &)
 
@@ -86,7 +86,7 @@ prompt_pure_precmd() {
 }
 
 prompt_pure_exit_color() {
-	[[ "$?" = '0' ]] && echo -e "\e[0;37m" || echo -e "\e[0;31m"
+	[[ "$?" = '0' ]] && echo -e "\033[0;37m" || echo -e "\033[0;31m"
 }
 
 prompt_pure_setup() {
@@ -101,7 +101,7 @@ prompt_pure_setup() {
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username="${USER}@${HOSTNAME} "
 
 	# prompt turns red if the previous command didn't exit with 0
-	PS1='\[$(prompt_pure_exit_color)\]❯\[\e[0m\] '
+	PS1='\[$(prompt_pure_exit_color)\]❯\[\033[0m\] '
 }
 
 prompt_pure_setup "$@"
