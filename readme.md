@@ -89,6 +89,14 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
+### `PURE_PROMPT_USERNAME_COLOR`
+
+Username prompt color, defaults to `white`.
+
+### `PURE_PROMPT_FORCE_DISPLAY_USERNAME`
+
+Set `PURE_PROMPT_FORCE_DISPLAY_USERNAME=1` to always display username@hostname, defaults to `0`.
+
 ## Example
 
 ```sh
