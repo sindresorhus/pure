@@ -15,7 +15,11 @@
 # %n => username
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
+# $PURE_PROMPT_FORCE_DISPLAY_USERNAME => username@hostname color definition, default white
+# $PURE_PROMPT_USERNAME_COLOR => if yes force displaying username@hostname, default false
 
+[[ -z "$PURE_PROMPT_FORCE_DISPLAY_USERNAME" ]] && PURE_PROMPT_FORCE_DISPLAY_USERNAME=0
+[[ -z "$PURE_PROMPT_USERNAME_COLOR" ]] && PURE_PROMPT_USERNAME_COLOR='white'
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
@@ -117,9 +121,10 @@ prompt_pure_setup() {
     # show username@host if logged in through SSH
     [[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
 
-    # show username@host if root, with username in white
-    [[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%F{242}@%m '
-
+    # show username@host if root, with username
+    if [[ $UID -eq 0 ]] || [[ $PURE_PROMPT_FORCE_DISPLAY_USERNAME == 1 ]]; then
+        prompt_pure_username='%F{${PURE_PROMPT_USERNAME_COLOR}}%n%F{${PURE_PROMPT_USERNAME_COLOR}}@%m '
+    fi
     # prompt turns red if the previous command didn't exit with 0
     PROMPT='%(?.%F{magenta}.%F{red})❯%f '
 }
