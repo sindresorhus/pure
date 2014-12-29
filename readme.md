@@ -11,7 +11,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ### Why?
 
-- Comes with the perfect prompt character.
+- Comes with the perfect prompt character.  
   Author went through the whole Unicode range to find it.
 - Shows `git` branch and whether it's dirty (with a `*`).
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
