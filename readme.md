@@ -91,7 +91,7 @@ Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness che
 
 ### `PURE_PROMPT_SYMBOL`
 
-It defines the prompt symbol. The default value is ```❯```.
+Defines the prompt symbol. The default value is `❯`.
 
 ## Example
 
