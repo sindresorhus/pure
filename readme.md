@@ -11,7 +11,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ### Why?
 
-- Comes with the perfect prompt character.  
+- Comes with the perfect prompt character.
   Author went through the whole Unicode range to find it.
 - Shows `git` branch and whether it's dirty (with a `*`).
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
@@ -88,6 +88,10 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 ### `PURE_GIT_UNTRACKED_DIRTY`
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
+
+### `PURE_PROMPT_SYMBOL`
+
+It defines the prompt symbol. The default value is ```❯```.
 
 ## Example
 

@@ -121,10 +121,10 @@ prompt_pure_setup() {
 	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%F{242}@%m '
 
 	# custom delimiter for the prompt
-	[[ -z ${PURE_PROMPT_DELIMITER+x} ]] && PURE_PROMPT_DELIMITER='❯'
+	[[ -z ${PURE_PROMPT_SYMBOL+x} ]] && PURE_PROMPT_SYMBOL='❯'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT='%(?.%F{magenta}.%F{red})'"${PURE_PROMPT_DELIMITER}"'%f '
+	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL}%f "
 }
 
 prompt_pure_setup "$@"
