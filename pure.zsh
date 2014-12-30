@@ -120,11 +120,8 @@ prompt_pure_setup() {
 	# show username@host if root, with username in white
 	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%F{242}@%m '
 
-	# custom symbol for the prompt
-	[[ -z ${PURE_PROMPT_SYMBOL+x} ]] && PURE_PROMPT_SYMBOL='❯'
-
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL}%f "
+	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
 }
 
 prompt_pure_setup "$@"
