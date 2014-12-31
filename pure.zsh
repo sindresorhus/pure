@@ -34,7 +34,7 @@ prompt_pure_human_time() {
 # fastest possible way to check if repo is dirty
 prompt_pure_git_dirty() {
 	# check if we're in a git repo
-	command git rev-parse --is-inside-work-tree &>/dev/null || return
+  [[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] || return
 	# check if it's dirty
 	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
 	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
@@ -77,7 +77,7 @@ prompt_pure_precmd() {
 	# check async if there is anything to pull
 	(( ${PURE_GIT_PULL:-1} )) && {
 		# check if we're in a git repo
-		command git rev-parse --is-inside-work-tree &>/dev/null &&
+    [[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] &&
 		# make sure working tree is not $HOME
 		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
