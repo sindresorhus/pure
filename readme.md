@@ -129,6 +129,13 @@ Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `antigen theme` function).
 
 
+## FAQ
+
+### Do you hate almost all software?
+
+[Yes.](https://gist.github.com/cookrn/4015437)
+
+
 ## License
 
 MIT © [Sindre Sorhus](http://sindresorhus.com)
