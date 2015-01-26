@@ -135,6 +135,10 @@ Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `anti
 
 [Yes.](https://gist.github.com/cookrn/4015437)
 
+### I am stuck in a shell loop in my terminal that ask me to authenticate. What should I do ?
+
+[This is a known issue](https://github.com/sindresorhus/pure/issues/76).
+Using `git pull` when you get the username prompt should help you to break the loop by giving you a real prompt for this.
 
 ## License
 
