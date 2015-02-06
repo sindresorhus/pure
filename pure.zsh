@@ -101,6 +101,9 @@ prompt_pure_setup() {
 	# if output doesn't end with a newline
 	export PROMPT_EOL_MARK=''
 
+	# disable auth prompting on git 2.3+
+	export GIT_TERMINAL_PROMPT=0
+
 	prompt_opts=(cr subst percent)
 
 	zmodload zsh/datetime
