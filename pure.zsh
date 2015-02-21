@@ -20,6 +20,7 @@
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
 prompt_pure_human_time() {
+	echo -n " "
 	local tmp=$1
 	local days=$(( tmp / 60 / 60 / 24 ))
 	local hours=$(( tmp / 60 / 60 % 24 ))
@@ -61,7 +62,8 @@ prompt_pure_preexec() {
 
 # string length ignoring ansi escapes
 prompt_pure_string_length() {
-	echo ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}}
+	# Subtract one since newline is counted as two characters
+	echo $(( ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}} - 1 ))
 }
 
 prompt_pure_precmd() {
@@ -71,7 +73,7 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty` $prompt_pure_username%f %F{yellow}`prompt_pure_cmd_exec_time`%f"
+	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty`$prompt_pure_username%f%F{yellow}`prompt_pure_cmd_exec_time`%f"
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
@@ -118,10 +120,10 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%n@%m '
+	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %n@%m '
 
 	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%F{242}@%m '
+	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%F{242}@%m '
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
