@@ -89,6 +89,10 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
+### `PURE_GIT_DELAY_DIRTY_CHECK`
+
+Time in seconds to delay git dirty checking for large repositories (git status takes > 2 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
+
 ### `PURE_PROMPT_SYMBOL`
 
 Defines the prompt symbol. The default value is `❯`.
