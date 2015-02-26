@@ -32,10 +32,14 @@ prompt_pure_human_time() {
 	echo "${seconds}s"
 }
 
+prompt_pure_is_git_repository() {
+	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] || return 1
+}
+
 # fastest possible way to check if repo is dirty
 prompt_pure_git_dirty() {
 	# check if we're in a git repo
-	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] || return
+	prompt_pure_is_git_repository || return
 	# check if it's dirty
 	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
 	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
@@ -80,30 +84,32 @@ prompt_pure_git_render_arrows() {
 	}
 }
 
-prompt_pure_is_git_repository() {
-	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] || return 1
-}
-
 prompt_pure_git_fetch() {
-	prompt_pure_git_fetch_complete=0
 	local pid=$$
 	# check async if there is anything to pull
 	(( ${PURE_GIT_PULL:-1} )) && {
 		# check if we're in a git repo
-		prompt_pure_is_git_repository &&
+		prompt_pure_is_git_repository || return
 		# make sure working tree is not $HOME
 		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		command git fetch &>/dev/null
-		# always send completion signal to parent process
+		command git fetch &>/dev/null &&
+		# send completion signal if something was done
 		command kill -INFO $pid
 	} &!
+	# Store the disowned child pid
+	prompt_pure_git_fetch_pid=$!
 }
 
-prompt_pure_git_fetch_compelte_trap() {
-	# mark git fetch as completed and draw arrows
-	prompt_pure_git_fetch_complete=1
-	prompt_pure_git_render_arrows
+prompt_pure_trap_info() {
+	# get the pid of the process that sent the kill signal
+	local child_pid=$!
+
+	# if the process was the git fetch process, render arrows
+	if [ $prompt_pure_git_fetch_pid -eq $child_pid ]; then
+		prompt_pure_git_fetch_pid=0
+		prompt_pure_git_render_arrows
+	fi
 }
 
 prompt_pure_chpwd() {
@@ -119,7 +125,7 @@ prompt_pure_chpwd() {
 
 prompt_pure_precmd() {
 	# set up a trap to catch git fetch updates
-	trap prompt_pure_git_fetch_compelte_trap INFO
+	trap prompt_pure_trap_info INFO
 
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
@@ -139,7 +145,8 @@ prompt_pure_precmd() {
 	prompt_pure_git_render_arrows
 
 	# try to do a new fetch if a previous fetch is not running
-	(( $prompt_pure_git_fetch_complete )) && prompt_pure_git_fetch
+	(( ! ${prompt_pure_git_fetch_pid:-0} )) &&
+	prompt_pure_git_fetch
 }
 
 prompt_pure_setup() {
