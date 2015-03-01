@@ -167,7 +167,7 @@ prompt_pure_string_length() {
 
 prompt_pure_preprompt_render() {
 	# check that no command is currently running, rendering might not be safe
-	[[ -n ${cmd_timestamp+x} ]] && return
+	[[ -n ${cmd_timestamp+x} && "$1" != "precmd" ]] && return
 
 	# get vcs info
 	vcs_info
@@ -198,12 +198,12 @@ prompt_pure_preprompt_render() {
 
 prompt_pure_precmd() {
 	_prompt_ret=$?
+
+	# set timestamp, indicates preprompt locking from child processes
+	cmd_timestamp=${cmd_timestamp:-$EPOCHSECONDS}
+
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
-
-	# store exec time for when preprompt gets re-rendered
-	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
-	unset cmd_timestamp
 
 	# make sure the worker is initialized, delete it if it has failed
 	zpty -t prompt_pure_worker &>/dev/null || zpty -b prompt_pure_worker prompt_pure_background_worker || zpty -d prompt_pure_worker
@@ -219,8 +219,13 @@ prompt_pure_precmd() {
 	# tell worker to do a git fetch
 	zpty -w prompt_pure_worker "fetch|$PWD"
 
+	# store exec time for when preprompt gets re-rendered
+	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
+
 	# print the preprompt
 	prompt_pure_preprompt_render precmd
+
+	unset cmd_timestamp
 
 	return ${_prompt_ret}
 }
