@@ -83,7 +83,7 @@ prompt_pure_precmd() {
 		# make sure working tree is not $HOME
 		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		command git fetch &>/dev/null &&
+		command git -c gc.auto=0 fetch &>/dev/null &&
 		# check if there is an upstream configured for this branch
 		command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
 			local arrows=''
