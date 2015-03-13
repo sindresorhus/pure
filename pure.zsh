@@ -132,6 +132,9 @@ prompt_pure_precmd() {
 	# store exec time for when preprompt gets re-rendered
 	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
 
+	# check for git arrows
+	_prompt_git_arrows=$(prompt_pure_git_arrows)
+
 	# set timestamp, indicates that preprompt should not be redrawn even if a redraw is triggered
 	cmd_timestamp=${cmd_timestamp:-$EPOCHSECONDS}
 
@@ -164,7 +167,6 @@ prompt_pure_chpwd() {
 		# reset git preprompt variables, switching working tree
 		_prompt_git_dirty=
 		_prompt_git_delay_dirty_check=
-		_prompt_git_arrows=$(prompt_pure_git_arrows)
 
 		_pure_git_working_tree=$working_tree
 	fi
