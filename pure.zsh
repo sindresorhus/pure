@@ -40,23 +40,19 @@ prompt_pure_human_time() {
 
 # fastest possible way to check if repo is dirty
 prompt_pure_git_dirty() {
-	local dirty=""
-	local start=$EPOCHSECONDS
+	cd $1
 
 	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] && {
 		# check if it's dirty
 		[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
 		command test -n "$(git status --porcelain --ignore-submodules ${umode})"
 
-		(($? == 0)) && dirty="*"
+		(($? == 0)) && echo "*"
 	}
-
-	echo "dirty|${dirty}:$(( $EPOCHSECONDS - $start ))"
 }
 
 prompt_pure_git_fetch() {
-	local state=""
-	local start=$EPOCHSECONDS
+	cd $1
 
 	(( ${PURE_GIT_PULL:-1} )) && {
 		# check if we're in a git repo
@@ -64,11 +60,8 @@ prompt_pure_git_fetch() {
 		# make sure working tree is not $HOME
 		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		command git fetch &>/dev/null &&
-		state="done"
+		command git fetch &>/dev/null
 	}
-
-	echo "fetch|${state}:$(( $EPOCHSECONDS - $start ))"
 }
 
 prompt_pure_git_arrows() {
@@ -80,66 +73,6 @@ prompt_pure_git_arrows() {
 		# output the arrows
 		echo " %F{cyan}${arrows}%f"
 	}
-}
-
-prompt_pure_check_worker_results() {
-	integer count=0
-
-	# read output from zpty and parse it if available
-	while zpty -r prompt_pure_worker line; do
-		count+=1
-		local cmd=${line%|*}
-		local result=${line#*|}
-		local value=${result%:*}
-		local timestamp=${result#*:}
-		# remove ^M at end
-		timestamp=${timestamp//[^0-9]/}
-
-		[[ $cmd == "dirty" ]] && {
-			_prompt_git_dirty=$value
-			(( ${timestamp} > 2 )) && _prompt_git_delay_dirty_check=$EPOCHSECONDS
-		}
-		[[ $cmd == "fetch" && $value == "done" ]] && _prompt_git_arrows=$(prompt_pure_git_arrows)
-	done
-
-	# if there were results, attempt to redraw the preprompt
-	(( $count )) && prompt_pure_preprompt_render
-
-	# re-start time for periodic instance
-	[[ $1 == "periodic" ]] && sched +15 prompt_pure_check_worker_results periodic
-
-	# because this task can run at any time, prevent it from destroying last cmd return status
-	return ${_prompt_ret}
-}
-
-# the background worker does some processing for us without locking up the terminal
-prompt_pure_background_worker() {
-	local storage
-	typeset -A storage
-
-	while read -r line; do
-		local cmd=${line%|*}
-		local dir=${line#*|}
-		local job="prompt_pure_git_${cmd}"
-
-		# change working directory if it has changed
-		[[ ${storage[dir]} != $dir ]] && {
-			cd "$dir"
-			# kill any child processes still running, we don't care about their results
-			kill ${${(v)jobstates##*:*:}%=*} &>/dev/null
-			storage[dir]=$dir
-		}
-
-		# check if a previous job is still running, if yes, let it finnish
-		for pid in ${${(v)jobstates##*:*:}%=*}; do
-			[[ "${storage[$cmd]}" == "$pid" ]] && continue 2
-		done
-
-		# run task in background
-		$job &
-		# store pid because zsh job manager is extremely unflexible (show jobname as non-unique '$job')...
-		storage[$cmd]=$!
-	done
 }
 
 # displays the exec time of the last command if set threshold was exceeded
@@ -169,9 +102,6 @@ prompt_pure_preprompt_render() {
 	# check that no command is currently running, rendering might not be safe
 	[[ -n ${cmd_timestamp+x} && "$1" != "precmd" ]] && return
 
-	# get vcs info
-	vcs_info
-
 	local prompt="%F{blue}%~%F{242}${vcs_info_msg_0_}${_prompt_git_dirty}$prompt_pure_username%f%F{yellow}${_prompt_exec_time}%f${_prompt_git_arrows}"
 	local prompt_length=$(prompt_pure_string_length $prompt)
 	local lines=$(( $prompt_length / $COLUMNS + 1 ))
@@ -199,31 +129,23 @@ prompt_pure_preprompt_render() {
 prompt_pure_precmd() {
 	_prompt_ret=$?
 
-	# set timestamp, indicates preprompt locking from child processes
+	# store exec time for when preprompt gets re-rendered
+	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
+
+	# set timestamp, indicates that preprompt should not be redrawn even if a redraw is triggered
 	cmd_timestamp=${cmd_timestamp:-$EPOCHSECONDS}
 
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
 
-	# make sure the worker is initialized, delete it if it has failed
-	zpty -t prompt_pure_worker &>/dev/null || zpty -b prompt_pure_worker prompt_pure_background_worker || zpty -d prompt_pure_worker
+	# preform async git dirty check and fetch
+	prompt_pure_async_tasks
 
-	# check for possible worker results now, and in a second
-	prompt_pure_check_worker_results
-	sched +1 prompt_pure_check_worker_results
-
-	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
-	(( $EPOCHSECONDS - ${_prompt_git_delay_dirty_check:-0} > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )) &&
-	zpty -w prompt_pure_worker "dirty|$PWD"
-
-	# tell worker to do a git fetch
-	zpty -w prompt_pure_worker "fetch|$PWD"
-
-	# store exec time for when preprompt gets re-rendered
-	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
+	# get vcs info
+	vcs_info
 
 	# print the preprompt
-	prompt_pure_preprompt_render precmd
+	prompt_pure_preprompt_render "precmd"
 
 	unset cmd_timestamp
 
@@ -236,6 +158,9 @@ prompt_pure_chpwd() {
 
 	# check if the working tree has changed and run git fetch immediately
 	if [ "${_pure_git_working_tree}" != "${working_tree}" ]; then
+		# stop any running async jobs
+		async_flush_jobs "prompt_pure"
+
 		# reset git preprompt variables, switching working tree
 		_prompt_git_dirty=
 		_prompt_git_delay_dirty_check=
@@ -243,6 +168,41 @@ prompt_pure_chpwd() {
 
 		_pure_git_working_tree=$working_tree
 	fi
+}
+
+prompt_pure_async_tasks() {
+	# initialize async worker
+	((!${_pure_async_init:-0})) && {
+		trap '
+			async_process_results "prompt_pure" prompt_pure_async_callback
+		' WINCH
+		async_start_worker "prompt_pure" -u -n
+		_pure_async_init=1
+	}
+
+	# tell worker to do a git fetch
+	async_job "prompt_pure" prompt_pure_git_fetch $PWD
+
+	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
+	local dirty_check=$(( $EPOCHSECONDS - ${_prompt_git_delay_dirty_check:-0} ))
+	if (( $dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+		async_job "prompt_pure" prompt_pure_git_dirty $PWD
+	fi
+}
+
+prompt_pure_async_callback() {
+	local job=$1
+	local output=$3
+	local exec_time=$4
+
+	if [[ "$job" == "prompt_pure_git_dirty" ]]; then
+		_prompt_git_dirty=$output
+		(( $exec_time > 2 )) && _prompt_git_delay_dirty_check=$EPOCHSECONDS
+	elif [[ "$job" == "prompt_pure_git_fetch" ]]; then
+		_prompt_git_arrows=$(prompt_pure_git_arrows)
+	fi
+
+	prompt_pure_preprompt_render
 }
 
 prompt_pure_setup() {
@@ -255,13 +215,10 @@ prompt_pure_setup() {
 
 	prompt_opts=(cr subst percent)
 
-	# loat zpty and sched for async & monitoring
-	zmodload zsh/zpty
-	zmodload zsh/sched
-
 	zmodload zsh/datetime
 	autoload -Uz add-zsh-hook
 	autoload -Uz vcs_info
+	autoload -Uz async && async
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
@@ -282,8 +239,6 @@ prompt_pure_setup() {
 
 	# trigger initial chpwd for new sessions
 	prompt_pure_chpwd
-	# initialize periodic check for worker results
-	sched +15 prompt_pure_check_worker_results periodic
 }
 
 prompt_pure_setup "$@"
