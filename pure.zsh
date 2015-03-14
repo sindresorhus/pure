@@ -48,6 +48,10 @@ prompt_pure_git_dirty() {
 		command test -n "$(git status --porcelain --ignore-submodules ${umode})"
 
 		(($? == 0)) && echo "*"
+
+		# add artificial delay in such a case that the task is completed "too" fast
+		# otherwise preprompt redraw might interfere with initial draw from precmd
+		sleep 0.01
 	}
 }
 
