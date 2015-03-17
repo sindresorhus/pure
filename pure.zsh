@@ -133,8 +133,7 @@ prompt_pure_preprompt_render() {
 		(( $prompt_length * $lines == $COLUMNS - 1 )) && clr=""
 
 		# modify previous prompt
-		# {
-		print -Pn "\e7\e[${lines}A\e[1G${prompt}${clr}\e8" #} &!
+		print -Pn "\e7\e[${lines}A\e[1G${prompt}${clr}\e8"
 	fi
 
 	# store previous prompt for comparison
