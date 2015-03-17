@@ -75,7 +75,7 @@ prompt_pure_git_arrows() {
 		(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
 		(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
 		# output the arrows
-		echo " %F{cyan}${arrows}%f"
+		echo " ${arrows}"
 	}
 }
 
@@ -106,9 +106,16 @@ prompt_pure_preprompt_render() {
 	# check that no command is currently running, rendering might not be safe
 	[[ -n ${cmd_timestamp+x} && "$1" != "precmd" ]] && return
 
-	local prompt="%F{blue}%~%F{242}${vcs_info_msg_0_}${_prompt_git_dirty}$prompt_pure_username%f%F{yellow}${_prompt_exec_time}%f${_prompt_git_arrows}"
-	local prompt_length=$(prompt_pure_string_length $prompt)
-	local lines=$(( $prompt_length / $COLUMNS + 1 ))
+	# construct prompt, beginning with path
+	local prompt="%F{blue}%~%f"
+	# git info
+	prompt+="%F{242}${vcs_info_msg_0_}${_prompt_git_dirty}%f"
+	# git pull/push arrows
+	prompt+="%F{cyan}${_prompt_git_arrows}%f"
+	# username and machine if applicable
+	prompt+=$prompt_pure_username
+	# execution time
+	prompt+="%F{yellow}${_prompt_exec_time}%f"
 
 	# if executing through precmd, do not perform fancy terminal editing
 	if [[ "$1" == "precmd" ]]; then
@@ -116,6 +123,10 @@ prompt_pure_preprompt_render() {
 	else
 		# only redraw if prompt has changed
 		[[ "${_prompt_previous_prompt}" != "${prompt}" ]] || return
+
+		# calculate length of prompt for redraw purposes
+		local prompt_length=$(prompt_pure_string_length $prompt)
+		local lines=$(( $prompt_length / $COLUMNS + 1 ))
 
 		# disable clearing of line if last char of prompt is last column of terminal
 		local clr="\e[K"
@@ -235,10 +246,10 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %n@%m'
+	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %F{242}%n@%m%f'
 
 	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%F{242}@%m'
+	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%f%F{242}@%m%f'
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
