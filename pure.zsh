@@ -189,10 +189,8 @@ prompt_pure_chpwd() {
 prompt_pure_async_tasks() {
 	# initialize async worker
 	((!${_pure_async_init:-0})) && {
-		trap '
-			async_process_results "prompt_pure" prompt_pure_async_callback
-		' WINCH
 		async_start_worker "prompt_pure" -u -n
+		async_register_callback "prompt_pure" prompt_pure_async_callback
 		_pure_async_init=1
 	}
 

@@ -3,7 +3,7 @@
 #
 # zsh-async
 #
-# version: 0.1.0
+# version: 0.2.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
@@ -143,6 +143,40 @@ async_job() {
 	zpty -w $worker $@
 }
 
+# This function traps notification signals and calls all registered callbacks
+_async_notify_trap() {
+	for k in ${(k)ASYNC_CALLBACKS}; do
+		async_process_results "${k}" "${ASYNC_CALLBACKS[$k]}"
+	done
+}
+
+#
+# Register a callback for completed jobs. As soon as a job is finnished, async_process_results will be called with the
+# specified callback function. This requires that a worker is initialized with the -n (notify) option.
+#
+# usage:
+# 	async_register_callback <worker_name> <callback_function>
+#
+async_register_callback() {
+	typeset -gA ASYNC_CALLBACKS
+
+	ASYNC_CALLBACKS[$1]="${@[2,${#@}]}"
+
+	trap '_async_notify_trap' WINCH
+}
+
+#
+# Unregister the callback for a specific worker.
+#
+# usage:
+# 	async_unregister_callback <worker_name>
+#
+async_unregister_callback() {
+	typeset -gA ASYNC_CALLBACKS
+
+	unset "ASYNC_CALLBACKS[$1]"
+}
+
 #
 # Flush all current jobs running on a worker. This will terminate any and all running processes under the worker, use
 # with caution.
@@ -151,7 +185,7 @@ async_job() {
 # 	async_flush_jobs <worker_name>
 #
 async_flush_jobs() {
-	zpty -t $worker &>/dev/null || return
+	zpty -t $worker &>/dev/null || return 1
 
 	# Send kill command to worker
 	zpty -w $1 "_killjobs"
