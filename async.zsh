@@ -14,7 +14,8 @@ _async_job() {
 	local start=$EPOCHREALTIME
 
 	# run the command
-	local out=$($@ 2>&1)
+	local out
+	out=$($@ 2>&1)
 	local ret=$?
 
 	# Grab mutex lock
