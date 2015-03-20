@@ -40,7 +40,7 @@ prompt_pure_human_time() {
 
 # fastest possible way to check if repo is dirty
 prompt_pure_git_dirty() {
-	cd $1
+	eval "cd '$@'"
 
 	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] && {
 		# check if it's dirty
@@ -56,7 +56,7 @@ prompt_pure_git_dirty() {
 }
 
 prompt_pure_git_fetch() {
-	cd $1
+	eval "cd '$@'"
 
 	(( ${PURE_GIT_PULL:-1} )) && {
 		# check if we're in a git repo
