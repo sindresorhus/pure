@@ -3,30 +3,25 @@
 #
 # zsh-async
 #
-# version: 0.2.0
+# version: 0.2.1
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
 # Wrapper for jobs executed by the async worker, gives output in parseable format with execution time
 _async_job() {
-	local out
-	# store the job identifier
-	local job=$1
-	# reset the identifier
-	1=""
 	# store start time
 	local start=$EPOCHREALTIME
 
 	# run the command
-	out=$($job $@ 2>&1)
+	local out=$($@ 2>&1)
 	local ret=$?
 
 	# Grab mutex lock
 	read -ep >/dev/null
 
-	# return output
-	print -r -N -n -- $job $ret "$out" $(( $EPOCHREALTIME - $start ))$'\0'
+	# return output (<job_name> <return_code> <output> <duration>)
+	print -r -N -n -- $1 $ret "$out" $(( $EPOCHREALTIME - $start ))$'\0'
 
 	# Unlock mutex
 	print -p "t"
@@ -100,9 +95,9 @@ async_process_results() {
 	local -a items
 	local IFS=$'\0'
 
-	typeset -A ASYNC_PROCESS_BUFFER
+	typeset -gA ASYNC_PROCESS_BUFFER
 	# Read output from zpty and parse it if available
-	while zpty -r $1 line; do
+	while zpty -rt $1 line 2>/dev/null; do
 		# Remove unwanted \r from output
 		ASYNC_PROCESS_BUFFER[$1]+=${line//$'\r'$'\n'/$'\n'}
 		# Split buffer on null characters, preserve empty elements
@@ -194,7 +189,7 @@ async_flush_jobs() {
 	while zpty -r $1 line; do done
 
 	# Clear any partial buffers
-	typeset -A ASYNC_PROCESS_BUFFER
+	typeset -gA ASYNC_PROCESS_BUFFER
 	ASYNC_PROCESS_BUFFER[$1]=""
 }
 
@@ -225,6 +220,7 @@ async_start_worker() {
 async_stop_worker() {
 	local ret=0
 	for worker in $@; do
+		async_unregister_callback $worker
 		zpty -d $worker 2>/dev/null || ret=$?
 	done
 
