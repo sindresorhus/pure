@@ -64,7 +64,7 @@ _async_worker() {
 		# If worker should perform unique jobs
 		if ((unique)); then
 			# Check if a previous job is still running, if yes, let it finnish
-			for pid in ${${(v)jobstates##*:*:}%=*}; do
+			for pid in ${${(v)jobstates##*:*:}%\=*}; do
 				if [[ "${storage[$job]}" == "$pid" ]]; then
 					continue 2
 				fi
