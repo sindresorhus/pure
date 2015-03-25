@@ -38,22 +38,15 @@ prompt_pure_human_time() {
 	echo "${seconds}s"
 }
 
-# fastest possible way to check if repo is dirty
-prompt_pure_git_dirty() {
-	cd "$*"
-
-	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
-	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
-	(($? == 0)) && echo "*"
+# displays the exec time of the last command if set threshold was exceeded
+prompt_pure_check_cmd_exec_time() {
+	local stop=$EPOCHSECONDS
+	local start=${prompt_pure_cmd_timestamp:-$stop}
+	integer elapsed=$stop-$start
+	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
-prompt_pure_git_fetch() {
-	cd "$*"
-
-	command git fetch
-}
-
-prompt_pure_git_arrows() {
+prompt_pure_check_git_arrows() {
 	# check if there is an upstream configured for this branch
 	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
 
@@ -64,16 +57,8 @@ prompt_pure_git_arrows() {
 	[[ "$arrows" != "" ]] && echo " ${arrows}"
 }
 
-# displays the exec time of the last command if set threshold was exceeded
-prompt_pure_cmd_exec_time() {
-	local stop=$EPOCHSECONDS
-	local start=${cmd_timestamp:-$stop}
-	integer elapsed=$stop-$start
-	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
-}
-
 prompt_pure_preexec() {
-	cmd_timestamp=$EPOCHSECONDS
+	prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
 	# shows the current dir and executed command in the title when a process is active
 	print -Pn "\e]0;"
@@ -89,25 +74,25 @@ prompt_pure_string_length() {
 
 prompt_pure_preprompt_render() {
 	# check that no command is currently running, rendering might not be safe
-	[[ -n ${cmd_timestamp+x} && "$1" != "precmd" ]] && return
+	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
 
 	# construct prompt, beginning with path
 	local prompt="%F{blue}%~%f"
 	# git info
-	prompt+="%F{242}${vcs_info_msg_0_}${_prompt_git_dirty}%f"
+	prompt+="%F{242}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
-	prompt+="%F{cyan}${_prompt_git_arrows}%f"
+	prompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
 	prompt+=$prompt_pure_username
 	# execution time
-	prompt+="%F{yellow}${_prompt_exec_time}%f"
+	prompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
 
 	# if executing through precmd, do not perform fancy terminal editing
 	if [[ "$1" == "precmd" ]]; then
 		print -P "\n${prompt}"
 	else
 		# only redraw if prompt has changed
-		[[ "${_prompt_previous_prompt}" != "${prompt}" ]] || return
+		[[ "${prompt_pure_last_preprompt}" != "${prompt}" ]] || return
 
 		# calculate length of prompt for redraw purposes
 		local prompt_length=$(prompt_pure_string_length $prompt)
@@ -122,20 +107,20 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# store previous prompt for comparison
-	_prompt_previous_prompt=$prompt
+	prompt_pure_last_preprompt=$prompt
 }
 
 prompt_pure_precmd() {
-	_prompt_ret=$?
+	prompt_pure_return_code=$?
 
 	# store exec time for when preprompt gets re-rendered
-	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
+	prompt_pure_cmd_exec_time=$(prompt_pure_check_cmd_exec_time)
 
 	# set timestamp, indicates that preprompt should not be redrawn even if a redraw is triggered
-	cmd_timestamp=${cmd_timestamp:-$EPOCHSECONDS}
+	prompt_pure_cmd_timestamp=${prompt_pure_cmd_timestamp:-$EPOCHSECONDS}
 
 	# check for git arrows
-	_prompt_git_arrows=$(prompt_pure_git_arrows)
+	prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
 
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
@@ -143,57 +128,70 @@ prompt_pure_precmd() {
 	# get vcs info
 	vcs_info
 
-	# print the preprompt
-	prompt_pure_preprompt_render "precmd"
-
-	unset cmd_timestamp
-
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
-	return ${_prompt_ret}
+	# print the preprompt
+	prompt_pure_preprompt_render "precmd"
+
+	unset prompt_pure_cmd_timestamp
+
+	return $prompt_pure_return_code
 }
 
-prompt_pure_chpwd() {
-	# prefix working_tree with x as to not match current path, affects variable resolution
-	local working_tree="x$(command git rev-parse --show-toplevel 2>/dev/null)"
+# fastest possible way to check if repo is dirty
+prompt_pure_async_git_dirty() {
+	cd "$*"
 
-	# check if the working tree has changed and run git fetch immediately
-	if [ "${_pure_git_working_tree}" != "${working_tree}" ]; then
-		# stop any running async jobs
-		async_flush_jobs "prompt_pure"
+	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
+	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
+	(($? == 0)) && echo "*"
+}
 
-		# reset git preprompt variables, switching working tree
-		_prompt_git_dirty=
-		_prompt_git_delay_dirty_check=
+prompt_pure_async_git_fetch() {
+	cd "$*"
 
-		_pure_git_working_tree=$working_tree
-	fi
+	command git fetch
 }
 
 prompt_pure_async_tasks() {
 	# initialize async worker
-	((!${_pure_async_init:-0})) && {
+	((!${prompt_pure_async_init:-0})) && {
 		async_start_worker "prompt_pure" -u -n
 		async_register_callback "prompt_pure" prompt_pure_async_callback
-		_pure_async_init=1
+		prompt_pure_async_init=1
 	}
 
+	# get the current git working tree, empty if not inside a git directory
+	local working_tree="$(command git rev-parse --show-toplevel 2>/dev/null)"
+
+	# check if the working tree changed, it is prefixed with "x" to prevent variable resolution in path
+	if [ "${prompt_pure_current_working_tree:-x}" != "x${working_tree}" ]; then
+		# stop any running async jobs
+		async_flush_jobs "prompt_pure"
+
+		# reset git preprompt variables, switching working tree
+		prompt_pure_git_dirty=
+		prompt_pure_git_delay_dirty_check=
+
+		# set the new working tree, prefixed with "x"
+		prompt_pure_current_working_tree="x${working_tree}"
+	fi
+
 	# only perform tasks inside git working tree
-	[[ "${_pure_git_working_tree}" != "x" ]] || return
+	[[ "${working_tree}" != "" ]] || return
 
 	# tell worker to do a git fetch
-	async_job "prompt_pure" prompt_pure_git_fetch $PWD
+	async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
-	local dirty_check=$(( $EPOCHSECONDS - ${_prompt_git_delay_dirty_check:-0} ))
+	local dirty_check=$(( $EPOCHSECONDS - ${prompt_pure_git_delay_dirty_check:-0} ))
 	if (( $dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		(( ${PURE_GIT_PULL:-1} )) &&
 		# make sure working tree is not $HOME
-		[[ "${_pure_git_working_tree}" != "x$HOME" ]] &&
+		[[ "${working_tree}" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_git_dirty $PWD
-
+		async_job "prompt_pure" prompt_pure_async_git_dirty $working_tree
 	fi
 }
 
@@ -202,16 +200,16 @@ prompt_pure_async_callback() {
 	local output=$3
 	local exec_time=$4
 
-	if [[ "$job" == "prompt_pure_git_dirty" ]]; then
-		_prompt_git_dirty=$output
-		(( $exec_time > 2 )) && _prompt_git_delay_dirty_check=$EPOCHSECONDS
-	elif [[ "$job" == "prompt_pure_git_fetch" ]]; then
-		_prompt_git_arrows=$(prompt_pure_git_arrows)
+	if [[ "$job" == "prompt_pure_async_git_dirty" ]]; then
+		prompt_pure_git_dirty=$output
+		(( $exec_time > 2 )) && prompt_pure_git_delay_dirty_check=$EPOCHSECONDS
+	elif [[ "$job" == "prompt_pure_async_git_fetch" ]]; then
+		prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
 	fi
 
 	prompt_pure_preprompt_render
 
-	return ${_prompt_ret}
+	return $prompt_pure_return_code
 }
 
 prompt_pure_setup() {
@@ -231,7 +229,6 @@ prompt_pure_setup() {
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
-	add-zsh-hook chpwd prompt_pure_chpwd
 
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:git*' formats ' %b'
@@ -245,9 +242,6 @@ prompt_pure_setup() {
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
-
-	# trigger initial chpwd for new sessions
-	prompt_pure_chpwd
 }
 
 prompt_pure_setup "$@"
