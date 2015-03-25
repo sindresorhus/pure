@@ -42,41 +42,26 @@ prompt_pure_human_time() {
 prompt_pure_git_dirty() {
 	cd "$*"
 
-	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] && {
-		# check if it's dirty
-		[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
-		command test -n "$(git status --porcelain --ignore-submodules ${umode})"
-
-		(($? == 0)) && echo "*"
-
-		# add artificial delay in such a case that the task is completed "too" fast
-		# otherwise preprompt redraw might interfere with initial draw from precmd
-		sleep 0.01
-	}
+	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
+	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
+	(($? == 0)) && echo "*"
 }
 
 prompt_pure_git_fetch() {
 	cd "$*"
 
-	(( ${PURE_GIT_PULL:-1} )) && {
-		# check if we're in a git repo
-		[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] &&
-		# make sure working tree is not $HOME
-		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
-		# check check if there is anything to pull
-		command git fetch &>/dev/null
-	}
+	command git fetch
 }
 
 prompt_pure_git_arrows() {
 	# check if there is an upstream configured for this branch
-	command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
-		local arrows=''
-		(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
-		(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
-		# output the arrows
-		[[ "$arrows" != "" ]] && echo " ${arrows}"
-	}
+	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
+
+	local arrows=""
+	(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
+	(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
+	# output the arrows
+	[[ "$arrows" != "" ]] && echo " ${arrows}"
 }
 
 # displays the exec time of the last command if set threshold was exceeded
@@ -146,17 +131,14 @@ prompt_pure_precmd() {
 	# store exec time for when preprompt gets re-rendered
 	_prompt_exec_time=$(prompt_pure_cmd_exec_time)
 
-	# check for git arrows
-	_prompt_git_arrows=$(prompt_pure_git_arrows)
-
 	# set timestamp, indicates that preprompt should not be redrawn even if a redraw is triggered
 	cmd_timestamp=${cmd_timestamp:-$EPOCHSECONDS}
 
+	# check for git arrows
+	_prompt_git_arrows=$(prompt_pure_git_arrows)
+
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
-
-	# preform async git dirty check and fetch
-	prompt_pure_async_tasks
 
 	# get vcs info
 	vcs_info
@@ -165,6 +147,9 @@ prompt_pure_precmd() {
 	prompt_pure_preprompt_render "precmd"
 
 	unset cmd_timestamp
+
+	# preform async git dirty check and fetch
+	prompt_pure_async_tasks
 
 	return ${_prompt_ret}
 }
@@ -194,13 +179,21 @@ prompt_pure_async_tasks() {
 		_pure_async_init=1
 	}
 
+	# only perform tasks inside git working tree
+	[[ "${_pure_git_working_tree}" != "x" ]] || return
+
 	# tell worker to do a git fetch
 	async_job "prompt_pure" prompt_pure_git_fetch $PWD
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
 	local dirty_check=$(( $EPOCHSECONDS - ${_prompt_git_delay_dirty_check:-0} ))
 	if (( $dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+		(( ${PURE_GIT_PULL:-1} )) &&
+		# make sure working tree is not $HOME
+		[[ "${_pure_git_working_tree}" != "x$HOME" ]] &&
+		# check check if there is anything to pull
 		async_job "prompt_pure" prompt_pure_git_dirty $PWD
+
 	fi
 }
 
@@ -217,6 +210,8 @@ prompt_pure_async_callback() {
 	fi
 
 	prompt_pure_preprompt_render
+
+	return ${_prompt_ret}
 }
 
 prompt_pure_setup() {
