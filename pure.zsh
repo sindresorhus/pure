@@ -205,17 +205,20 @@ prompt_pure_async_callback() {
 	local output=$3
 	local exec_time=$4
 
-	if [[ "$job" == "prompt_pure_async_git_dirty" ]]; then
-		prompt_pure_git_dirty=$output
-		prompt_pure_preprompt_render
+	case "${job}" in
+		prompt_pure_async_git_dirty)
+			prompt_pure_git_dirty=$output
+			prompt_pure_preprompt_render
 
-		# when prompt_pure_git_delay_dirty_check is set, the git info is displayed in a different color, this is why the
-		# prompt is rendered before the variable is (potentially) set
-		(( $exec_time > 2 )) && prompt_pure_git_delay_dirty_check=$EPOCHSECONDS
-	elif [[ "$job" == "prompt_pure_async_git_fetch" ]]; then
-		prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
-		prompt_pure_preprompt_render
-	fi
+			# when prompt_pure_git_delay_dirty_check is set, the git info is displayed in a different color, this is why the
+			# prompt is rendered before the variable is (potentially) set
+			(( $exec_time > 2 )) && prompt_pure_git_delay_dirty_check=$EPOCHSECONDS
+			;;
+		prompt_pure_async_git_fetch)
+			prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+			prompt_pure_preprompt_render
+			;;
+	esac
 }
 
 prompt_pure_setup() {
