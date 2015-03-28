@@ -73,13 +73,17 @@ prompt_pure_string_length() {
 }
 
 prompt_pure_preprompt_render() {
-	# check that no command is currently running, rendering might not be safe
+	# check that no command is currently running, the prompt will otherwise be rendered in the wrong place
 	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
+
+	# set color for git branch/dirty status, change color if dirty checking has been delayed
+	local git_color=242
+	[[ -n ${prompt_pure_git_delay_dirty_check+x} ]] && git_color=red
 
 	# construct prompt, beginning with path
 	local prompt="%F{blue}%~%f"
 	# git info
-	prompt+="%F{242}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	prompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
 	prompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
@@ -171,8 +175,8 @@ prompt_pure_async_tasks() {
 		async_flush_jobs "prompt_pure"
 
 		# reset git preprompt variables, switching working tree
-		prompt_pure_git_dirty=
-		prompt_pure_git_delay_dirty_check=
+		unset prompt_pure_git_dirty
+		unset prompt_pure_git_delay_dirty_check
 
 		# set the new working tree, prefixed with "x"
 		prompt_pure_current_working_tree="x${working_tree}"
@@ -187,6 +191,7 @@ prompt_pure_async_tasks() {
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
 	local dirty_check=$(( $EPOCHSECONDS - ${prompt_pure_git_delay_dirty_check:-0} ))
 	if (( $dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+		unset prompt_pure_git_delay_dirty_check
 		(( ${PURE_GIT_PULL:-1} )) &&
 		# make sure working tree is not $HOME
 		[[ "${working_tree}" != "$HOME" ]] &&
@@ -202,12 +207,15 @@ prompt_pure_async_callback() {
 
 	if [[ "$job" == "prompt_pure_async_git_dirty" ]]; then
 		prompt_pure_git_dirty=$output
+		prompt_pure_preprompt_render
+
+		# when prompt_pure_git_delay_dirty_check is set, the git info is displayed in a different color, this is why the
+		# prompt is rendered before the variable is (potentially) set
 		(( $exec_time > 2 )) && prompt_pure_git_delay_dirty_check=$EPOCHSECONDS
 	elif [[ "$job" == "prompt_pure_async_git_fetch" ]]; then
 		prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+		prompt_pure_preprompt_render
 	fi
-
-	prompt_pure_preprompt_render
 
 	return $prompt_pure_return_code
 }
