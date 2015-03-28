@@ -118,8 +118,9 @@ prompt_pure_precmd() {
 	# store exec time for when preprompt gets re-rendered
 	prompt_pure_cmd_exec_time=$(prompt_pure_check_cmd_exec_time)
 
-	# set timestamp, indicates that preprompt should not be redrawn even if a redraw is triggered
-	prompt_pure_cmd_timestamp=${prompt_pure_cmd_timestamp:-$EPOCHSECONDS}
+	# by making sure that prompt_pure_cmd_timestamp is defined here the async functions are prevented from interfering
+	# with the initial preprompt rendering
+	prompt_pure_cmd_timestamp=
 
 	# check for git arrows
 	prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
@@ -136,6 +137,7 @@ prompt_pure_precmd() {
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
 
+	# remove the prompt_pure_cmd_timestamp, indicating that precmd has completed
 	unset prompt_pure_cmd_timestamp
 }
 
