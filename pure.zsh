@@ -115,8 +115,6 @@ prompt_pure_preprompt_render() {
 }
 
 prompt_pure_precmd() {
-	prompt_pure_return_code=$?
-
 	# store exec time for when preprompt gets re-rendered
 	prompt_pure_cmd_exec_time=$(prompt_pure_check_cmd_exec_time)
 
@@ -139,8 +137,6 @@ prompt_pure_precmd() {
 	prompt_pure_preprompt_render "precmd"
 
 	unset prompt_pure_cmd_timestamp
-
-	return $prompt_pure_return_code
 }
 
 # fastest possible way to check if repo is dirty
@@ -218,8 +214,6 @@ prompt_pure_async_callback() {
 		prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
 		prompt_pure_preprompt_render
 	fi
-
-	return $prompt_pure_return_code
 }
 
 prompt_pure_setup() {
