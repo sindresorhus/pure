@@ -116,6 +116,7 @@ prompt_pure_setup() {
 	add-zsh-hook preexec prompt_pure_preexec
 
 	zstyle ':vcs_info:*' enable git
+	zstyle ':vcs_info:*' use-simple true
 	zstyle ':vcs_info:git*' formats ' %b'
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
