@@ -83,7 +83,8 @@ prompt_pure_precmd() {
 		# make sure working tree is not $HOME
 		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		command git -c gc.auto=0 fetch &>/dev/null &&
+		# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
+		GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch &>/dev/null &&
 		# check if there is an upstream configured for this branch
 		command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
 			local arrows=''
@@ -102,9 +103,6 @@ prompt_pure_setup() {
 	# prevent percentage showing up
 	# if output doesn't end with a newline
 	export PROMPT_EOL_MARK=''
-
-	# disable auth prompting on git 2.3+
-	export GIT_TERMINAL_PROMPT=0
 
 	prompt_opts=(cr subst percent)
 
