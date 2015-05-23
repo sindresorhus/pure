@@ -15,6 +15,12 @@
 # %n => username
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
+# terminal codes:
+# \e7   => save cursor position
+# \e[2A => move cursor 2 lines up
+# \e[1G => go to position 1 in terminal
+# \e8   => restore cursor position
+# \e[K  => clears everything after the cursor on the current line
 
 
 # turns seconds into human readable time
@@ -32,27 +38,27 @@ prompt_pure_human_time() {
 	echo "${seconds}s"
 }
 
-# fastest possible way to check if repo is dirty
-prompt_pure_git_dirty() {
-	# check if we're in a git repo
-	[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] || return
-	# check if it's dirty
-	[[ "$PURE_GIT_UNTRACKED_DIRTY" == 0 ]] && local umode="-uno" || local umode="-unormal"
-	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
-
-	(($? == 0)) && echo '*'
-}
-
 # displays the exec time of the last command if set threshold was exceeded
-prompt_pure_cmd_exec_time() {
+prompt_pure_check_cmd_exec_time() {
 	local stop=$EPOCHSECONDS
-	local start=${cmd_timestamp:-$stop}
+	local start=${prompt_pure_cmd_timestamp:-$stop}
 	integer elapsed=$stop-$start
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
+prompt_pure_check_git_arrows() {
+	# check if there is an upstream configured for this branch
+	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
+
+	local arrows=""
+	(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
+	(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
+	# output the arrows
+	[[ "$arrows" != "" ]] && echo " ${arrows}"
+}
+
 prompt_pure_preexec() {
-	cmd_timestamp=$EPOCHSECONDS
+	prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
 	# shows the current dir and executed command in the title when a process is active
 	print -Pn "\e]0;"
@@ -66,38 +72,155 @@ prompt_pure_string_length() {
 	echo $(( ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}} - 1 ))
 }
 
+prompt_pure_preprompt_render() {
+	# check that no command is currently running, the prompt will otherwise be rendered in the wrong place
+	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
+
+	# set color for git branch/dirty status, change color if dirty checking has been delayed
+	local git_color=242
+	[[ -n ${prompt_pure_git_delay_dirty_check+x} ]] && git_color=red
+
+	# construct prompt, beginning with path
+	local prompt="%F{blue}%~%f"
+	# git info
+	prompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	# git pull/push arrows
+	prompt+="%F{cyan}${prompt_pure_git_arrows}%f"
+	# username and machine if applicable
+	prompt+=$prompt_pure_username
+	# execution time
+	prompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
+
+	# if executing through precmd, do not perform fancy terminal editing
+	if [[ "$1" == "precmd" ]]; then
+		print -P "\n${prompt}"
+	else
+		# only redraw if prompt has changed
+		[[ "${prompt_pure_last_preprompt}" != "${prompt}" ]] || return
+
+		# calculate length of prompt for redraw purposes
+		local prompt_length=$(prompt_pure_string_length $prompt)
+		local lines=$(( $prompt_length / $COLUMNS + 1 ))
+
+		# disable clearing of line if last char of prompt is last column of terminal
+		local clr="\e[K"
+		(( $prompt_length * $lines == $COLUMNS - 1 )) && clr=""
+
+		# modify previous prompt
+		print -Pn "\e7\e[${lines}A\e[1G${prompt}${clr}\e8"
+	fi
+
+	# store previous prompt for comparison
+	prompt_pure_last_preprompt=$prompt
+}
+
 prompt_pure_precmd() {
+	# store exec time for when preprompt gets re-rendered
+	prompt_pure_cmd_exec_time=$(prompt_pure_check_cmd_exec_time)
+
+	# by making sure that prompt_pure_cmd_timestamp is defined here the async functions are prevented from interfering
+	# with the initial preprompt rendering
+	prompt_pure_cmd_timestamp=
+
+	# check for git arrows
+	prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+
 	# shows the full path in the title
 	print -Pn '\e]0;%~\a'
 
-	# git info
+	# get vcs info
 	vcs_info
 
-	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty`$prompt_pure_username%f%F{yellow}`prompt_pure_cmd_exec_time`%f"
-	print -P $prompt_pure_preprompt
+	# preform async git dirty check and fetch
+	prompt_pure_async_tasks
 
-	# check async if there is anything to pull
-	(( ${PURE_GIT_PULL:-1} )) && {
-		# check if we're in a git repo
-		[[ "$(command git rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] &&
-		# make sure working tree is not $HOME
-		[[ "$(command git rev-parse --show-toplevel)" != "$HOME" ]] &&
-		# check check if there is anything to pull
-		# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
-		GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch &>/dev/null &&
-		# check if there is an upstream configured for this branch
-		command git rev-parse --abbrev-ref @'{u}' &>/dev/null && {
-			local arrows=''
-			(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows='⇣'
-			(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+='⇡'
-			print -Pn "\e7\e[A\e[1G\e[`prompt_pure_string_length $prompt_pure_preprompt`C%F{cyan}${arrows}%f\e8"
-		}
-	} &!
+	# print the preprompt
+	prompt_pure_preprompt_render "precmd"
 
-	# reset value since `preexec` isn't always triggered
-	unset cmd_timestamp
+	# remove the prompt_pure_cmd_timestamp, indicating that precmd has completed
+	unset prompt_pure_cmd_timestamp
 }
 
+# fastest possible way to check if repo is dirty
+prompt_pure_async_git_dirty() {
+	local untracked_dirty=$2
+	local umode="-unormal"
+	[[ "$untracked_dirty" == "0" ]] && umode="-uno"
+
+	cd "$1"
+	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
+	(($? == 0)) && echo "*"
+}
+
+prompt_pure_async_git_fetch() {
+	cd "$1"
+
+	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
+	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
+}
+
+prompt_pure_async_tasks() {
+	# initialize async worker
+	((!${prompt_pure_async_init:-0})) && {
+		async_start_worker "prompt_pure" -u -n
+		async_register_callback "prompt_pure" prompt_pure_async_callback
+		prompt_pure_async_init=1
+	}
+
+	# get the current git working tree, empty if not inside a git directory
+	local working_tree="$(command git rev-parse --show-toplevel 2>/dev/null)"
+
+	# check if the working tree changed, it is prefixed with "x" to prevent variable resolution in path
+	if [ "${prompt_pure_current_working_tree:-x}" != "x${working_tree}" ]; then
+		# stop any running async jobs
+		async_flush_jobs "prompt_pure"
+
+		# reset git preprompt variables, switching working tree
+		unset prompt_pure_git_dirty
+		unset prompt_pure_git_delay_dirty_check
+
+		# set the new working tree, prefixed with "x"
+		prompt_pure_current_working_tree="x${working_tree}"
+	fi
+
+	# only perform tasks inside git working tree
+	[[ "${working_tree}" != "" ]] || return
+
+	# tell worker to do a git fetch
+	async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
+
+	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
+	local dirty_check=$(( $EPOCHSECONDS - ${prompt_pure_git_delay_dirty_check:-0} ))
+	if (( $dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+		unset prompt_pure_git_delay_dirty_check
+		(( ${PURE_GIT_PULL:-1} )) &&
+		# make sure working tree is not $HOME
+		[[ "${working_tree}" != "$HOME" ]] &&
+		# check check if there is anything to pull
+		async_job "prompt_pure" prompt_pure_async_git_dirty $working_tree $PURE_GIT_UNTRACKED_DIRTY
+	fi
+}
+
+prompt_pure_async_callback() {
+	local job=$1
+	local output=$3
+	local exec_time=$4
+
+	case "${job}" in
+		prompt_pure_async_git_dirty)
+			prompt_pure_git_dirty=$output
+			prompt_pure_preprompt_render
+
+			# when prompt_pure_git_delay_dirty_check is set, the git info is displayed in a different color, this is why the
+			# prompt is rendered before the variable is (potentially) set
+			(( $exec_time > 2 )) && prompt_pure_git_delay_dirty_check=$EPOCHSECONDS
+			;;
+		prompt_pure_async_git_fetch)
+			prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+			prompt_pure_preprompt_render
+			;;
+	esac
+}
 
 prompt_pure_setup() {
 	# prevent percentage showing up
@@ -109,6 +232,7 @@ prompt_pure_setup() {
 	zmodload zsh/datetime
 	autoload -Uz add-zsh-hook
 	autoload -Uz vcs_info
+	autoload -Uz async && async
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
@@ -119,10 +243,10 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
 
 	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %n@%m'
+	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %F{242}%n@%m%f'
 
 	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%F{242}@%m'
+	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%f%F{242}@%m%f'
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "

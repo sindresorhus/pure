@@ -43,10 +43,13 @@ That's it. Skip to [Getting started](#getting-started).
 
 2. Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
 
+3. Symlink `async.zsh` in `$fpath` with the name `async`.
+
 #### Example
 
 ```sh
 $ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
+$ ln -s "$PWD/async.zsh" /usr/local/share/zsh/site-functions/async
 ```
 *Run `echo $fpath` to see possible locations.*
 
@@ -61,6 +64,7 @@ Then install the theme there:
 
 ```sh
 $ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
+$ ln -s "$PWD/async.zsh" "$HOME/.zfunctions/async"
 ```
 
 
@@ -88,6 +92,10 @@ Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remo
 ### `PURE_GIT_UNTRACKED_DIRTY`
 
 Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
+
+### `PURE_GIT_DELAY_DIRTY_CHECK`
+
+Time in seconds to delay git dirty checking for large repositories (git status takes > 2 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
 
 ### `PURE_PROMPT_SYMBOL`
 
