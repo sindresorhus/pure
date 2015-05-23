@@ -9,6 +9,12 @@
     "email": "sindresorhus@gmail.com",
     "url": "sindresorhus.com"
   },
+  "maintainers": [
+    {
+      "name": "Mathias Fredriksson",
+      "url": "github.com/mafredri"
+    }
+  ],
   "engines": {
     "node": ">=0.10.0"
   },

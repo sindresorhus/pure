@@ -145,6 +145,13 @@ Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `anti
 Using `git pull` when you get the username prompt should help you to break the loop by giving you a real prompt for this. **[This has been fixed in git 2.3](https://github.com/sindresorhus/pure/commit/f43ab97e1cf4a276b7a6e33eac055ee16610be15)**
 
 
+## Team
+
+[![Sindre Sorhus](https://avatars.githubusercontent.com/u/170270?v=3&s=100)](http://sindresorhus.com) | [![Mathias Fredriksson](https://avatars.githubusercontent.com/u/147409?v=3&s=100)](https://github.com/mafredri)
+---|---
+[Sindre Sorhus](http://sindresorhus.com) | [Mathias Fredriksson](https://github.com/mafredri)
+
+
 ## License
 
 MIT © [Sindre Sorhus](http://sindresorhus.com)
