@@ -7,7 +7,7 @@
   "author": {
     "name": "Sindre Sorhus",
     "email": "sindresorhus@gmail.com",
-    "url": "http://sindresorhus.com"
+    "url": "sindresorhus.com"
   },
   "engines": {
     "node": ">=0.10.0"
@@ -16,15 +16,22 @@
     "postinstall": "dest=/usr/local/share/zsh/site-functions/; mkdir -p $dest && ln -sf \"$PWD/pure.zsh\" $dest/prompt_pure_setup && ln -sf \"$PWD/async.zsh\" $dest/async || echo 'Could not automagically symlink the prompt. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually'"
   },
   "files": [
-    "pure.zsh"
+    "pure.zsh",
+    "async.zsh"
   ],
   "keywords": [
     "zsh",
+    "zshell",
     "sh",
     "shell",
     "bash",
     "pure",
     "prompt",
-    "theme"
+    "theme",
+    "git",
+    "async",
+    "fast",
+    "minimal",
+    "pretty"
   ]
 }

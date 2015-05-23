@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast ZSH prompt
 
-![screenshot](screenshot.png)
+![](screenshot.png)
 
 
 ## Overview
@@ -28,7 +28,7 @@ Can be installed with `npm` or manually. Requires git 2.0.0+ and ZSH 5.0.0+.
 
 ### npm
 
-```sh
+```
 $ npm install --global pure-prompt
 ```
 
@@ -47,7 +47,7 @@ That's it. Skip to [Getting started](#getting-started).
 
 #### Example
 
-```sh
+```
 $ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
 $ ln -s "$PWD/async.zsh" /usr/local/share/zsh/site-functions/async
 ```
@@ -139,14 +139,11 @@ Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `anti
 
 ## FAQ
 
-### Do you hate almost all software?
-
-[Yes.](https://gist.github.com/cookrn/4015437)
-
 ### I am stuck in a shell loop in my terminal that ask me to authenticate. What should I do ?
 
 [This is a known issue](https://github.com/sindresorhus/pure/issues/76).
 Using `git pull` when you get the username prompt should help you to break the loop by giving you a real prompt for this. **[This has been fixed in git 2.3](https://github.com/sindresorhus/pure/commit/f43ab97e1cf4a276b7a6e33eac055ee16610be15)**
+
 
 ## License
 

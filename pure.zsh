@@ -25,6 +25,7 @@
 
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
+# https://github.com/sindresorhus/pretty-time-zsh
 prompt_pure_human_time() {
 	echo -n " "
 	local tmp=$1
