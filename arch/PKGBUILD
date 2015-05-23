@@ -21,4 +21,6 @@ package() {
   cd $srcdir/$pkgname
   install -Dm644 pure.zsh \
     "$pkgdir/usr/share/zsh/functions/Prompts/prompt_pure_setup"
+  install -Dm644 async.zsh \
+    "$pkgdir/usr/share/zsh/functions/async"
 }
