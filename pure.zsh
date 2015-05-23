@@ -155,7 +155,8 @@ prompt_pure_async_git_dirty() {
 prompt_pure_async_git_fetch() {
 	cd "$1"
 
-	command git -c gc.auto=0 fetch
+	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
+	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
 }
 
 prompt_pure_async_tasks() {
@@ -225,9 +226,6 @@ prompt_pure_setup() {
 	# prevent percentage showing up
 	# if output doesn't end with a newline
 	export PROMPT_EOL_MARK=''
-
-	# disable auth prompting on git 2.3+
-	export GIT_TERMINAL_PROMPT=0
 
 	prompt_opts=(cr subst percent)
 
