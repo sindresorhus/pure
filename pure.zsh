@@ -149,7 +149,7 @@ prompt_pure_async_git_dirty() {
 	[[ "$untracked_dirty" == "0" ]] && umode="-uno"
 
 	cd "$*"
-	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
+	command test -n "$(git status --porcelain --ignore-submodules ${umode})" &>/dev/null
 	(($? == 0)) && echo "*"
 }
 
