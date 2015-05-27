@@ -148,13 +148,15 @@ prompt_pure_async_git_dirty() {
 	local umode="-unormal"
 	[[ "$untracked_dirty" == "0" ]] && umode="-uno"
 
-	cd "$*"
+	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
+	cd -q "$*"
 	command test -n "$(git status --porcelain --ignore-submodules ${umode})" &>/dev/null
 	(($? == 0)) && echo "*"
 }
 
 prompt_pure_async_git_fetch() {
-	cd "$*"
+	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
+	cd -q "$*"
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
