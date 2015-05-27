@@ -270,7 +270,7 @@ done
 # turn potential relative path into real path
 pure_path="$(cd -P "$(dirname "$pure_source")" && pwd)"
 
-# Soruce async.zsh
+# source async.zsh
 [ -f "$pure_path"/async.zsh ] && . "$pure_path"/async.zsh
 
 prompt_pure_setup "$@"
