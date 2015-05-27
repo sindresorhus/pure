@@ -144,17 +144,17 @@ prompt_pure_precmd() {
 
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
-	local untracked_dirty=$2
+	local untracked_dirty=$1; shift
 	local umode="-unormal"
 	[[ "$untracked_dirty" == "0" ]] && umode="-uno"
 
-	cd "$1"
+	cd "$*"
 	command test -n "$(git status --porcelain --ignore-submodules ${umode})"
 	(($? == 0)) && echo "*"
 }
 
 prompt_pure_async_git_fetch() {
-	cd "$1"
+	cd "$*"
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
@@ -188,7 +188,7 @@ prompt_pure_async_tasks() {
 	[[ "${working_tree}" != "" ]] || return
 
 	# tell worker to do a git fetch
-	async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
+	async_job "prompt_pure" prompt_pure_async_git_fetch "$working_tree"
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
 	local dirty_check=$(( $EPOCHSECONDS - ${prompt_pure_git_delay_dirty_check:-0} ))
@@ -198,7 +198,7 @@ prompt_pure_async_tasks() {
 		# make sure working tree is not $HOME
 		[[ "${working_tree}" != "$HOME" ]] &&
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty $working_tree $PURE_GIT_UNTRACKED_DIRTY
+		async_job "prompt_pure" prompt_pure_async_git_dirty "${PURE_GIT_UNTRACKED_DIRTY:-1}" "$working_tree"
 	fi
 }
 
