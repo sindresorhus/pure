@@ -253,4 +253,24 @@ prompt_pure_setup() {
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
 }
 
+# http://stackoverflow.com/questions/9901210/bash-source0-equivalent-in-zsh
+# find the real path of pure on-disk, following symlinks
+local pure_source
+local pure_path
+# closest zsh eqvivalent to $BASH_SOURCE
+pure_source="${(%):-%x}"
+# iterate until we find the real file
+while [ -h "$pure_source" ]; do
+	local dir
+	dir="$(cd -P "$(dirname "$pure_source")" && pwd)"
+	pure_source="$(readlink "$pure_source")"
+	[[ $pure_source != /* ]] && pure_source="$dir/$pure_source"
+done
+
+# turn potential relative path into real path
+pure_path="$(cd -P "$(dirname "$pure_source")" && pwd)"
+
+# Soruce async.zsh
+[ -f "$pure_path"/async.zsh ] && . "$pure_path"/async.zsh
+
 prompt_pure_setup "$@"
