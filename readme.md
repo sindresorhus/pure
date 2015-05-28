@@ -126,7 +126,9 @@ To have commands colorized as seen in the screenshot install [zsh-syntax-highlig
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme` and add `ZSH_THEME="pure"` to your `.zshrc` file.
+1. Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme`
+2. Symlink (or copy) `async.zsh` to `~/.oh-my-zsh/custom/async.zsh`
+3. Add `ZSH_THEME="pure"` to your `.zshrc` file.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
@@ -134,8 +136,12 @@ Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
 ### [antigen](https://github.com/zsh-users/antigen)
 
-Add `antigen bundle sindresorhus/pure` to your .zshrc file (do not use the `antigen theme` function).
+Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
 
+```
+antigen bundle mafredri/zsh-async
+antigen bundle sindresorhus/pure
+```
 
 ## FAQ
 
