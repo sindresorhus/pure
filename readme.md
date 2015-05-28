@@ -163,7 +163,7 @@ sudo emerge -1 zsh
 
 #### FreeBSD 10.1
 
-Either try the command `kldload pty` or enable `device pty`(?).
+On a default setup, running the command `kldload pty` should do the trick. If you have a custom kernel, you might need to add `device pty` to the configuration file ([example](https://github.com/nbari/freebsd/blob/58646a9c3c4aaabf6f6467ff505f27f09e29dc75/kernels/xen.kernel#L188)).
 
 ## Team
 
