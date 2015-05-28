@@ -150,6 +150,20 @@ antigen bundle sindresorhus/pure
 [This is a known issue](https://github.com/sindresorhus/pure/issues/76).
 Using `git pull` when you get the username prompt should help you to break the loop by giving you a real prompt for this. **[This has been fixed in git 2.3](https://github.com/sindresorhus/pure/commit/f43ab97e1cf4a276b7a6e33eac055ee16610be15)**
 
+### I am seeing the error `zpty: can't open pseudo terminal: bad file descriptor`.
+
+[This is a known issue](https://github.com/sindresorhus/pure/issues/117). `zsh/zpty` requires either legacy bsd ptys or access to `/dev/ptmx`. Here are some known solutions.
+
+#### Gentoo
+
+```
+sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
+sudo emerge -1 zsh
+```
+
+#### FreeBSD 10.1
+
+Either try the command `kldload pty` or enable `device pty`(?).
 
 ## Team
 
