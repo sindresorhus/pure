@@ -3,7 +3,7 @@
 #
 # zsh-async
 #
-# version: 0.2.1
+# version: 0.2.3
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
@@ -15,14 +15,14 @@ _async_job() {
 
 	# run the command
 	local out
-	out=$($* 2>&1)
+	out=$(eval "$@" 2>&1)
 	local ret=$?
 
 	# Grab mutex lock
 	read -ep >/dev/null
 
 	# return output (<job_name> <return_code> <output> <duration>)
-	print -r -N -n -- $1 $ret "$out" $(( $EPOCHREALTIME - $start ))$'\0'
+	print -r -N -n -- "$1" "$ret" "$out" $(( $EPOCHREALTIME - $start ))$'\0'
 
 	# Unlock mutex
 	print -p "t"
@@ -56,7 +56,7 @@ _async_worker() {
 		# Check for non-job commands sent to worker
 		case "$job" in
 		_killjobs)
-			kill ${${(v)jobstates##*:*:}%=*} &>/dev/null
+			kill -KILL ${${(v)jobstates##*:*:}%\=*} &>/dev/null
 			continue
 			;;
 		esac
@@ -93,12 +93,14 @@ _async_worker() {
 #
 async_process_results() {
 	integer count=0
+	local worker=$1
+	local callback=$2
 	local -a items
 	local IFS=$'\0'
 
 	typeset -gA ASYNC_PROCESS_BUFFER
 	# Read output from zpty and parse it if available
-	while zpty -rt $1 line 2>/dev/null; do
+	while zpty -rt "$worker" line 2>/dev/null; do
 		# Remove unwanted \r from output
 		ASYNC_PROCESS_BUFFER[$1]+=${line//$'\r'$'\n'/$'\n'}
 		# Split buffer on null characters, preserve empty elements
@@ -110,8 +112,8 @@ async_process_results() {
 		(( ${#items} % 4 )) && continue
 
 		# Work through all results
-		while ((${#items} > 0)); do
-			eval '$2 "${(@)=items[1,4]}"'
+		while (( ${#items} > 0 )); do
+			"$callback" "${(@)=items[1,4]}"
 			shift 4 items
 			count+=1
 		done
@@ -135,7 +137,7 @@ async_process_results() {
 #
 async_job() {
 	local worker=$1; shift
-	zpty -w $worker $*
+	zpty -w "$worker" "$@"
 }
 
 # This function traps notification signals and calls all registered callbacks
@@ -154,8 +156,9 @@ _async_notify_trap() {
 #
 async_register_callback() {
 	typeset -gA ASYNC_CALLBACKS
+	local worker=$1; shift
 
-	ASYNC_CALLBACKS[$1]="${*[2,${#*}]}"
+	ASYNC_CALLBACKS[$worker]="$*"
 
 	trap '_async_notify_trap' WINCH
 }
@@ -180,13 +183,16 @@ async_unregister_callback() {
 # 	async_flush_jobs <worker_name>
 #
 async_flush_jobs() {
-	zpty -t $worker &>/dev/null || return 1
+	local worker=$1; shift
+
+	# Check if the worker exists
+	zpty -t "$worker" &>/dev/null || return 1
 
 	# Send kill command to worker
-	zpty -w $1 "_killjobs"
+	zpty -w "$worker" "_killjobs"
 
 	# Clear all output buffers
-	while zpty -r $1 line; do done
+	while zpty -r "$worker" line; do true; done
 
 	# Clear any partial buffers
 	typeset -gA ASYNC_PROCESS_BUFFER
@@ -207,7 +213,7 @@ async_flush_jobs() {
 #
 async_start_worker() {
 	local worker=$1; shift
-	zpty -t $worker &>/dev/null || zpty -b $worker _async_worker -p $$ $* || async_stop_worker $worker
+	zpty -t "$worker" &>/dev/null || zpty -b "$worker" _async_worker -p $$ "$@" || async_stop_worker "$worker"
 }
 
 #
@@ -218,9 +224,9 @@ async_start_worker() {
 #
 async_stop_worker() {
 	local ret=0
-	for worker in $*; do
-		async_unregister_callback $worker
-		zpty -d $worker 2>/dev/null || ret=$?
+	for worker in "$@"; do
+		async_unregister_callback "$worker"
+		zpty -d "$worker" 2>/dev/null || ret=$?
 	done
 
 	return $ret
@@ -241,4 +247,4 @@ async() {
 	async_init
 }
 
-async "$*"
+async "$@"
