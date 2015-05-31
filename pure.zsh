@@ -64,7 +64,7 @@ prompt_pure_preexec() {
 	# tell the terminal we are setting the title
 	print -Pn "\e]0;"
 	# show hostname if connected through ssh
-	[[ "$SSH_CONNECTION" != '' ]] && print -Pn "%m: "
+	[[ "$SSH_CONNECTION" != '' ]] && print -Pn "(%m) "
 	# shows the current dir and executed command in the title when a process is active
 	# (use print -r to disable potential evaluation of escape characters in cmd)
 	print -Pnr "$PWD:t: $2"
@@ -133,7 +133,7 @@ prompt_pure_precmd() {
 	# tell the terminal we are setting the title
 	print -Pn "\e]0;"
 	# show hostname if connected through ssh
-	[[ "$SSH_CONNECTION" != '' ]] && print -Pn "%m: "
+	[[ "$SSH_CONNECTION" != '' ]] && print -Pn "(%m) "
 	# shows the full path in the title
 	print -Pn "%~\a"
 
