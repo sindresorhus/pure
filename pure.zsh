@@ -145,13 +145,17 @@ prompt_pure_precmd() {
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
 	local untracked_dirty=$1; shift
-	local umode="-unormal"
-	[[ "$untracked_dirty" == "0" ]] && umode="-uno"
 
 	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
 	cd -q "$*"
-	command test -n "$(git status --porcelain --ignore-submodules ${umode})" &>/dev/null
-	(($? == 0)) && echo "*"
+
+	if [[ "$untracked_dirty" == "0" ]]; then
+		command git diff --no-ext-diff --quiet --exit-code
+	else
+		test -z "$(command git status --porcelain --ignore-submodules -unormal)"
+	fi
+
+	(( $? )) && echo "*"
 }
 
 prompt_pure_async_git_fetch() {
