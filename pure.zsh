@@ -185,8 +185,8 @@ prompt_pure_async_tasks() {
 	# get the current git working tree, empty if not inside a git directory
 	local working_tree="$(command git rev-parse --show-toplevel 2>/dev/null)"
 
-	# check if the working tree changed, it is prefixed with "x" to prevent variable resolution in path
-	if [ "${prompt_pure_current_working_tree:-x}" != "x${working_tree}" ]; then
+	# check if the working tree changed (prompt_pure_current_working_tree is prefixed by "x")
+	if [[ "${prompt_pure_current_working_tree:-x}" != "x${working_tree}" ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
@@ -194,7 +194,7 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_delay_dirty_check
 
-		# set the new working tree, prefixed with "x"
+		# set the new working tree and prefix with "x" to prevent the creation of a named path by AUTO_NAME_DIRS
 		prompt_pure_current_working_tree="x${working_tree}"
 	fi
 
