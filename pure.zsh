@@ -67,7 +67,7 @@ prompt_pure_preexec() {
 	[[ "$SSH_CONNECTION" != '' ]] && print -Pn "(%m) "
 	# shows the current dir and executed command in the title when a process is active
 	# (use print -r to disable potential evaluation of escape characters in cmd)
-	print -Pnr "$PWD:t: $2"
+	print -nr "$PWD:t: $2"
 	print -Pn "\a"
 }
 
