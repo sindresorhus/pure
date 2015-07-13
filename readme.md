@@ -101,6 +101,14 @@ Time in seconds to delay git dirty checking for large repositories (git status t
 
 Defines the prompt symbol. The default value is `❯`.
 
+### `PURE_GIT_DOWN_ARROW`
+
+Defines git downwards arrow symbol. The default value is `⇣`.
+
+### `PURE_GIT_UP_ARROW`
+
+Defines git upwards arrow symbol. The default value is `⇡`.
+
 ## Example
 
 ```sh
