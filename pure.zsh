@@ -76,8 +76,7 @@ prompt_pure_preexec() {
 
 # string length ignoring ansi escapes
 prompt_pure_string_length() {
-	# Subtract one since newline is counted as two characters
-	echo $(( ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}} - 1 ))
+	echo $(( ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}} ))
 }
 
 prompt_pure_preprompt_render() {
@@ -108,7 +107,7 @@ prompt_pure_preprompt_render() {
 
 		# calculate length of preprompt for redraw purposes
 		local preprompt_length=$(prompt_pure_string_length $preprompt)
-		local lines=$(( $preprompt_length / $COLUMNS + 1 ))
+		local lines=$(( ($preprompt_length - 1) / $COLUMNS + 1 ))
 
 		# disable clearing of line if last char of preprompt is last column of terminal
 		local clr="\e[K"
