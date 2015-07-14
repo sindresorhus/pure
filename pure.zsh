@@ -51,11 +51,14 @@ prompt_pure_check_git_arrows() {
 	# check if there is an upstream configured for this branch
 	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
 
-	local arrows=""
-	(( $(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows="${PURE_GIT_DOWN_ARROW:-⇣}"
-	(( $(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null) > 0 )) && arrows+="${PURE_GIT_UP_ARROW:-⇡}"
+	local right left arrows
+	right=$(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null)
+	left=$(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null)
+
+	(( ${right:-0} > 0 )) && arrows="${PURE_GIT_DOWN_ARROW:-⇣}"
+	(( ${left:-0} > 0 )) && arrows+="${PURE_GIT_UP_ARROW:-⇡}"
 	# output the arrows
-	[[ "$arrows" != "" ]] && echo " ${arrows}"
+	[[ $arrows != "" ]] && echo " ${arrows}"
 }
 
 prompt_pure_preexec() {
