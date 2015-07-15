@@ -81,45 +81,45 @@ prompt_pure_string_length() {
 }
 
 prompt_pure_preprompt_render() {
-	# check that no command is currently running, the prompt will otherwise be rendered in the wrong place
+	# check that no command is currently running, the preprompt will otherwise be rendered in the wrong place
 	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
 
 	# set color for git branch/dirty status, change color if dirty checking has been delayed
 	local git_color=242
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
-	# construct prompt, beginning with path
-	local prompt="%F{blue}%~%f"
+	# construct preprompt, beginning with path
+	local preprompt="%F{blue}%~%f"
 	# git info
-	prompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
-	prompt+="%F{cyan}${prompt_pure_git_arrows}%f"
+	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
-	prompt+=$prompt_pure_username
+	preprompt+=$prompt_pure_username
 	# execution time
-	prompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
+	preprompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
 
 	# if executing through precmd, do not perform fancy terminal editing
 	if [[ "$1" == "precmd" ]]; then
-		print -P "\n${prompt}"
+		print -P "\n${preprompt}"
 	else
-		# only redraw if prompt has changed
-		[[ "${prompt_pure_last_preprompt}" != "${prompt}" ]] || return
+		# only redraw if preprompt has changed
+		[[ "${prompt_pure_last_preprompt}" != "${preprompt}" ]] || return
 
-		# calculate length of prompt for redraw purposes
-		local prompt_length=$(prompt_pure_string_length $prompt)
-		local lines=$(( $prompt_length / $COLUMNS + 1 ))
+		# calculate length of preprompt for redraw purposes
+		local preprompt_length=$(prompt_pure_string_length $preprompt)
+		local lines=$(( $preprompt_length / $COLUMNS + 1 ))
 
-		# disable clearing of line if last char of prompt is last column of terminal
+		# disable clearing of line if last char of preprompt is last column of terminal
 		local clr="\e[K"
-		(( $prompt_length * $lines == $COLUMNS - 1 )) && clr=""
+		(( $preprompt_length * $lines == $COLUMNS - 1 )) && clr=""
 
-		# modify previous prompt
-		print -Pn "\e7\e[${lines}A\e[1G${prompt}${clr}\e8"
+		# modify previous preprompt
+		print -Pn "\e7\e[${lines}A\e[1G${preprompt}${clr}\e8"
 	fi
 
-	# store previous prompt for comparison
-	prompt_pure_last_preprompt=$prompt
+	# store previous preprompt for comparison
+	prompt_pure_last_preprompt=$preprompt
 }
 
 prompt_pure_precmd() {
