@@ -111,7 +111,7 @@ prompt_pure_preprompt_render() {
 
 		# disable clearing of line if last char of preprompt is last column of terminal
 		local clr="\e[K"
-		(( $preprompt_length * $lines == $COLUMNS - 1 )) && clr=""
+		(( $COLUMNS * $lines == $preprompt_length )) && clr=""
 
 		# modify previous preprompt
 		print -Pn "\e7\e[${lines}A\e[1G${preprompt}${clr}\e8"
