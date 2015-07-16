@@ -246,7 +246,7 @@ prompt_pure_setup() {
 	# if output doesn't end with a newline
 	export PROMPT_EOL_MARK=''
 
-	prompt_opts=(cr subst percent)
+	prompt_opts=(subst percent)
 
 	zmodload zsh/datetime
 	autoload -Uz add-zsh-hook
