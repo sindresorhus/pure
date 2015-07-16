@@ -47,6 +47,15 @@ prompt_pure_check_cmd_exec_time() {
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
+prompt_pure_clear_screen() {
+	# enable output to terminal
+	zle -I
+	# clear screen and move cursor to (0, 0)
+	print -n "\e[2J\e[0;0H"
+	# print preprompt
+	prompt_pure_preprompt_render precmd
+}
+
 prompt_pure_check_git_arrows() {
 	# check if there is an upstream configured for this branch
 	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
@@ -249,6 +258,7 @@ prompt_pure_setup() {
 	prompt_opts=(subst percent)
 
 	zmodload zsh/datetime
+	zmodload zsh/zle
 	autoload -Uz add-zsh-hook
 	autoload -Uz vcs_info
 	autoload -Uz async && async
@@ -260,6 +270,13 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:*' use-simple true
 	zstyle ':vcs_info:git*' formats ' %b'
 	zstyle ':vcs_info:git*' actionformats ' %b|%a'
+
+	# if the user has not registered a custom zle widget for clear-screen,
+	# override the builtin one so that the preprompt is displayed correctly when
+	# ^L is issued.
+	if [[ $widgets[clear-screen] == "builtin" ]]; then
+		zle -N clear-screen prompt_pure_clear_screen
+	fi
 
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %F{242}%n@%m%f'
