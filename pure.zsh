@@ -51,7 +51,7 @@ prompt_pure_clear_screen() {
 	# enable output to terminal
 	zle -I
 	# clear screen and move cursor to (0, 0)
-	print -n "\e[2J\e[0;0H"
+	print -n '\e[2J\e[0;0H'
 	# print preprompt
 	prompt_pure_preprompt_render precmd
 }
@@ -274,7 +274,7 @@ prompt_pure_setup() {
 	# if the user has not registered a custom zle widget for clear-screen,
 	# override the builtin one so that the preprompt is displayed correctly when
 	# ^L is issued.
-	if [[ $widgets[clear-screen] == "builtin" ]]; then
+	if [[ $widgets[clear-screen] == 'builtin' ]]; then
 		zle -N clear-screen prompt_pure_clear_screen
 	fi
 
