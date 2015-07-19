@@ -47,6 +47,55 @@ prompt_pure_check_cmd_exec_time() {
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
+if [[ "$PURE_HIGHLIGHT_REPO" == 1 ]] ; then
+	# underline
+	PURE_UNDERLINE_START="$(tput smul)"
+	PURE_UNDERLINE_END="$(tput rmul)"
+	# bold
+	# PURE_UNDERLINE_START=${fg_bold[blue]}
+	# PURE_UNDERLINE_END=${fg_no_bold[blue]}
+	prompt_pure_render_preprompt_path() {
+		if [[ -n "$vcs_info_msg_1_" ]] ; then
+			local prerepo reponame postrepo
+			if [[ "$PWD" == "$vcs_info_msg_1_"* ]]; then
+				# the working directory is the real path
+				prerepo=${vcs_info_msg_1_%/*}
+				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}"; fi # replace ~
+				prerepo="${prerepo%/}/"
+				reponame=${vcs_info_msg_1_##*/}
+				postrepo="${PWD#$vcs_info_msg_1_}"
+				postrepo=${postrepo#/}
+				[[ -n "${postrepo}" ]] && postrepo="/${postrepo}"
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}${postrepo}"
+			elif [[ "$PWD" == */"$vcs_info_msg_2_" ]]; then
+				# the working directory is in a git repository under a symlink
+				local repopath="${PWD%/$vcs_info_msg_2_}"
+				reponame=${repopath##*/}
+				prerepo=${repopath%/*}
+				if [[ "${prerepo}" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				prerepo="${prerepo%/}/"
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}/$vcs_info_msg_2_"
+			elif [[ "$vcs_info_msg_2_" == "." ]]; then
+				# the working directory is at the root of a repo under a symlink
+				prerepo=${PWD%/*}
+				if [[ "${prerepo}" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				prerepo="${prerepo%/}/"
+				reponame=${PWD##*/}
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}"
+			else
+				# fallback: the working directory symlinks into a repo somewhere else
+				prompt_pure_preprompt_path="%F{blue}%~"
+			fi
+		else
+			prompt_pure_preprompt_path="%F{blue}%~"
+		fi
+	}
+else
+	prompt_pure_render_preprompt_path() {
+		prompt_pure_preprompt_path="%F{blue}%~"
+	}
+fi
+
 prompt_pure_clear_screen() {
 	# enable output to terminal
 	zle -I
@@ -97,7 +146,9 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	local prompt_pure_preprompt_path
+	prompt_pure_render_preprompt_path
+	local preprompt="$prompt_pure_preprompt_path"
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
@@ -266,10 +317,11 @@ prompt_pure_setup() {
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
+	zstyle ':vcs_info:*' max-exports 3
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
-	zstyle ':vcs_info:git*' formats ' %b'
-	zstyle ':vcs_info:git*' actionformats ' %b|%a'
+	zstyle ':vcs_info:git*' formats ' %b' '%R' '%S'
+	zstyle ':vcs_info:git*' actionformats ' %b|%a' '%R' '%S'
 
 	# if the user has not registered a custom zle widget for clear-screen,
 	# override the builtin one so that the preprompt is displayed correctly when
