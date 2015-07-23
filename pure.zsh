@@ -98,7 +98,7 @@ prompt_pure_print_path() {
        if [[ $repo != $upath || $vcs_info_msg_2_ == '.' ]]; then
            local parent="${repo:h}/"
            # if parent is ./ we can safely remove it
-           local _repo="${parent#./}%U${repo:t}%u"
+           local _repo="${parent#./}%B${repo:t}%b%F{blue}"
            upath=${upath/$repo/$_repo}
        fi
    fi
