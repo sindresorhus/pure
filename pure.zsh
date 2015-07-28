@@ -26,25 +26,29 @@
 # turns seconds into human readable time
 # 165392 => 1d 21h 56m 32s
 # https://github.com/sindresorhus/pretty-time-zsh
-prompt_pure_human_time() {
-	echo -n " "
-	local tmp=$1
-	local days=$(( tmp / 60 / 60 / 24 ))
-	local hours=$(( tmp / 60 / 60 % 24 ))
-	local minutes=$(( tmp / 60 % 60 ))
-	local seconds=$(( tmp % 60 ))
-	(( $days > 0 )) && echo -n "${days}d "
-	(( $hours > 0 )) && echo -n "${hours}h "
-	(( $minutes > 0 )) && echo -n "${minutes}m "
-	echo "${seconds}s"
+prompt_pure_human_time_to_var() {
+	local human=" " total_seconds=$1 var=$2
+	local days=$(( total_seconds / 60 / 60 / 24 ))
+	local hours=$(( total_seconds / 60 / 60 % 24 ))
+	local minutes=$(( total_seconds / 60 % 60 ))
+	local seconds=$(( total_seconds % 60 ))
+	(( days > 0 )) && human+="${days}d "
+	(( hours > 0 )) && human+="${hours}h "
+	(( minutes > 0 )) && human+="${minutes}m "
+	human+="${seconds}s"
+
+	# store human readable time in variable as specified by caller
+	typeset -g "${var}"="${human}"
 }
 
-# displays the exec time of the last command if set threshold was exceeded
+# stores (into prompt_pure_cmd_exec_time) the exec time of the last command if set threshold was exceeded
 prompt_pure_check_cmd_exec_time() {
-	local stop=$EPOCHSECONDS
-	local start=${prompt_pure_cmd_timestamp:-$stop}
-	integer elapsed=$stop-$start
-	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
+	integer elapsed
+	(( elapsed = EPOCHSECONDS - ${prompt_pure_cmd_timestamp:-$EPOCHSECONDS} ))
+	prompt_pure_cmd_exec_time=
+	(( elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5} )) && {
+		prompt_pure_human_time_to_var $elapsed "prompt_pure_cmd_exec_time"
+	}
 }
 
 prompt_pure_clear_screen() {
@@ -57,17 +61,26 @@ prompt_pure_clear_screen() {
 }
 
 prompt_pure_check_git_arrows() {
+	# reset git arrows
+	prompt_pure_git_arrows=
+
 	# check if there is an upstream configured for this branch
 	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
 
-	local right left arrows
-	right=$(command git rev-list --right-only --count HEAD...@'{u}' 2>/dev/null)
-	left=$(command git rev-list --left-only --count HEAD...@'{u}' 2>/dev/null)
+	local arrow_status
+	# check git left and right arrow_status
+	arrow_status="$(command git rev-list --left-right --count HEAD...@'{u}' 2>/dev/null)"
+	# exit if the command failed
+	(( !$? )) || return
 
-	(( ${right:-0} > 0 )) && arrows="${PURE_GIT_DOWN_ARROW:-⇣}"
+	# left and right are tab-separated, split on tab and store as array
+	arrow_status=(${(ps:\t:)arrow_status})
+	local arrows left=${arrow_status[1]} right=${arrow_status[2]}
+
+	(( ${right:-0} > 0 )) && arrows+="${PURE_GIT_DOWN_ARROW:-⇣}"
 	(( ${left:-0} > 0 )) && arrows+="${PURE_GIT_UP_ARROW:-⇡}"
-	# output the arrows
-	[[ $arrows != "" ]] && echo " ${arrows}"
+
+	[[ -n $arrows ]] && prompt_pure_git_arrows=" ${arrows}"
 }
 
 prompt_pure_preexec() {
@@ -84,8 +97,13 @@ prompt_pure_preexec() {
 }
 
 # string length ignoring ansi escapes
-prompt_pure_string_length() {
-	echo $(( ${#${(S%%)1//(\%([KF1]|)\{*\}|\%[Bbkf])}} ))
+prompt_pure_string_length_to_var() {
+	local str=$1 var=$2 length
+	# perform expansion on str and check length
+	length=$(( ${#${(S%%)str//(\%([KF1]|)\{*\}|\%[Bbkf])}} ))
+
+	# store string length in variable as specified by caller
+	typeset -g "${var}"="${length}"
 }
 
 prompt_pure_print_path() {
@@ -132,13 +150,16 @@ prompt_pure_preprompt_render() {
 		# only redraw if preprompt has changed
 		[[ "${prompt_pure_last_preprompt}" != "${preprompt}" ]] || return
 
-		# calculate length of preprompt for redraw purposes
-		local preprompt_length=$(prompt_pure_string_length $preprompt)
-		local lines=$(( ($preprompt_length - 1) / $COLUMNS + 1 ))
+		# calculate length of preprompt and store it locally in preprompt_length
+		integer preprompt_length
+		prompt_pure_string_length_to_var "${preprompt}" "preprompt_length"
+
+		# calculate number of preprompt lines for redraw purposes
+		integer lines=$(( (preprompt_length - 1) / COLUMNS + 1 ))
 
 		# disable clearing of line if last char of preprompt is last column of terminal
-		local clr="\e[K"
-		(( $COLUMNS * $lines == $preprompt_length )) && clr=""
+		local clr='\e[K'
+		(( COLUMNS * lines == preprompt_length )) && clr=
 
 		# modify previous preprompt
 		print -Pn "\e7\e[${lines}A\e[1G${preprompt}${clr}\e8"
@@ -149,15 +170,15 @@ prompt_pure_preprompt_render() {
 }
 
 prompt_pure_precmd() {
-	# store exec time for when preprompt gets re-rendered
-	prompt_pure_cmd_exec_time=$(prompt_pure_check_cmd_exec_time)
+	# check exec time and store it in a variable
+	prompt_pure_check_cmd_exec_time
 
 	# by making sure that prompt_pure_cmd_timestamp is defined here the async functions are prevented from interfering
 	# with the initial preprompt rendering
 	prompt_pure_cmd_timestamp=
 
 	# check for git arrows
-	prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+	prompt_pure_check_git_arrows
 
 	# tell the terminal we are setting the title
 	print -Pn "\e]0;"
@@ -211,11 +232,11 @@ prompt_pure_async_tasks() {
 		prompt_pure_async_init=1
 	}
 
-	# get the current git working tree, empty if not inside a git directory
-	local working_tree="$(command git rev-parse --show-toplevel 2>/dev/null)"
+	# store working_tree without the "x" prefix
+	local working_tree="${vcs_info_msg_1_#x}"
 
 	# check if the working tree changed (prompt_pure_current_working_tree is prefixed by "x")
-	if [[ "${prompt_pure_current_working_tree:-x}" != "x${working_tree}" ]]; then
+	if [[ ${prompt_pure_current_working_tree#x} != $working_tree ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
@@ -228,21 +249,20 @@ prompt_pure_async_tasks() {
 	fi
 
 	# only perform tasks inside git working tree
-	[[ "${working_tree}" != "" ]] || return
+	[[ -n $working_tree ]] || return
 
-	if (( ${PURE_GIT_PULL:-1} )); then
-		# make sure working tree is not $HOME
-		[[ "${working_tree}" != "$HOME" ]] &&
+	# do not preform git fetch if it is disabled or working_tree == HOME
+	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
 		# tell worker to do a git fetch
-		async_job "prompt_pure" prompt_pure_async_git_fetch "$working_tree"
+		async_job "prompt_pure" prompt_pure_async_git_fetch "${working_tree}"
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
-	local time_since_last_dirty_check=$(( $EPOCHSECONDS - ${prompt_pure_git_last_dirty_check_timestamp:-0} ))
-	if (( $time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+	integer time_since_last_dirty_check=$(( EPOCHSECONDS - ${prompt_pure_git_last_dirty_check_timestamp:-0} ))
+	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty "${PURE_GIT_UNTRACKED_DIRTY:-1}" "$working_tree"
+		async_job "prompt_pure" prompt_pure_async_git_dirty "${PURE_GIT_UNTRACKED_DIRTY:-1}" "${working_tree}"
 	fi
 }
 
@@ -262,7 +282,7 @@ prompt_pure_async_callback() {
 			(( $exec_time > 2 )) && prompt_pure_git_last_dirty_check_timestamp=$EPOCHSECONDS
 			;;
 		prompt_pure_async_git_fetch)
-			prompt_pure_git_arrows=$(prompt_pure_check_git_arrows)
+			prompt_pure_check_git_arrows
 			prompt_pure_preprompt_render
 			;;
 	esac
@@ -284,9 +304,13 @@ prompt_pure_setup() {
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
-	zstyle ':vcs_info:*' max-exports 3
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
+	# raise max exports to 3 to also fetch path from the base of the repo
+	zstyle ':vcs_info:git*' max-exports 3
+	# vcs_info_msg_0_ = ' %b' (for branch)
+	# vcs_info_msg_1_ = 'x%R' git top level (%R), x-prefix prevents creation of a named path (AUTO_NAME_DIRS)
+	# vcs_info_msg_2_ = '%S' relative path of current working directory from top level of repo
 	zstyle ':vcs_info:git*' formats ' %b' 'x%R' '%S'
 	zstyle ':vcs_info:git*' actionformats ' %b|%a' 'x%R' '%S'
 
