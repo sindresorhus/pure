@@ -21,6 +21,7 @@
 # \e[1G => go to position 1 in terminal
 # \e8   => restore cursor position
 # \e[K  => clears everything after the cursor on the current line
+# \e[2K => clear everything on the current line
 
 
 # turns seconds into human readable time
@@ -133,18 +134,45 @@ prompt_pure_preprompt_render() {
 		[[ "${prompt_pure_last_preprompt}" != "${preprompt}" ]] || return
 
 		# calculate length of preprompt and store it locally in preprompt_length
-		integer preprompt_length
+		integer preprompt_length lines
 		prompt_pure_string_length_to_var "${preprompt}" "preprompt_length"
 
 		# calculate number of preprompt lines for redraw purposes
-		integer lines=$(( (preprompt_length - 1) / COLUMNS + 1 ))
+		(( lines = ( preprompt_length - 1 ) / COLUMNS + 1 ))
+
+		# calculate previous preprompt lines to figure out how the new preprompt should behave
+		integer last_preprompt_length last_lines
+		prompt_pure_string_length_to_var "${prompt_pure_last_preprompt}" "last_preprompt_length"
+		(( last_lines = ( last_preprompt_length - 1 ) / COLUMNS + 1 ))
+
+		# clr_prev_preprompt erases visual artifacts from previous preprompt
+		local clr_prev_preprompt
+		if (( last_lines > lines )); then
+			# move cursor up by last_lines, clear the line and move it down by one line
+			clr_prev_preprompt="\e[${last_lines}A\e[2K\e[1B"
+			while (( last_lines - lines > 1 )); do
+				# clear the line and move cursor down by one
+				clr_prev_preprompt+='\e[2K\e[1B'
+				(( last_lines-- ))
+			done
+
+			# move cursor into correct position for preprompt update
+			clr_prev_preprompt+="\e[${lines}B"
+		# create more space for preprompt if new preprompt has more lines than last
+		elif (( last_lines < lines )); then
+			# move cursor using newlines because ansi cursor movement can't push the cursor beyond the last line
+			printf $'\n'%.0s {1..$(( lines - last_lines ))}
+
+			# redraw the prompt since it has been moved by print
+			zle && zle .reset-prompt
+		fi
 
 		# disable clearing of line if last char of preprompt is last column of terminal
 		local clr='\e[K'
 		(( COLUMNS * lines == preprompt_length )) && clr=
 
 		# modify previous preprompt
-		print -Pn "\e7\e[${lines}A\e[1G${preprompt}${clr}\e8"
+		print -Pn "\e7${clr_prev_preprompt}\e[${lines}A\e[1G${preprompt}${clr}\e8"
 	fi
 
 	# store previous preprompt for comparison
