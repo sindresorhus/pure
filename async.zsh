@@ -3,26 +3,51 @@
 #
 # zsh-async
 #
-# version: 0.2.3
+# version: 1.0.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
 # Wrapper for jobs executed by the async worker, gives output in parseable format with execution time
 _async_job() {
-	# store start time
-	local start=$EPOCHREALTIME
+	# Store start time as double precision (+E disables scientific notation)
+	float -F duration=$EPOCHREALTIME
 
-	# run the command
-	local out
-	out=$(eval "$@" 2>&1)
-	local ret=$?
+	# Run the command
+	#
+	# What is happening here is that we are assigning stdout, stderr and ret to
+	# variables, and then we are printing out the variable assignment through
+	# typeset -p. This way when we run eval we get something along the lines of:
+	# 	eval "
+	# 		typeset stdout=' M async.test.sh\n M async.zsh'
+	# 		typeset ret=0
+	# 		typeset stderr=''
+	# 	"
+	unset stdout stderr ret
+	eval "$(
+		{
+			stdout=$(eval "$@")
+			ret=$?
+			typeset -p stdout ret
+		} 2> >(stderr=$(cat); typeset -p stderr)
+	)"
+
+	# Calculate duration
+	duration=$(( EPOCHREALTIME - duration ))
+
+	# stip all null-characters from stdout and stderr
+	stdout="${stdout//$'\0'/}"
+	stderr="${stderr//$'\0'/}"
+
+	# if ret is missing for some unknown reason, set it to -1 to indicate we
+	# have run into a bug
+	ret=${ret:--1}
 
 	# Grab mutex lock
 	read -ep >/dev/null
 
-	# return output (<job_name> <return_code> <output> <duration>)
-	print -r -N -n -- "$1" "$ret" "$out" $(( $EPOCHREALTIME - $start ))$'\0'
+	# return output (<job_name> <return_code> <stdout> <duration> <stderr>)
+	print -r -N -n -- "$1" "$ret" "$stdout" "$duration" "$stderr"$'\0'
 
 	# Unlock mutex
 	print -p "t"
@@ -88,8 +113,9 @@ _async_worker() {
 # callback_function is called with the following parameters:
 # 	$1 = job name, e.g. the function passed to async_job
 # 	$2 = return code
-# 	$3 = resulting output from execution
+# 	$3 = resulting stdout from execution
 # 	$4 = execution time, floating point e.g. 2.05 seconds
+# 	$5 = resulting stderr from execution
 #
 async_process_results() {
 	integer count=0
@@ -102,24 +128,24 @@ async_process_results() {
 	# Read output from zpty and parse it if available
 	while zpty -rt "$worker" line 2>/dev/null; do
 		# Remove unwanted \r from output
-		ASYNC_PROCESS_BUFFER[$1]+=${line//$'\r'$'\n'/$'\n'}
+		ASYNC_PROCESS_BUFFER[$worker]+=${line//$'\r'$'\n'/$'\n'}
 		# Split buffer on null characters, preserve empty elements
-		items=("${(@)=ASYNC_PROCESS_BUFFER[$1]}")
+		items=("${(@)=ASYNC_PROCESS_BUFFER[$worker]}")
 		# Remove last element since it's due to the return string separator structure
 		items=("${(@)items[1,${#items}-1]}")
 
 		# Continue until we receive all information
-		(( ${#items} % 4 )) && continue
+		(( ${#items} % 5 )) && continue
 
 		# Work through all results
 		while (( ${#items} > 0 )); do
-			"$callback" "${(@)=items[1,4]}"
-			shift 4 items
+			"$callback" "${(@)=items[1,5]}"
+			shift 5 items
 			count+=1
 		done
 
 		# Empty the buffer
-		ASYNC_PROCESS_BUFFER[$1]=""
+		ASYNC_PROCESS_BUFFER[$worker]=""
 	done
 
 	# If we processed any results, return success
@@ -196,7 +222,7 @@ async_flush_jobs() {
 
 	# Clear any partial buffers
 	typeset -gA ASYNC_PROCESS_BUFFER
-	ASYNC_PROCESS_BUFFER[$1]=""
+	ASYNC_PROCESS_BUFFER[$worker]=""
 }
 
 #
