@@ -100,6 +100,9 @@ prompt_pure_set_title() {
 }
 
 prompt_pure_preexec() {
+	# attempt to detect and prevent prompt_pure_async_git_fetch from interfering with the user
+	[[ $2 =~ git\ .*(pull|fetch) ]] && async_flush_jobs 'prompt_pure'
+
 	prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
 	# shows the current dir and executed command in the title while a process is active

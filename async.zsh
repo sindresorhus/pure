@@ -81,7 +81,12 @@ _async_worker() {
 		# Check for non-job commands sent to worker
 		case "$job" in
 		_killjobs)
-			kill -KILL ${${(v)jobstates##*:*:}%\=*} &>/dev/null
+			# Do nothing in the worker when receiving the TERM signal
+			trap '' TERM
+			# Send TERM to the entire process group (PID and all children)
+			kill -TERM -$$ &>/dev/null
+			# Reset trap
+			trap - TERM
 			continue
 			;;
 		esac
