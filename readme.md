@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast ZSH prompt
 
-![](screenshot.png)
+<img src="screenshot.png" width="550">
 
 
 ## Overview
