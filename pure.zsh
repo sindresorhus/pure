@@ -223,7 +223,7 @@ prompt_pure_async_git_dirty() {
 	local untracked_dirty=$1; shift
 
 	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	cd -q "$*"
+	builtin cd -q "$*"
 
 	if [[ "$untracked_dirty" == "0" ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
@@ -236,7 +236,7 @@ prompt_pure_async_git_dirty() {
 
 prompt_pure_async_git_fetch() {
 	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	cd -q "$*"
+	builtin cd -q "$*"
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
