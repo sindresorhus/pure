@@ -152,6 +152,15 @@ antigen bundle mafredri/zsh-async
 antigen bundle sindresorhus/pure
 ```
 
+### [antibody](https://github.com/getantibody/antibody)
+
+Update your `.zshrc` file with the following two lines (order matters):
+
+```
+antibody bundle mafredri/zsh-async
+antibody bundle sindresorhus/pure
+```
+
 ## FAQ
 
 ### My preprompt is missing when I clear the screen with Ctrl+L
