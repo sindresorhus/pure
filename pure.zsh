@@ -239,7 +239,7 @@ prompt_pure_async_git_fetch() {
 	builtin cd -q "$*"
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
-	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
+	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch --append
 }
 
 prompt_pure_async_tasks() {
