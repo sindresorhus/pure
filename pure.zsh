@@ -85,7 +85,7 @@ prompt_pure_check_git_arrows() {
 }
 
 prompt_pure_set_title() {
-	# do not set title if PURE_SET_TITLE is equal to 0
+	# do not set title if PURE_SET_TITLE is set to 0
 	(( ${PURE_SET_TITLE:-1} == 0 )) && return
 
 	# tell the terminal we are setting the title
