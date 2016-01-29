@@ -28,7 +28,7 @@ Can be installed with `npm` or manually. Requires git 2.0.0+ and ZSH 5.0.0+.
 
 ### npm
 
-```
+```console
 $ npm install --global pure-prompt
 ```
 
@@ -47,7 +47,7 @@ That's it. Skip to [Getting started](#getting-started).
 
 #### Example
 
-```
+```console
 $ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
 $ ln -s "$PWD/async.zsh" /usr/local/share/zsh/site-functions/async
 ```
@@ -62,7 +62,7 @@ fpath=( "$HOME/.zfunctions" $fpath )
 
 Then install the theme there:
 
-```sh
+```console
 $ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
 $ ln -s "$PWD/async.zsh" "$HOME/.zfunctions/async"
 ```
@@ -147,18 +147,18 @@ Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
 Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
 
-```
-antigen bundle mafredri/zsh-async
-antigen bundle sindresorhus/pure
+```console
+$ antigen bundle mafredri/zsh-async
+$ antigen bundle sindresorhus/pure
 ```
 
 ### [antibody](https://github.com/getantibody/antibody)
 
 Update your `.zshrc` file with the following two lines (order matters):
 
-```
-antibody bundle mafredri/zsh-async
-antibody bundle sindresorhus/pure
+```console
+$ antibody bundle mafredri/zsh-async
+$ antibody bundle sindresorhus/pure
 ```
 
 ## FAQ
@@ -180,9 +180,9 @@ Using `git pull` when you get the username prompt should help you to break the l
 
 #### Gentoo
 
-```
-sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
-sudo emerge -1 zsh
+```console
+$ sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
+$ sudo emerge -1 zsh
 ```
 
 #### FreeBSD 10.1
