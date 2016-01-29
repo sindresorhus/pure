@@ -141,6 +141,8 @@ To have commands colorized as seen in the screenshot install [zsh-syntax-highlig
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
+Pure is bundled with Prezto. No need to install it.
+
 Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
 ### [antigen](https://github.com/zsh-users/antigen)
