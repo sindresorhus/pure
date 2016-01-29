@@ -109,6 +109,10 @@ Defines the git down arrow symbol. The default value is `⇣`.
 
 Defines the git up arrow symbol. The default value is `⇡`.
 
+## `PURE_SET_TITLE`
+
+Set `PURE_SET_TITLE=0` to prevent Pure from setting terminal title.
+
 ## Example
 
 ```sh
