@@ -148,8 +148,8 @@ Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
 
 ```console
-antigen bundle mafredri/zsh-async
-antigen bundle sindresorhus/pure
+$ antigen bundle mafredri/zsh-async
+$ antigen bundle sindresorhus/pure
 ```
 
 ### [antibody](https://github.com/getantibody/antibody)
@@ -157,8 +157,8 @@ antigen bundle sindresorhus/pure
 Update your `.zshrc` file with the following two lines (order matters):
 
 ```console
-antibody bundle mafredri/zsh-async
-antibody bundle sindresorhus/pure
+$ antibody bundle mafredri/zsh-async
+$ antibody bundle sindresorhus/pure
 ```
 
 ## FAQ
@@ -181,8 +181,8 @@ Using `git pull` when you get the username prompt should help you to break the l
 #### Gentoo
 
 ```console
-sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
-sudo emerge -1 zsh
+$ sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
+$ sudo emerge -1 zsh
 ```
 
 #### FreeBSD 10.1
