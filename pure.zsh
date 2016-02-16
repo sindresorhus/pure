@@ -85,6 +85,9 @@ prompt_pure_check_git_arrows() {
 }
 
 prompt_pure_set_title() {
+	# emacs terminal does not support settings the title
+	(( ${+EMACS} )) && return
+
 	# tell the terminal we are setting the title
 	print -n '\e]0;'
 	# show hostname if connected through ssh
@@ -174,9 +177,6 @@ prompt_pure_preprompt_render() {
 		elif (( last_lines < lines )); then
 			# move cursor using newlines because ansi cursor movement can't push the cursor beyond the last line
 			printf $'\n'%.0s {1..$(( lines - last_lines ))}
-
-			# redraw the prompt since it has been moved by print
-			zle && zle .reset-prompt
 		fi
 
 		# disable clearing of line if last char of preprompt is last column of terminal
@@ -184,7 +184,10 @@ prompt_pure_preprompt_render() {
 		(( COLUMNS * lines == preprompt_length )) && clr=
 
 		# modify previous preprompt
-		print -Pn "\e7${clr_prev_preprompt}\e[${lines}A\e[1G${preprompt}${clr}\e8"
+		print -Pn "${clr_prev_preprompt}\e[${lines}A\e[${COLUMNS}D${preprompt}${clr}\n"
+
+		# redraw prompt (also resets cursor position)
+		zle && zle .reset-prompt
 	fi
 
 	# store previous preprompt for comparison
