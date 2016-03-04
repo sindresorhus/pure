@@ -14,7 +14,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Comes with the perfect prompt character.  
   Author went through the whole Unicode range to find it.
 - Shows `git` branch and whether it's dirty (with a `*`).
-- Indicates when you have unpushed/unpulled `git` commits with up/down arrows.
+- Indicates when you have unpushed/unpulled `git` commits with up/down arrows. *(Check is done asynchronously!)*
 - Prompt character turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
 - Username and host only displayed when in an SSH session.
