@@ -125,10 +125,11 @@ prompt pure
 
 ## Tips
 
-[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above. Just make sure you have anti-aliasing enabled in your Terminal.
+[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme)<sup>1</sup> theme with the [Droid Sans Mono](http://www.google.com/webfonts/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above. Just make sure you have anti-aliasing enabled in your Terminal.
 
 To have commands colorized as seen in the screenshot install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
 
+<sup>1</sup> <sub>The screenshot shows the theme colors interpreted in the sRGB color space rather than the Generic RGB color space in which the theme is specified. Thus, the colors differ slightly from the theme's regular appearance.</sub>
 
 ## Integration
 
