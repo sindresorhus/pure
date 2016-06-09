@@ -145,8 +145,8 @@ prompt_pure_preprompt_render() {
 	if [[ "$1" == "precmd" ]]; then
 		print -P "\n${preprompt}"
 	else
-		# only redraw if preprompt has changed
-		[[ "${prompt_pure_last_preprompt}" != "${preprompt}" ]] || return
+		# only redraw if the expanded preprompt has changed
+		[[ "${prompt_pure_last_preprompt[2]}" != "${(S%%)preprompt}" ]] || return
 
 		# calculate length of preprompt and store it locally in preprompt_length
 		integer preprompt_length lines
@@ -157,7 +157,7 @@ prompt_pure_preprompt_render() {
 
 		# calculate previous preprompt lines to figure out how the new preprompt should behave
 		integer last_preprompt_length last_lines
-		prompt_pure_string_length_to_var "${prompt_pure_last_preprompt}" "last_preprompt_length"
+		prompt_pure_string_length_to_var "${prompt_pure_last_preprompt[1]}" "last_preprompt_length"
 		(( last_lines = ( last_preprompt_length - 1 ) / COLUMNS + 1 ))
 
 		# clr_prev_preprompt erases visual artifacts from previous preprompt
@@ -190,8 +190,8 @@ prompt_pure_preprompt_render() {
 		zle && zle .reset-prompt
 	fi
 
-	# store previous preprompt for comparison
-	prompt_pure_last_preprompt=$preprompt
+	# store both unexpanded and expanded preprompt for comparison
+	typeset -ag prompt_pure_last_preprompt=("$preprompt" "${(S%%)preprompt}")
 }
 
 prompt_pure_precmd() {
