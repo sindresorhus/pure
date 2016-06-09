@@ -141,6 +141,9 @@ prompt_pure_preprompt_render() {
 	# execution time
 	preprompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
 
+	# make sure prompt_pure_last_preprompt is a global array
+	typeset -g -a prompt_pure_last_preprompt
+
 	# if executing through precmd, do not perform fancy terminal editing
 	if [[ "$1" == "precmd" ]]; then
 		print -P "\n${preprompt}"
@@ -191,7 +194,7 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# store both unexpanded and expanded preprompt for comparison
-	typeset -ag prompt_pure_last_preprompt=("$preprompt" "${(S%%)preprompt}")
+	prompt_pure_last_preprompt=("$preprompt" "${(S%%)preprompt}")
 }
 
 prompt_pure_precmd() {
