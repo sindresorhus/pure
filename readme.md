@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast ZSH prompt
 
-<img src="screenshot.png" width="550">
+<img src="screenshot.png" width="864">
 
 
 ## Overview
@@ -125,11 +125,13 @@ prompt pure
 
 ## Tips
 
-[Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](https://fonts.google.com/specimen/Droid+Sans+Mono) font (15pt) is a beautiful combination, as seen in the screenshot above.<sup>1</sup> Just make sure you have anti-aliasing enabled in your Terminal.
+In the screenshot you see Pure running in [HyperTerm](https://hyperterm.org) with the [hyperterm-snazzy](https://github.com/sindresorhus/hyperterm-snazzy) theme and Menlo font.
 
-To have commands colorized as seen in the screenshot install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
+The [Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](https://fonts.google.com/specimen/Droid+Sans+Mono) font (15pt) is also a [nice combination](https://github.com/sindresorhus/pure/blob/95ee3e7618c6e2162a1e3cdac2a88a20ac3beb27/screenshot.png).<br>
+*Just make sure you have anti-aliasing enabled in your terminal.*
 
-<sup>1</sup> <sub>The screenshot shows the theme colors interpreted in the sRGB color space rather than the Generic RGB color space in which the theme is specified. Thus, the colors differ slightly from the theme's regular appearance.</sub>
+To have commands colorized as seen in the screenshot, install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
+
 
 ## Integration
 
