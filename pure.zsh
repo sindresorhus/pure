@@ -132,9 +132,8 @@ prompt_pure_preprompt_render() {
 
 	# construct preprompt, beginning with path
 	local preprompt="%F{blue}%~%f"
-	# git info, delay evaluation of branch name until the prompt expansion to
-	# prevent e.g. double variable interpolation
-	preprompt+="%F{$git_color}"'$vcs_info_msg_0_'"${prompt_pure_git_dirty}%f"
+	# git info
+	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
 	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
