@@ -74,7 +74,7 @@ Initialize the prompt system (if not so already) and choose `pure`:
 
 ```sh
 # .zshrc
-autoload -U promptinit && promptinit
+autoload -U promptinit; promptinit
 prompt pure
 ```
 
@@ -114,7 +114,7 @@ Defines the git up arrow symbol. The default value is `⇡`.
 ```sh
 # .zshrc
 
-autoload -U promptinit && promptinit
+autoload -U promptinit; promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
