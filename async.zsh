@@ -3,7 +3,7 @@
 #
 # zsh-async
 #
-# version: 1.2.0
+# version: 1.3.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
@@ -26,7 +26,7 @@ _async_job() {
 	unset stdout stderr ret
 	eval "$(
 		{
-			stdout=$(eval "$@")
+			stdout=$(eval '$@')
 			ret=$?
 			typeset -p stdout ret
 		} 2> >(stderr=$(cat); typeset -p stderr)
@@ -91,9 +91,21 @@ _async_worker() {
 		esac
 	done
 
-	while read -r cmd; do
-		# Separate on spaces into an array
-		cmd=(${=cmd})
+	local -a buffer
+	# Command arguments are separated with a null character.
+	while read -r -d $'\0' line; do
+		if [[ $line != ___ZSH_ASNYC_EOC___ ]]; then
+			# Read command arguments until we receive magic end-of-command string.
+			buffer+=($line)
+			continue
+		fi
+
+		# Copy command buffer
+		cmd=("${(@)=buffer}")
+
+		# Reset command buffer
+		buffer=()
+
 		local job=$cmd[1]
 
 		# Check for non-job commands sent to worker
@@ -223,7 +235,14 @@ async_job() {
 	setopt localoptions noshwordsplit
 
 	local worker=$1; shift
-	zpty -w $worker $@
+
+	local cmd p
+	for p in "$@"; do
+		cmd+="$p"$'\0'
+	done
+	cmd+=___ZSH_ASNYC_EOC___$'\0'
+
+	zpty -w $worker $cmd
 }
 
 # This function traps notification signals and calls all registered callbacks
@@ -283,7 +302,7 @@ async_flush_jobs() {
 	zpty -t $worker &>/dev/null || return 1
 
 	# Send kill command to worker
-	zpty -w $worker "_killjobs"
+	async_job $worker "_killjobs"
 
 	# Clear all output buffers
 	while zpty -r $worker line; do true; done
