@@ -125,7 +125,7 @@ prompt pure
 
 ## Tips
 
-In the screenshot you see Pure running in [HyperTerm](https://hyperterm.org) with the [hyperterm-snazzy](https://github.com/sindresorhus/hyperterm-snazzy) theme and Menlo font.
+In the screenshot you see Pure running in [Hyper](https://hyper.is) with the [hyper-snazzy](https://github.com/sindresorhus/hyper-snazzy) theme and Menlo font.
 
 The [Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) theme with the [Droid Sans Mono](https://fonts.google.com/specimen/Droid+Sans+Mono) font (15pt) is also a [nice combination](https://github.com/sindresorhus/pure/blob/95ee3e7618c6e2162a1e3cdac2a88a20ac3beb27/screenshot.png).<br>
 *Just make sure you have anti-aliasing enabled in your terminal.*
