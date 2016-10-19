@@ -101,6 +101,18 @@ Time in seconds to delay git dirty checking for large repositories (git status t
 
 Defines the prompt symbol. The default value is `❯`.
 
+### `PURE_PREPROMPT_COLOR`
+
+Defines the color for the prepromt line. The default value is `blue`.
+
+### `PURE_SUCCESS_COLOR`
+
+Defines the color for the prompt with exit code `0`. The default value is `magenta`.
+
+### `PURE_ERROR_COLOR`
+
+Defines the color for the prompt with exit code different than `0`. The default value is `red`.
+
 ### `PURE_GIT_DOWN_ARROW`
 
 Defines the git down arrow symbol. The default value is `⇣`.
