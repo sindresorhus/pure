@@ -201,6 +201,7 @@ On a default setup, running the command `kldload pty` should do the trick. If yo
 	* [rafaelrinaldi/pure](https://github.com/rafaelrinaldi/pure), support for bare Fish and various framework ([Oh-My-Fish](https://github.com//oh-my-fish/oh-my-fish), [Fisherman](https://github.com//fisherman/fisherman) and [Wahoo](https://github.com//bucaran/wahoo)).
 * **Zsh**
   * [therealklanni/purity](https://github.com/therealklanni/purity): a more compact current working directory, important details on the main prompt line, and extra Git indicators.
+  * [intelfx/pure](https://github.com/intelfx/pure): Solarized-friendly colors, highly verbose and fully async Git integration
 
 ## Team
 
