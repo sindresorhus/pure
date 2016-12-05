@@ -109,6 +109,14 @@ Defines the git down arrow symbol. The default value is `⇣`.
 
 Defines the git up arrow symbol. The default value is `⇡`.
 
+### `PURE_PROMPT_COLOR_FAIL`
+
+Defines the prompt arrow color when commands fail. The default is `red`.
+
+### `PURE_PROMPT_COLOR_NORMAL`
+
+Defines the prompt arrow color when commands complete successfully. The default is `magenta`.
+
 ## Example
 
 ```sh
