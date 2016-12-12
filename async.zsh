@@ -3,7 +3,7 @@
 #
 # zsh-async
 #
-# version: 1.3.0
+# version: 1.3.1
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
@@ -60,6 +60,13 @@ _async_worker() {
 	local notify_parent=0
 	local parent_pid=0
 	local coproc_pid=0
+
+	# Deactivate all zsh hooks inside the worker.
+	zsh_hooks=(chpwd periodic precmd preexec zshexit zshaddhistory)
+	unfunction $zsh_hooks &>/dev/null
+	# And hooks with registered functions.
+	zsh_hook_functions=( ${^zsh_hooks}_functions )
+	unset $zsh_hook_functions
 
 	child_exit() {
 		# If coproc (cat) is the only child running, we close it to avoid
@@ -194,7 +201,7 @@ async_process_results() {
 
 		# Work through all results
 		while (( ${#items} > 0 )); do
-			$callback "${(@)=items[1,5]}"
+			$callback "${(@)items[1,5]}"
 			shift 5 items
 			count+=1
 		done
