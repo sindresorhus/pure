@@ -137,8 +137,14 @@ To have commands colorized as seen in the screenshot, install [zsh-syntax-highli
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-1. Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/themes/pure.zsh-theme`.
-2. Set `ZSH_THEME="pure"` in your `.zshrc` file.
+1. Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/sindresorhus-pure.zsh-theme`.
+2. Symlink (or copy) `async.zsh` to `~/.oh-my-zsh/custom/async.zsh`.
+3. Set `ZSH_THEME="sindresorhus-pure"` in your `.zshrc` file.
+
+Or skip the `oh-my-zsh` integration above and simply:
+
+1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
+2. Follow the pure [Install](https://github.com/sindresorhus/pure#install) instructions.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
