@@ -164,6 +164,15 @@ $ antibody bundle mafredri/zsh-async
 $ antibody bundle sindresorhus/pure
 ```
 
+### [zplug](https://github.com/zplug/zplug)
+
+Update your zshrc with the following lines
+
+```shell
+zplug "mafredri/zsh-async", from:github
+zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
+```
+
 ## FAQ
 
 ### My preprompt is missing when I clear the screen with Ctrl+L
