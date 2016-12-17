@@ -24,7 +24,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 
 ## Install
 
-Can be installed with `npm` or manually. Requires git 2.0.0+ and ZSH 5.0.0+.
+Can be installed with `npm` or manually. Requires Git 2.0.0+ and ZSH 5.2+. Older versions of ZSH are known to work, but they are **not** recommended.
 
 ### npm
 
@@ -137,8 +137,14 @@ To have commands colorized as seen in the screenshot, install [zsh-syntax-highli
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
 
-1. Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/themes/pure.zsh-theme`.
-2. Set `ZSH_THEME="pure"` in your `.zshrc` file.
+1. Symlink (or copy) `pure.zsh` to `~/.oh-my-zsh/custom/pure.zsh-theme`.
+2. Symlink (or copy) `async.zsh` to `~/.oh-my-zsh/custom/async.zsh`.
+3. Set `ZSH_THEME="pure"` in your `.zshrc` file.
+
+Or skip the `oh-my-zsh` integration above and simply:
+
+1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
+2. Follow the Pure [Install](#install) instructions.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
