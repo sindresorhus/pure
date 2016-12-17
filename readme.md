@@ -144,7 +144,7 @@ To have commands colorized as seen in the screenshot, install [zsh-syntax-highli
 Or skip the `oh-my-zsh` integration above and simply:
 
 1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
-2. Follow the pure [Install](https://github.com/sindresorhus/pure#install) instructions.
+2. Follow the Pure [Install](#install) instructions.
 
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
