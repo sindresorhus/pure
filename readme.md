@@ -146,6 +146,12 @@ Pure is bundled with Prezto. No need to install it.
 
 Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
 
+### [zim](https://github.com/Eriner/zim)
+
+Pure is bundled with Zim. No need to install it.
+
+Set `zprompt_theme='pure'` in `~/.zimrc`.
+
 ### [antigen](https://github.com/zsh-users/antigen)
 
 Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
