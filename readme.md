@@ -162,27 +162,27 @@ Set `zprompt_theme='pure'` in `~/.zimrc`.
 
 Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
 
-```console
-$ antigen bundle mafredri/zsh-async
-$ antigen bundle sindresorhus/pure
+```sh
+antigen bundle mafredri/zsh-async
+antigen bundle sindresorhus/pure
 ```
 
 ### [antibody](https://github.com/getantibody/antibody)
 
 Update your `.zshrc` file with the following two lines (order matters):
 
-```console
-$ antibody bundle mafredri/zsh-async
-$ antibody bundle sindresorhus/pure
+```sh
+antibody bundle mafredri/zsh-async
+antibody bundle sindresorhus/pure
 ```
 
 ### [zplug](https://github.com/zplug/zplug)
 
-Update your `.zshrc` file with the following lines (order matters):
+Update your `.zshrc` file with the following two lines (order matters):
 
-```console
-$ zplug mafredri/zsh-async, from:github, defer:0  # Load this first
-$ zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
+```sh
+zplug mafredri/zsh-async, from:github, defer:0  # Load this first
+zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 ```
 
 ## FAQ
