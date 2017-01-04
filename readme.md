@@ -178,10 +178,10 @@ antibody bundle sindresorhus/pure
 
 ### [zplug](https://github.com/zplug/zplug)
 
-Update your `.zshrc` file with the following two lines (order matters):
+Update your `.zshrc` file with the following two lines:
 
 ```sh
-zplug mafredri/zsh-async, from:github, defer:0  # Load this first
+zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 ```
 
