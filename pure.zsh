@@ -78,8 +78,23 @@ prompt_pure_check_git_arrows() {
 	arrow_status=(${(ps:\t:)arrow_status})
 	local arrows left=${arrow_status[1]} right=${arrow_status[2]}
 
-	(( ${right:-0} > 0 )) && arrows+="${PURE_GIT_DOWN_ARROW:-⇣}"
-	(( ${left:-0} > 0 )) && arrows+="${PURE_GIT_UP_ARROW:-⇡}"
+	if (( ${right:-0} > 0 )); then
+        commits=$(command git rev-list --count HEAD..@{upstream} 2>/dev/null)
+        if [[ $commits ]] && (( commits )); then
+            arrows+="${commits}${PURE_GIT_DOWN_ARROW:-⇣}"
+        else
+            arrows+="${PURE_GIT_DOWN_ARROW:-⇣}"
+        fi
+    fi
+
+	if (( ${left:-0} > 0 )); then
+        commits=$(command git --count HEAD..@{upstream} 2>/dev/null)
+        if [[ $commits ]] && (( commits )); then
+            arrows+="${commits}${PURE_GIT_UP_ARROW:-⇡}"
+        else
+            arrows+="${PURE_GIT_UP_ARROW:-⇡}"
+        fi
+    fi
 
 	[[ -n $arrows ]] && prompt_pure_git_arrows=" ${arrows}"
 }
