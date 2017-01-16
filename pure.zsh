@@ -371,4 +371,14 @@ prompt_pure_setup() {
 	PROMPT="%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f "
 }
 
+# Auto notify git pull!
+function prompt_pull() {
+    git rev-parse --is-inside-work-tree &>/dev/null &&
+    git fetch &&
+    [[ $(git rev-list HEAD...origin/master --count 2>/dev/null) > 0 ]] &&
+    echo "You have stuff to pull..."
+}
+
+add-zsh-hook precmd prompt_pull
+
 prompt_pure_setup "$@"
