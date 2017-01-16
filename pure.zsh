@@ -256,7 +256,11 @@ prompt_pure_async_git_fetch() {
 	builtin cd -q "$*"
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
-	GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch
+	export GIT_TERMINAL_PROMPT=0
+	# set ssh BachMode to disable all interactive ssh password prompting
+	export GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-"ssh -o BatchMode=yes"}
+
+	command git -c gc.auto=0 fetch
 }
 
 prompt_pure_async_tasks() {
