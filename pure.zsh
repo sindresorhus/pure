@@ -121,10 +121,17 @@ prompt_pure_preprompt_render() {
 
 	# construct preprompt, beginning with path
 	local preprompt="%F{blue}%~%f"
+
 	# git info
-	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	typeset -gA prompt_pure_vcs_info
+	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
+		preprompt+=" %F{$git_color}${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f"
+	fi
 	# git pull/push arrows
-	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
+	if [[ -n $prompt_pure_git_arrows ]]; then
+		preprompt+=" %F{cyan}${prompt_pure_git_arrows}%f"
+	fi
+
 	# username and machine if applicable
 	preprompt+=$prompt_pure_username
 	# execution time
@@ -204,9 +211,6 @@ prompt_pure_precmd() {
 	# shows the full path in the title
 	prompt_pure_set_title 'expand-prompt' '%~'
 
-	# get vcs info
-	vcs_info
-
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
@@ -239,6 +243,19 @@ prompt_pure_async_git_aliases() {
 	done
 
 	print -- ${(j:|:)pullalias}  # join on pipe (for use in regex).
+}
+
+prompt_pure_async_vcs_info() {
+	setopt localoptions noshwordsplit
+	builtin cd -q $1 2>/dev/null
+
+	vcs_info
+
+	local -A info
+	info[top]=$vcs_info_msg_1_
+	info[branch]=$vcs_info_msg_0_
+
+	print -r - ${(@kvq)info}
 }
 
 # fastest possible way to check if repo is dirty
@@ -290,26 +307,33 @@ prompt_pure_async_tasks() {
 		prompt_pure_async_init=1
 	}
 
-	# store working_tree without the "x" prefix
-	local working_tree="${vcs_info_msg_1_#x}"
+	typeset -gA prompt_pure_vcs_info
 
-	# check if the working tree changed (prompt_pure_current_working_tree is prefixed by "x")
-	if [[ ${prompt_pure_current_working_tree#x} != $working_tree ]]; then
+	local -H MATCH
+	if ! [[ $PWD =~ ^$prompt_pure_vcs_info[pwd] ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
 		# reset git preprompt variables, switching working tree
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_last_dirty_check_timestamp
+		unset prompt_pure_git_arrows
 		unset prompt_pure_git_fetch_pattern
-		prompt_pure_git_arrows=
-
-		# set the new working tree and prefix with "x" to prevent the creation of a named path by AUTO_NAME_DIRS
-		prompt_pure_current_working_tree="x${working_tree}"
+		prompt_pure_vcs_info[branch]=
+		prompt_pure_vcs_info[top]=
 	fi
+	unset MATCH
 
-	# only perform tasks inside git working tree
-	[[ -n $working_tree ]] || return
+	async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
+
+	# # only perform tasks inside git working tree
+	[[ -n $prompt_pure_vcs_info[top] ]] || return
+
+	prompt_pure_async_refresh
+}
+
+prompt_pure_async_refresh() {
+	setopt localoptions noshwordsplit
 
 	if [[ -z $prompt_pure_git_fetch_pattern ]]; then
 		# we set the pattern here to avoid redoing the pattern check until the
@@ -318,12 +342,12 @@ prompt_pure_async_tasks() {
 		async_job "prompt_pure" prompt_pure_async_git_aliases $working_tree
 	fi
 
-	async_job "prompt_pure" prompt_pure_async_git_arrows $working_tree
+	async_job "prompt_pure" prompt_pure_async_git_arrows $PWD
 
 	# do not preform git fetch if it is disabled or working_tree == HOME
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
 		# tell worker to do a git fetch
-		async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_fetch $PWD
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
@@ -331,7 +355,7 @@ prompt_pure_async_tasks() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
 	fi
 }
 
@@ -343,7 +367,7 @@ prompt_pure_check_git_arrows() {
 	(( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-⇡}
 
 	[[ -n $arrows ]] || return
-	typeset -g REPLY=" $arrows"
+	typeset -g REPLY=$arrows
 }
 
 prompt_pure_async_callback() {
@@ -351,6 +375,35 @@ prompt_pure_async_callback() {
 	local job=$1 code=$2 output=$3 exec_time=$4
 
 	case $job in
+		prompt_pure_async_vcs_info)
+			local -A info
+			typeset -gA prompt_pure_vcs_info
+
+			info=("${(Q@)=output}")
+			local -H MATCH
+			# check if git toplevel has changed
+			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
+				# if stored pwd is part of $PWD, $PWD is shorter and likelier
+				# to be toplevel, so we update pwd
+				if [[ $prompt_pure_vcs_info[pwd] =~ ^$PWD ]]; then
+					prompt_pure_vcs_info[pwd]=$PWD
+				fi
+			else
+				# store $PWD to detect if we (maybe) left the git path
+				prompt_pure_vcs_info[pwd]=$PWD
+			fi
+			unset MATCH
+
+			# update has a git toplevel set which means we just entered a new
+			# git directory, run the async refresh tasks
+			[[ -n $info[top] ]] && [[ -z $prompt_pure_vcs_info[top] ]] && prompt_pure_async_refresh
+
+			# always update branch and toplevel
+			prompt_pure_vcs_info[branch]=$info[branch]
+			prompt_pure_vcs_info[top]=$info[top]
+
+			prompt_pure_preprompt_render
+			;;
 		prompt_pure_async_git_aliases)
 			if [[ -n $output ]]; then
 				# append custom git aliases to the predefined ones.
@@ -413,10 +466,9 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:*' use-simple true
 	# only export two msg variables from vcs_info
 	zstyle ':vcs_info:*' max-exports 2
-	# vcs_info_msg_0_ = ' %b' (for branch)
-	# vcs_info_msg_1_ = 'x%R' git top level (%R), x-prefix prevents creation of a named path (AUTO_NAME_DIRS)
-	zstyle ':vcs_info:git*' formats ' %b' 'x%R'
-	zstyle ':vcs_info:git*' actionformats ' %b|%a' 'x%R'
+	# export branch (%b) and git toplevel (%R)
+	zstyle ':vcs_info:git*' formats '%b' '%R'
+	zstyle ':vcs_info:git*' actionformats '%b|%a' '%R'
 
 	# if the user has not registered a custom zle widget for clear-screen,
 	# override the builtin one so that the preprompt is displayed correctly when
