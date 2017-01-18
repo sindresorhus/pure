@@ -136,8 +136,13 @@ prompt_pure_preprompt_render() {
 	local git_color=242
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
-	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	# initialize the preprompt
+	local preprompt=
+	# show if we are in a nested shell
+	(( SHLVL > 1 )) && preprompt+="%F{240}${(l:$((SHLVL-1))::!:)}%f "
+	# add current path
+	preprompt+="%F{blue}%~%f"
+
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
