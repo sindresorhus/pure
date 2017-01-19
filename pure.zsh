@@ -61,29 +61,6 @@ prompt_pure_clear_screen() {
 	prompt_pure_preprompt_render precmd
 }
 
-prompt_pure_check_git_arrows() {
-	# reset git arrows
-	prompt_pure_git_arrows=
-
-	# check if there is an upstream configured for this branch
-	command git rev-parse --abbrev-ref @'{u}' &>/dev/null || return
-
-	local arrow_status
-	# check git left and right arrow_status
-	arrow_status="$(command git rev-list --left-right --count HEAD...@'{u}' 2>/dev/null)"
-	# exit if the command failed
-	(( !$? )) || return
-
-	# left and right are tab-separated, split on tab and store as array
-	arrow_status=(${(ps:\t:)arrow_status})
-	local arrows left=${arrow_status[1]} right=${arrow_status[2]}
-
-	(( ${right:-0} > 0 )) && arrows+="${PURE_GIT_DOWN_ARROW:-⇣}"
-	(( ${left:-0} > 0 )) && arrows+="${PURE_GIT_UP_ARROW:-⇡}"
-
-	[[ -n $arrows ]] && prompt_pure_git_arrows=" ${arrows}"
-}
-
 prompt_pure_set_title() {
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
@@ -216,9 +193,6 @@ prompt_pure_precmd() {
 	# with the initial preprompt rendering
 	prompt_pure_cmd_timestamp=
 
-	# check for git arrows
-	prompt_pure_check_git_arrows
-
 	# shows the full path in the title
 	prompt_pure_set_title 'expand-prompt' '%~'
 
@@ -237,33 +211,46 @@ prompt_pure_precmd() {
 
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
-	local untracked_dirty=$1; shift
+	setopt localoptions noshwordsplit
+	local untracked_dirty=$1 dir=$2
 
 	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q "$*"
+	builtin cd -q $dir
 
-	if [[ "$untracked_dirty" == "0" ]]; then
+	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
 	else
 		test -z "$(command git status --porcelain --ignore-submodules -unormal)"
 	fi
 
-	(( $? )) && echo "*"
+	return $?
 }
 
 prompt_pure_async_git_fetch() {
+	setopt localoptions noshwordsplit
 	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q "$*"
+	builtin cd -q $1
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	export GIT_TERMINAL_PROMPT=0
 	# set ssh BachMode to disable all interactive ssh password prompting
 	export GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-"ssh -o BatchMode=yes"}
 
-	command git -c gc.auto=0 fetch
+	command git -c gc.auto=0 fetch &>/dev/null || return 1
+
+	# check arrow status after a successful git fetch
+	prompt_pure_async_git_arrows $1
+}
+
+prompt_pure_async_git_arrows() {
+	setopt localoptions noshwordsplit
+	builtin cd -q $1
+	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
 prompt_pure_async_tasks() {
+	setopt localoptions noshwordsplit
+
 	# initialize async worker
 	((!${prompt_pure_async_init:-0})) && {
 		async_start_worker "prompt_pure" -u -n
@@ -282,6 +269,7 @@ prompt_pure_async_tasks() {
 		# reset git preprompt variables, switching working tree
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_last_dirty_check_timestamp
+		prompt_pure_git_arrows=
 
 		# set the new working tree and prefix with "x" to prevent the creation of a named path by AUTO_NAME_DIRS
 		prompt_pure_current_working_tree="x${working_tree}"
@@ -290,10 +278,12 @@ prompt_pure_async_tasks() {
 	# only perform tasks inside git working tree
 	[[ -n $working_tree ]] || return
 
+	async_job "prompt_pure" prompt_pure_async_git_arrows $working_tree
+
 	# do not preform git fetch if it is disabled or working_tree == HOME
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
 		# tell worker to do a git fetch
-		async_job "prompt_pure" prompt_pure_async_git_fetch "${working_tree}"
+		async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
@@ -301,28 +291,52 @@ prompt_pure_async_tasks() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty "${PURE_GIT_UNTRACKED_DIRTY:-1}" "${working_tree}"
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $working_tree
 	fi
 }
 
-prompt_pure_async_callback() {
-	local job=$1
-	local output=$3
-	local exec_time=$4
+prompt_pure_check_git_arrows() {
+	setopt localoptions noshwordsplit
+	local arrows left=${1:-0} right=${2:-0}
 
-	case "${job}" in
+	(( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-⇣}
+	(( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-⇡}
+
+	[[ -n $arrows ]] || return
+	typeset -g REPLY=" $arrows"
+}
+
+prompt_pure_async_callback() {
+	setopt localoptions noshwordsplit
+	local job=$1 code=$2 output=$3 exec_time=$4
+
+	case $job in
 		prompt_pure_async_git_dirty)
-			prompt_pure_git_dirty=$output
-			prompt_pure_preprompt_render
+			local prev_dirty=$prompt_pure_git_dirty
+			if (( code == 0 )); then
+				prompt_pure_git_dirty=
+			else
+				prompt_pure_git_dirty="*"
+			fi
+
+			[[ $prev_dirty != $prompt_pure_git_dirty ]] && prompt_pure_preprompt_render
 
 			# When prompt_pure_git_last_dirty_check_timestamp is set, the git info is displayed in a different color.
 			# To distinguish between a "fresh" and a "cached" result, the preprompt is rendered before setting this
 			# variable. Thus, only upon next rendering of the preprompt will the result appear in a different color.
 			(( $exec_time > 2 )) && prompt_pure_git_last_dirty_check_timestamp=$EPOCHSECONDS
 			;;
-		prompt_pure_async_git_fetch)
-			prompt_pure_check_git_arrows
-			prompt_pure_preprompt_render
+		prompt_pure_async_git_fetch|prompt_pure_async_git_arrows)
+			# prompt_pure_async_git_fetch executes prompt_pure_async_git_arrows
+			# after a successful fetch.
+			if (( code == 0 )); then
+				local REPLY
+				prompt_pure_check_git_arrows ${(ps:\t:)output}
+				if [[ $prompt_pure_git_arrows != $REPLY ]]; then
+					prompt_pure_git_arrows=$REPLY
+					prompt_pure_preprompt_render
+				fi
+			fi
 			;;
 	esac
 }
