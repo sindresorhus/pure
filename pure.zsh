@@ -216,14 +216,19 @@ prompt_pure_precmd() {
 	# with the initial preprompt rendering
 	prompt_pure_cmd_timestamp=
 
-	# check for git arrows
-	prompt_pure_check_git_arrows
+	# check if we are in a fuse directory
+	if [[ `stat -f -L -c %T $PWD` == *fuseblk* ]]; then
+		unset prompt_pure_git_arrows
+		unset vcs_info_msg_0_
+	else
+		# check for git arrows
+		prompt_pure_check_git_arrows
+		# get vcs info
+		vcs_info
+	fi
 
 	# shows the full path in the title
 	prompt_pure_set_title 'expand-prompt' '%~'
-
-	# get vcs info
-	vcs_info
 
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
