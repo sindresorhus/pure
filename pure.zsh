@@ -342,11 +342,20 @@ prompt_pure_async_callback() {
 }
 
 prompt_pure_setup() {
+	local autoload_name=$1; shift
+
 	# prevent percentage showing up
 	# if output doesn't end with a newline
 	export PROMPT_EOL_MARK=''
 
 	prompt_opts=(subst percent)
+
+	# if autoload_name or eval context differ, pure wasn't autoloaded via
+	# promptinit and we need to take care of setting the options ourselves
+	if [[ $autoload_name != prompt_pure_setup ]] || [[ $zsh_eval_context[-2] != loadautofunc ]]; then
+		# borrowed from `promptinit`, set the pure prompt options
+		setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
+	fi
 
 	zmodload zsh/datetime
 	zmodload zsh/zle
@@ -385,4 +394,4 @@ prompt_pure_setup() {
 	PROMPT='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
 
-prompt_pure_setup "$@"
+prompt_pure_setup "$0" "$@"
