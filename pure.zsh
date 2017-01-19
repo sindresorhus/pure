@@ -137,9 +137,9 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	local preprompt="%F{red}[ %F{blue}%~%f%F{red} ]"
 	# git info
-	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	preprompt+="%F{$git_color} ${vcs_info_msg_0_} ${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
 	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
@@ -312,7 +312,7 @@ prompt_pure_async_callback() {
 
 	case "${job}" in
 		prompt_pure_async_git_dirty)
-			prompt_pure_git_dirty=$output
+			prompt_pure_git_dirty="$output"
 			prompt_pure_preprompt_render
 
 			# When prompt_pure_git_last_dirty_check_timestamp is set, the git info is displayed in a different color.
@@ -342,16 +342,15 @@ prompt_pure_setup() {
 	autoload -Uz vcs_info
 	autoload -Uz async && async
 
-	add-zsh-hook precmd prompt_pure_precmd
+add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
-
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
 	# only export two msg variables from vcs_info
 	zstyle ':vcs_info:*' max-exports 2
 	# vcs_info_msg_0_ = ' %b' (for branch)
 	# vcs_info_msg_1_ = 'x%R' git top level (%R), x-prefix prevents creation of a named path (AUTO_NAME_DIRS)
-	zstyle ':vcs_info:git*' formats ' %b' 'x%R'
+	zstyle ':vcs_info:git*' formats '[ %b ]' 'x%R'
 	zstyle ':vcs_info:git*' actionformats ' %b|%a' 'x%R'
 
 	# if the user has not registered a custom zle widget for clear-screen,
