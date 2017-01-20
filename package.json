@@ -1,6 +1,6 @@
 {
   "name": "pure-prompt",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Pretty, minimal and fast ZSH prompt",
   "license": "MIT",
   "repository": "sindresorhus/pure",
