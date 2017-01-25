@@ -101,6 +101,10 @@ Time in seconds to delay git dirty checking for large repositories (git status t
 
 Defines the prompt symbol. The default value is `❯`.
 
+### `PURE_PROMPT_SYSTEM_TIME`
+
+Displays system time before the prompt symbol.
+
 ### `PURE_GIT_DOWN_ARROW`
 
 Defines the git down arrow symbol. The default value is `⇣`.
