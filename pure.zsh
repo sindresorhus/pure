@@ -379,7 +379,8 @@ prompt_pure_async_callback() {
 			local -A info
 			typeset -gA prompt_pure_vcs_info
 
-			info=("${(Q@)=output}")
+			# parse output (z) and unquote as array (Q@)
+			info=("${(Q@)${(z)output}}")
 			local -H MATCH
 			# check if git toplevel has changed
 			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
