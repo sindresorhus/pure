@@ -80,11 +80,13 @@ prompt_pure_set_title() {
 }
 
 prompt_pure_preexec() {
-	# detect when git is performing pull/fetch (including git aliases).
-	if [[ $2 =~ (git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)(\ .*)?$ ]]; then
-		# we must flush the async jobs to cancel our git fetch in order
-		# to avoid conflicts with the user issued pull / fetch.
-		async_flush_jobs 'prompt_pure'
+	if [[ -n $prompt_pure_git_fetch_pattern ]]; then
+		# detect when git is performing pull/fetch (including git aliases).
+		if [[ $2 =~ (git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)(\ .*)?$ ]]; then
+			# we must flush the async jobs to cancel our git fetch in order
+			# to avoid conflicts with the user issued pull / fetch.
+			async_flush_jobs 'prompt_pure'
+		fi
 	fi
 
 	prompt_pure_cmd_timestamp=$EPOCHSECONDS
