@@ -436,6 +436,12 @@ prompt_pure_async_callback() {
 					prompt_pure_git_arrows=$REPLY
 					prompt_pure_preprompt_render
 				fi
+			else
+				# non-zero exit means there is no upstream configured.
+				if [[ -n $prompt_pure_git_arrows ]]; then
+					unset prompt_pure_git_arrows
+					prompt_pure_preprompt_render
+				fi
 			fi
 			;;
 	esac
