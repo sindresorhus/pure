@@ -302,6 +302,16 @@ prompt_pure_async_vcs_info() {
 	setopt localoptions noshwordsplit
 	builtin cd -q $1 2>/dev/null
 
+	# configure vcs_info inside async task, this frees up vcs_info
+	# to be used or configured as the user pleases.
+	zstyle ':vcs_info:*' enable git
+	zstyle ':vcs_info:*' use-simple true
+	# only export two msg variables from vcs_info
+	zstyle ':vcs_info:*' max-exports 2
+	# export branch (%b) and git toplevel (%R)
+	zstyle ':vcs_info:git*' formats '%b' '%R'
+	zstyle ':vcs_info:git*' actionformats '%b|%a' '%R'
+
 	vcs_info
 
 	local -A info
@@ -521,14 +531,6 @@ prompt_pure_setup() {
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
-
-	zstyle ':vcs_info:*' enable git
-	zstyle ':vcs_info:*' use-simple true
-	# only export two msg variables from vcs_info
-	zstyle ':vcs_info:*' max-exports 2
-	# export branch (%b) and git toplevel (%R)
-	zstyle ':vcs_info:git*' formats '%b' '%R'
-	zstyle ':vcs_info:git*' actionformats '%b|%a' '%R'
 
 	# if the user has not registered a custom zle widget for clear-screen,
 	# override the builtin one so that the preprompt is displayed correctly when
