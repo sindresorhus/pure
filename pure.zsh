@@ -200,7 +200,7 @@ prompt_pure_preprompt_render() {
 		else
 			# When lines equal, we can try to perform a partial prompt update.
 			integer pos
-			for (( pos = 1; pos < $#preprompt_parts; pos++ )); do
+			for (( pos = 1; pos <= $#preprompt_parts; pos++ )); do
 				patch_pos=$pos
 				if [[ $preprompt_parts[$pos] != $prompt_pure_last_preprompt[$pos] ]]; then
 					break  # We found where the preprompts differ.
