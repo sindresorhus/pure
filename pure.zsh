@@ -106,151 +106,64 @@ prompt_pure_string_length_to_var() {
 }
 
 prompt_pure_preprompt_render() {
-	# store the current prompt_subst setting so that it can be restored later
-	local prompt_subst_status=$options[prompt_subst]
+	setopt localoptions noshwordsplit
 
-	# make sure prompt_subst is unset to prevent parameter expansion in preprompt
-	setopt local_options no_prompt_subst no_sh_word_split
+	# Check that no command is currently running, the preprompt will otherwise
+	# be rendered in the wrong place.
+	[[ -n ${prompt_pure_cmd_timestamp+x} ]] && [[ $1 != precmd ]] && return
 
-	# check that no command is currently running, the preprompt will otherwise be rendered in the wrong place
-	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
-
-	# set color for git branch/dirty status, change color if dirty checking has been delayed
+	# Set color for git branch/dirty status, change color if dirty checking has
+	# been delayed.
 	local git_color=242
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
-	# Expand the working directory for later comparison.
-	local expanded_pwd="%~"
-	expanded_pwd=${(%)expanded_pwd}
+	# Set the path.
+	preprompt_parts+=("%F{blue}%~%f")
 
-	preprompt_parts+=("%F{blue}$expanded_pwd%f")
-
-	# git info
+	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=(" %F{$git_color}${prompt_pure_vcs_info[branch]}%f")
-		preprompt_parts+=("%F{$git_color}${prompt_pure_git_dirty}%f")
+		preprompt_parts+=("%F{$git_color}\${prompt_pure_vcs_info[branch]}\${prompt_pure_git_dirty}%f")
 	fi
-	# git pull/push arrows
+	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=(" %F{cyan}${prompt_pure_git_arrows}%f")
+		preprompt_parts+=("%F{cyan}${prompt_pure_git_arrows}%f")
 	fi
 
-	# username and machine if applicable
+	# Username and machine, if applicable.
 	[[ -n $prompt_pure_username ]] && preprompt_parts+=($prompt_pure_username)
-	# execution time
+	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=("%F{yellow}${prompt_pure_cmd_exec_time}%f")
 
-	# Join the preprompt array on empty string.
-	local preprompt=${(j..)preprompt_parts}
+	local -ah ps1
 
-	# if executing through precmd, do not perform fancy terminal editing
-	if [[ "$1" == "precmd" ]]; then
-		print -P "\n${preprompt}"
-	else
-		local prev_preprompt=${(j..)prompt_pure_last_preprompt}
-		if [[ $prev_preprompt == $preprompt ]]; then
-			# Avoid redrawing when there are no changes.
-			return
-		fi
+	# Construct the new prompt, containing preprompt.
+	PROMPT=${PROMPT//$prompt_newline/$'\n'}
+	ps1=(${(f)PROMPT})  # Split on newline.
+	ps1=(
+		$prompt_newline           # Initial newline, for spaciousness.
+		${(j. .)preprompt_parts}  # Join parts, space separated.
+		$prompt_newline           # Separate preprompt and prompt.
+		$ps1[-1]                  # Keep last part of the prompt.
+	)
 
-		# We need the length/lines of the preprompt to
-		# figure out what update method we should use.
-		integer preprompt_length lines
-		prompt_pure_string_length_to_var "$preprompt" preprompt_length
-		lines=$(( ((preprompt_length - 1) / COLUMNS) + 1 ))
+	PROMPT="${(j..)ps1}"
 
-		# We use the length/lines of the previous preprompt to
-		# figure out the best update method for the new one.
-		integer last_preprompt_length last_lines
-		prompt_pure_string_length_to_var "$prev_preprompt" last_preprompt_length
-		last_lines=$(( ((last_preprompt_length - 1) / COLUMNS) + 1 ))
+	# Expand the prompt for future comparision.
+	local expanded_prompt
+	expanded_prompt="${(S%%)PROMPT}"
 
-		# The patch position can tell us if we can perform a partial redraw to
-		# update the preprompt. A partial update is faster and causes less
-		# visual flicker.
-		integer patch_pos=1
-
-		# With clr_prev_preprompt we can erase visual artifacts,
-		# if any, from the previous preprompt.
-		local clr_prev_preprompt
-
-		if (( last_lines > lines )); then
-			# Move the cursor to the top (of previous preprompt) and erase
-			# line-by-line, moving downwards, until the number of lines matches
-			# the new preprompt.
-			clr_prev_preprompt="\e[${last_lines}A\e[2K\e[1B"
-			while (( last_lines - lines > 1 )); do
-				# Add a line clear and move cursor down one line.
-				clr_prev_preprompt+='\e[2K\e[1B'
-				(( last_lines-- ))
-			done
-
-			# Move cursor all the way back down just so we can move it up again
-			# during the update, this simplifies the algorithm.
-			clr_prev_preprompt+="\e[${lines}B"
-		elif (( last_lines < lines )); then
-			# When the preprompt takes up more lines than the previous, we must
-			# make more vertical space using newlines. Ansi escape sequences
-			# alone cannot move the cursor beyond the terminal edge.
-			printf $'\n'%.0s {1..$(( lines - last_lines ))}
-		else
-			# When lines equal, we can try to perform a partial prompt update.
-			integer pos
-			for (( pos = 1; pos <= $#preprompt_parts; pos++ )); do
-				patch_pos=$pos
-				if [[ $preprompt_parts[$pos] != $prompt_pure_last_preprompt[$pos] ]]; then
-					break  # We found where the preprompts differ.
-				fi
-			done
-		fi
-
-		local clr='\e[K'
-		if (( (COLUMNS * lines) == preprompt_length )) || (( preprompt_length > last_preprompt_length )); then
-			# When the preprompt ends at the last column of the terminal, or is
-			# longer than the previous, clearing the rest makes no sense.
-			clr=
-		fi
-
-		local move_to_patch_pos
-		if (( patch_pos > 1 )); then
-			# Find out how long the matching part of the preprompt is.
-			integer patch_pos_length
-			prompt_pure_string_length_to_var "${(j..)preprompt_parts[1,$patch_pos-1]}" patch_pos_length
-
-			# Consider the line where our patch starts.
-			lines=$(( lines - (patch_pos_length / COLUMNS) ))
-
-			# Move the cursor N columns right, into the correct patch position.
-			move_to_patch_pos="\e[$(( (patch_pos_length % COLUMNS) + 1 ))G"
-
-			# Modify the prompt since we are performing a partial update.
-			preprompt=${(j..)preprompt_parts[$patch_pos,-1]}
-		fi
-
-		# Redraw preprompt, either by patching or fully redrawing.
-		# TODO: Figure out cursor position instead of relying on ESC[1G
-		# The escape, ESC[nG is not part of ANSI.SYS and is not supported by
-		# some terminal emulators, Emacs ansi-term comes to mind.
-		print -Pn "${clr_prev_preprompt}\e[${lines}A\e[1G${move_to_patch_pos}${preprompt}${clr}\n"
-
-		if [[ $prompt_subst_status = 'on' ]]; then
-			# Re-enable prompt_subst for expansion on PS1,
-			# affects zle reset-prompt.
-			setopt prompt_subst
-		fi
-
-		# Redraw prompt to reset cursor position.
+	if [[ $1 != precmd ]] && [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
+		# Redraw the prompt.
 		zle && zle .reset-prompt
 
 		setopt no_prompt_subst
 	fi
 
-	# Store the preprompt for later comparision.
-	prompt_pure_last_preprompt=($preprompt_parts)
+	prompt_pure_last_prompt=$expanded_prompt
 }
 
 prompt_pure_precmd() {
@@ -511,8 +424,7 @@ prompt_pure_async_callback() {
 }
 
 prompt_pure_setup() {
-	# prevent percentage showing up
-	# if output doesn't end with a newline
+	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
 	prompt_opts=(subst percent)
@@ -520,6 +432,11 @@ prompt_pure_setup() {
 	# borrowed from promptinit, sets the prompt options in case pure was not
 	# initialized via promptinit.
 	setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
+
+	if [[ -z $prompt_newline ]]; then
+		# This variable needs to be set, usually set by promptinit.
+		typeset -g prompt_newline=$'\n%{\r%}'
+	fi
 
 	zmodload zsh/datetime
 	zmodload zsh/zle
