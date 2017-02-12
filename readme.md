@@ -109,6 +109,14 @@ Defines the git down arrow symbol. The default value is `⇣`.
 
 Defines the git up arrow symbol. The default value is `⇡`.
 
+### `PURE_PROMPT_NORMAL_COLOR`
+
+Change prompt symbol foreground color. The default value is magenta.
+
+### `PURE_PROMPT_ERROR_COLOR`
+
+Change prompt symbol foreground color if error. The default value is red.
+
 ## Example
 
 ```sh
