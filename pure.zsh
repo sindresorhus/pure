@@ -80,8 +80,14 @@ prompt_pure_set_title() {
 }
 
 prompt_pure_preexec() {
-	# attempt to detect and prevent prompt_pure_async_git_fetch from interfering with user initiated git or hub fetch
-	[[ $2 =~ (git|hub)\ .*(pull|fetch) ]] && async_flush_jobs 'prompt_pure'
+	if [[ -n $prompt_pure_git_fetch_pattern ]]; then
+		# detect when git is performing pull/fetch (including git aliases).
+		if [[ $2 =~ (git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)(\ .*)?$ ]]; then
+			# we must flush the async jobs to cancel our git fetch in order
+			# to avoid conflicts with the user issued pull / fetch.
+			async_flush_jobs 'prompt_pure'
+		fi
+	fi
 
 	prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
@@ -209,6 +215,30 @@ prompt_pure_precmd() {
 	unset prompt_pure_cmd_timestamp
 }
 
+prompt_pure_async_git_aliases() {
+	setopt localoptions noshwordsplit
+	local dir=$1
+	local -a gitalias pullalias
+
+	# we enter repo to get local aliases as well.
+	builtin cd -q $dir
+
+	# list all aliases and split on newline.
+	gitalias=(${(@f)"$(command git config --get-regexp "^alias\.")"})
+	for line in $gitalias; do
+		parts=(${(@)=line})           # split line on spaces
+		aliasname=${parts[1]#alias.}  # grab the name (alias.[name])
+		shift parts                   # remove aliasname
+
+		# check alias for pull or fetch (must be exact match).
+		if [[ $parts =~ ^(.*\ )?(pull|fetch)(\ .*)?$ ]]; then
+			pullalias+=($aliasname)
+		fi
+	done
+
+	print -- ${(j:|:)pullalias}  # join on pipe (for use in regex).
+}
+
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
@@ -269,6 +299,7 @@ prompt_pure_async_tasks() {
 		# reset git preprompt variables, switching working tree
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_last_dirty_check_timestamp
+		unset prompt_pure_git_fetch_pattern
 		prompt_pure_git_arrows=
 
 		# set the new working tree and prefix with "x" to prevent the creation of a named path by AUTO_NAME_DIRS
@@ -277,6 +308,13 @@ prompt_pure_async_tasks() {
 
 	# only perform tasks inside git working tree
 	[[ -n $working_tree ]] || return
+
+	if [[ -z $prompt_pure_git_fetch_pattern ]]; then
+		# we set the pattern here to avoid redoing the pattern check until the
+		# working three has changed. pull and fetch are always valid patterns.
+		prompt_pure_git_fetch_pattern="pull|fetch"
+		async_job "prompt_pure" prompt_pure_async_git_aliases $working_tree
+	fi
 
 	async_job "prompt_pure" prompt_pure_async_git_arrows $working_tree
 
@@ -311,6 +349,12 @@ prompt_pure_async_callback() {
 	local job=$1 code=$2 output=$3 exec_time=$4
 
 	case $job in
+		prompt_pure_async_git_aliases)
+			if [[ -n $output ]]; then
+				# append custom git aliases to the predefined ones.
+				prompt_pure_git_fetch_pattern+="|$output"
+			fi
+			;;
 		prompt_pure_async_git_dirty)
 			local prev_dirty=$prompt_pure_git_dirty
 			if (( code == 0 )); then
