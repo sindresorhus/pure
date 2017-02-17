@@ -261,7 +261,7 @@ prompt_pure_async_git_fetch() {
 	# set ssh BachMode to disable all interactive ssh password prompting
 	export GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-"ssh -o BatchMode=yes"}
 
-	command git -c gc.auto=0 fetch &>/dev/null || return 1
+	command git -c gc.auto=0 fetch &>/dev/null || return 99
 
 	# check arrow status after a successful git fetch
 	prompt_pure_async_git_arrows $1
@@ -412,8 +412,10 @@ prompt_pure_async_callback() {
 					prompt_pure_git_arrows=$REPLY
 					prompt_pure_preprompt_render
 				fi
-			else
-				# non-zero exit means there is no upstream configured.
+			elif (( code != 99 )); then
+				# Unless the exit code is 99, prompt_pure_async_git_arrows
+				# failed with a non-zero exit status, meaning there is no
+				# upstream configured.
 				if [[ -n $prompt_pure_git_arrows ]]; then
 					unset prompt_pure_git_arrows
 					prompt_pure_preprompt_render
