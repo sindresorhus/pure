@@ -131,19 +131,22 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	local preprompt='%F{blue}%~%f'
 	# git info
-	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
+	preprompt+='%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f'
 	# git pull/push arrows
-	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
+	preprompt+='%F{cyan}${prompt_pure_git_arrows}%f'
 	# username and machine if applicable
-	preprompt+=$prompt_pure_username
+	preprompt+='$prompt_pure_username'
 	# execution time
-	preprompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
+	preprompt+='%F{yellow}${prompt_pure_cmd_exec_time}%f'
+
+	# Expand pre-prompt into the string we'll be printing
+	preprompt=$(print -Pn "${preprompt}")
 
 	# if executing through precmd, do not perform fancy terminal editing
 	if [[ "$1" == "precmd" ]]; then
-		print -P "\n${preprompt}"
+		print "\n${preprompt}"
 	else
 		# only redraw if preprompt has changed
 		[[ "${prompt_pure_last_preprompt}" != "${preprompt}" ]] || return
