@@ -59,6 +59,7 @@ prompt_pure_clear_screen() {
 	print -n '\e[2J\e[0;0H'
 	# print preprompt
 	prompt_pure_preprompt_render precmd
+	zle .reset-prompt
 }
 
 prompt_pure_set_title() {
