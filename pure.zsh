@@ -121,6 +121,12 @@ prompt_pure_preprompt_render() {
 
 	# construct preprompt, beginning with path
 	local preprompt="%F{blue}%~%f"
+
+	# display virtualenv if enabled
+	if [[ -n $VIRTUAL_ENV ]]; then
+		preprompt+=" %F{yellow}${VIRTUAL_ENV:t}%f"
+	fi
+
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
