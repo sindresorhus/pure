@@ -105,6 +105,24 @@ prompt_pure_string_length_to_var() {
 	typeset -g "${var}"="${length}"
 }
 
+prompt_pure_print_path() {
+   local upath='%~'
+   if [[ -n $vcs_info_msg_1_ ]]; then
+       # expand %~
+       upath=${(%)upath}
+       # remove git subdirectory from path to get "pretty" repo path
+       local repo=${upath%'/'$vcs_info_msg_2_}
+       if [[ $repo != $upath || $vcs_info_msg_2_ == '.' ]]; then
+           local parent="${repo:h}/"
+           # if parent is ./ we can safely remove it
+           local _repo="${parent#./}%B${repo:t}%b%F{blue}"
+           upath=${upath/$repo/$_repo}
+       fi
+   fi
+
+   print $upath
+}
+
 prompt_pure_preprompt_render() {
 	# store the current prompt_subst setting so that it can be restored later
 	local prompt_subst_status=$options[prompt_subst]
@@ -120,7 +138,7 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	local preprompt="%F{blue}$(prompt_pure_print_path)%f"
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
@@ -411,12 +429,13 @@ prompt_pure_setup() {
 
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
-	# only export two msg variables from vcs_info
-	zstyle ':vcs_info:*' max-exports 2
+	# raise max exports to 3 to also fetch path from the base of the repo
+	zstyle ':vcs_info:git*' max-exports 3
 	# vcs_info_msg_0_ = ' %b' (for branch)
 	# vcs_info_msg_1_ = 'x%R' git top level (%R), x-prefix prevents creation of a named path (AUTO_NAME_DIRS)
-	zstyle ':vcs_info:git*' formats ' %b' 'x%R'
-	zstyle ':vcs_info:git*' actionformats ' %b|%a' 'x%R'
+	# vcs_info_msg_2_ = '%S' relative path of current working directory from top level of repo
+	zstyle ':vcs_info:git*' formats ' %b' 'x%R' '%S'
+	zstyle ':vcs_info:git*' actionformats ' %b|%a' 'x%R' '%S'
 
 	# if the user has not registered a custom zle widget for clear-screen,
 	# override the builtin one so that the preprompt is displayed correctly when
