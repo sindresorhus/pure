@@ -146,11 +146,11 @@ Or skip the `oh-my-zsh` integration above and simply:
 1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
 2. Follow the Pure [Install](#install) instructions.
 
-### [prezto](https://github.com/zsh-users/prezto)
+### [prezto](https://github.com/sorin-ionescu/prezto)
 
 Pure is bundled with Prezto. No need to install it.
 
-Set `zstyle ':prezto:module:prompt' theme 'pure'` in `~/.zpreztorc`.
+Add `prompt pure` to your `~/.zpreztorc`.
 
 ### [zim](https://github.com/Eriner/zim)
 
