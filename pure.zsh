@@ -105,6 +105,16 @@ prompt_pure_string_length_to_var() {
 	typeset -g "${var}"="${length}"
 }
 
+function zle-line-init zle-keymap-select {
+	# store our vi mode
+	if [[ "${KEYMAP}" == 'vicmd' ]]; then
+		prompt_pure_vi_mode="%F{red} N %f"
+	else
+		prompt_pure_vi_mode=""
+	fi
+	prompt_pure_preprompt_render
+}
+
 prompt_pure_preprompt_render() {
 	# store the current prompt_subst setting so that it can be restored later
 	local prompt_subst_status=$options[prompt_subst]
@@ -121,6 +131,8 @@ prompt_pure_preprompt_render() {
 
 	# construct preprompt, beginning with path
 	local preprompt="%F{blue}%~%f"
+	# add vi mode if we use it
+	preprompt+=$prompt_pure_vi_mode
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
@@ -408,6 +420,9 @@ prompt_pure_setup() {
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
+
+	zle -N zle-line-init
+	zle -N zle-keymap-select
 
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
