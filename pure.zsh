@@ -138,16 +138,21 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
-	local -ah ps1
+	# Cleanup prompt (remove preprompt).
+	local trim_preprompt
+	trim_preprompt="${PROMPT#*\$PROMPT_PURE_PREPROMPT_BEGIN}"
+	trim_preprompt="${trim_preprompt%\$PROMPT_PURE_PREPROMPT_END*}"
+	PROMPT=${PROMPT/\$PROMPT_PURE_PREPROMPT_BEGIN${trim_preprompt}\$PROMPT_PURE_PREPROMPT_END}
 
-	# Construct the new prompt, containing preprompt.
-	PROMPT=${PROMPT//$prompt_newline/$'\n'}
-	ps1=(${(f)PROMPT})  # Split on newline.
+	# Construct the new prompt with a clean preprompt.
+	local -ah ps1
 	ps1=(
+		'$PROMPT_PURE_PREPROMPT_BEGIN'
 		$prompt_newline           # Initial newline, for spaciousness.
 		${(j. .)preprompt_parts}  # Join parts, space separated.
 		$prompt_newline           # Separate preprompt and prompt.
-		$ps1[-1]                  # Keep last part of the prompt.
+		'$PROMPT_PURE_PREPROMPT_END'
+		$PROMPT
 	)
 
 	PROMPT="${(j..)ps1}"
