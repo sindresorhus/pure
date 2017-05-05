@@ -140,7 +140,7 @@ prompt_pure_preprompt_render() {
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH
-	if [[ $PROMPT =~ $prompt_newline ]]; then
+	if [[ $PROMPT = *$prompt_newline* ]]; then
 		# When the prompt contains newlines, we keep everything before the first
 		# and after the last newline, leaving us with everything except the
 		# preprompt. This is needed because some software prefixes the prompt
