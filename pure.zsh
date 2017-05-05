@@ -52,15 +52,6 @@ prompt_pure_check_cmd_exec_time() {
 	}
 }
 
-prompt_pure_clear_screen() {
-	# enable output to terminal
-	zle -I
-	# clear screen and move cursor to (0, 0)
-	print -n '\e[2J\e[0;0H'
-	# Redraw prompt.
-	zle .reset-prompt
-}
-
 prompt_pure_set_title() {
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
@@ -455,13 +446,6 @@ prompt_pure_setup() {
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
-
-	# if the user has not registered a custom zle widget for clear-screen,
-	# override the builtin one so that the preprompt is displayed correctly when
-	# ^L is issued.
-	if [[ $widgets[clear-screen] == 'builtin' ]]; then
-		zle -N clear-screen prompt_pure_clear_screen
-	fi
 
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%F{242}%n@%m%f'
