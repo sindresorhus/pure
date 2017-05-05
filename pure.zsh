@@ -138,21 +138,23 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
-	# Cleanup prompt (remove preprompt).
-	local trim_preprompt
-	trim_preprompt="${PROMPT#*\$PROMPT_PURE_PREPROMPT_BEGIN}"
-	trim_preprompt="${trim_preprompt%\$PROMPT_PURE_PREPROMPT_END*}"
-	PROMPT=${PROMPT/\$PROMPT_PURE_PREPROMPT_BEGIN${trim_preprompt}\$PROMPT_PURE_PREPROMPT_END}
+	local cleaned_ps1=$PROMPT
+	local -H MATCH
+	if [[ $PROMPT =~ $prompt_newline ]]; then
+		# When the prompt contains newlines, we keep everything before the first
+		# and after the last newline, leaving us with everything except the
+		# preprompt. This is needed because some software prefixes the prompt
+		# (e.g. virtualenv).
+		cleaned_ps1=${PROMPT%%${prompt_newline}*}${PROMPT##*${prompt_newline}}
+	fi
 
 	# Construct the new prompt with a clean preprompt.
 	local -ah ps1
 	ps1=(
-		'$PROMPT_PURE_PREPROMPT_BEGIN'
 		$prompt_newline           # Initial newline, for spaciousness.
 		${(j. .)preprompt_parts}  # Join parts, space separated.
 		$prompt_newline           # Separate preprompt and prompt.
-		'$PROMPT_PURE_PREPROMPT_END'
-		$PROMPT
+		$cleaned_ps1
 	)
 
 	PROMPT="${(j..)ps1}"
