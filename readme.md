@@ -95,7 +95,11 @@ Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness che
 
 ### `PURE_GIT_DELAY_DIRTY_CHECK`
 
-Time in seconds to delay git dirty checking for large repositories (git status takes > 2 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
+Time in seconds to delay git dirty checking for "large" repositories (where git status may take longer than `PURE_GIT_STATUS_TIMEOUT` seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
+
+### `PURE_GIT_STATUS_TIMEOUT`
+
+Time in seconds to wait for `git status` to return before considering the repository "large".
 
 ### `PURE_PROMPT_SYMBOL`
 
