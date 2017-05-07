@@ -103,6 +103,16 @@ prompt_pure_preexec() {
 	export VIRTUAL_ENV_DISABLE_PROMPT=${VIRTUAL_ENV_DISABLE_PROMPT:-12}
 }
 
+prompt_pure_reset_prompt() {
+	if [[ $CONTEXT = cont ]]; then
+		# When the context is cont, PS2 is active and calling
+		# reset-prompt will have no effect on PS1.
+		return
+	fi
+
+	zle .reset-prompt
+}
+
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
@@ -160,7 +170,7 @@ prompt_pure_preprompt_render() {
 		print
 	elif [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
 		# Redraw the prompt.
-		zle && zle .reset-prompt
+		zle && zle prompt-pure-reset-prompt
 	fi
 
 	typeset -g prompt_pure_last_prompt=$expanded_prompt
@@ -641,9 +651,11 @@ prompt_pure_setup() {
 
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
+	PROMPT2='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
+	PROMPT2+='%F{242}%_%f %(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
