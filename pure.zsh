@@ -176,6 +176,10 @@ prompt_pure_precmd() {
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
+	# store name of virtualenv in psvar if activated
+	psvar[12]=
+	[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
 
@@ -425,6 +429,9 @@ prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
+	# disallow python virtualenvs from updating the prompt
+	export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 	prompt_opts=(subst percent)
 
 	# borrowed from promptinit, sets the prompt options in case pure was not
@@ -453,8 +460,11 @@ prompt_pure_setup() {
 	# show username@host if root, with username in white
 	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%f%F{242}@%m%f'
 
+	# if a virtualenv is activated, display it in grey
+	PROMPT='%(12V.%F{242}${psvar[12]}%f .)'
+
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
 
 prompt_pure_setup "$@"
