@@ -1,6 +1,6 @@
 # Pure
 
-> Pretty, minimal and fast ZSH prompt
+> Pretty, minimal and fast ZSH/Bash prompt
 
 <img src="screenshot.png" width="864">
 
@@ -36,6 +36,8 @@ That's it. Skip to [Getting started](#getting-started).
 
 ### Manually
 
+### For zsh
+
 1. Either…
   - Clone this repo
   - add it as a submodule, or
@@ -67,6 +69,14 @@ $ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
 $ ln -s "$PWD/async.zsh" "$HOME/.zfunctions/async"
 ```
 
+### For bash
+
+1. Either…
+  - Clone this repo
+  - add it as a submodule, or
+  - just download `pure.bash`
+
+2. Put it on anywhere you like.
 
 ## Getting started
 
@@ -78,6 +88,10 @@ autoload -U promptinit; promptinit
 prompt pure
 ```
 
+```sh
+# .bashrc
+source "pure.bash"
+```
 
 ## Options
 
@@ -120,6 +134,15 @@ autoload -U promptinit; promptinit
 PURE_CMD_MAX_EXEC_TIME=10
 
 prompt pure
+```
+
+```sh
+# .bashrc
+
+# optionally define some options
+PURE_CMD_MAX_EXEC_TIME=10
+
+source "pure.bash"
 ```
 
 
