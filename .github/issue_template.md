@@ -26,6 +26,8 @@ I have:
 <!--
 Please provide a minimal `.zshrc` that reproduces the issue.
 Try to remove everything that that does not affect the issue, the fewer lines, the better.
+
+Run  `$ cat .zshrc | awk '!/^#/'` to get all the lines from your .zshrc file which don't contain "#".
 -->
 
 ```shell
