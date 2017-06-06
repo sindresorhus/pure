@@ -463,6 +463,12 @@ prompt_pure_setup() {
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
+	# initialize prompt
+	PROMPT=''
+
+	# prepend system time
+	[[ "$PURE_PROMPT_SYSTEM_TIME" != '' ]] && PROMPT+='%F{white}%* '
+
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
