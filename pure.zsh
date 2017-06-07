@@ -463,6 +463,9 @@ prompt_pure_setup() {
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
+	# show username@host if root, with username in white
+	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%F{242}@%m '
+
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
