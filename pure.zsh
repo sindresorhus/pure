@@ -286,7 +286,7 @@ prompt_pure_async_tasks() {
 	typeset -gA prompt_pure_vcs_info
 
 	local -H MATCH
-	if ! [[ $PWD =~ ^$prompt_pure_vcs_info[pwd] ]]; then
+	if ! [[ $PWD = ${prompt_pure_vcs_info[pwd]}* ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
@@ -362,7 +362,7 @@ prompt_pure_async_callback() {
 			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
 				# if stored pwd is part of $PWD, $PWD is shorter and likelier
 				# to be toplevel, so we update pwd
-				if [[ $prompt_pure_vcs_info[pwd] =~ ^$PWD ]]; then
+				if [[ $prompt_pure_vcs_info[pwd] = ${PWD}* ]]; then
 					prompt_pure_vcs_info[pwd]=$PWD
 				fi
 			else
