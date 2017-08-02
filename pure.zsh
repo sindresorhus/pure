@@ -121,7 +121,7 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}\${prompt_pure_git_arrows}%f")
+		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}${prompt_pure_git_arrows}%f")
 	fi
 
 	# Username and machine, if applicable.
