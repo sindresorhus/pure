@@ -109,6 +109,18 @@ Defines the git down arrow symbol. The default value is `⇣`.
 
 Defines the git up arrow symbol. The default value is `⇡`.
 
+### `PURE_GIT_COLOR`
+
+Defines the git prompt color. The default value is `242`.
+
+### `PURE_GIT_ARROW_COLOR`
+
+Defines the git prompt arrow color. The default value is `cyan`.
+
+#### `PURE_PATH_COLOR`
+
+Defines the path color. The default value is `blue`.
+
 ## Example
 
 ```sh

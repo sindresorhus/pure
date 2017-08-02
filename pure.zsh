@@ -105,15 +105,14 @@ prompt_pure_preprompt_render() {
 
 	# Set color for git branch/dirty status, change color if dirty checking has
 	# been delayed.
-	local git_color=$GIT_COLOR:242
-    local path_color=blue
+	local git_color=${PURE_GIT_COLOR:-242}
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
 	# Set the path.
-	preprompt_parts+=("%F{${PURE_PATH_COLOR:blue}}%~%b%f")
+	preprompt_parts+=("%F{${PURE_PATH_COLOR:-blue}}%~%b%f")
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
@@ -122,7 +121,7 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:green}\${prompt_pure_git_arrows}%f")
+		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}\${prompt_pure_git_arrows}%f")
 	fi
 
 	# Username and machine, if applicable.
