@@ -464,7 +464,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{${PURE_PROMPT_COLOR:-magenta}}.%F{${PURE_PROMPT_ERROR_COLOR:-red}})${PURE_PROMPT_SYMBOL:-❯}%f '
+	PROMPT+='%(?.%F{magenta}.%F{red})❯%f '
 }
 
 prompt_pure_setup "$@"

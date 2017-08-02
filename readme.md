@@ -97,18 +97,6 @@ Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness che
 
 Time in seconds to delay git dirty checking for large repositories (git status takes > 5 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
 
-### `PURE_PROMPT_SYMBOL`
-
-Defines the prompt symbol. The default value is `❯`.
-
-### `PURE_PROMPT_COLOR`
-
-Defines the prompt color. The default value is `magenta`.
-
-### `PURE_PROMPT_ERROR_COLOR`
-
-Defines the prompt color. The default value is `red`.
-
 ### `PURE_GIT_DOWN_ARROW`
 
 Defines the git down arrow symbol. The default value is `⇣`.
