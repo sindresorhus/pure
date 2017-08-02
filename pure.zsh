@@ -112,7 +112,7 @@ prompt_pure_preprompt_render() {
 	local -a preprompt_parts
 
 	# Set the path.
-	preprompt_parts+=('%F{blue}%~%f')
+	preprompt_parts+=('%F{cyan}%~%f')
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
@@ -121,7 +121,7 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=('%F{cyan}${prompt_pure_git_arrows}%f')
+		preprompt_parts+=('%F{green}${prompt_pure_git_arrows}%f')
 	fi
 
 	# Username and machine, if applicable.
