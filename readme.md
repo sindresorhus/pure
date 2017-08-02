@@ -101,6 +101,14 @@ Time in seconds to delay git dirty checking for large repositories (git status t
 
 Defines the prompt symbol. The default value is `❯`.
 
+#### `PURE_PROMPT_COLOR`
+
+Defines the prompt color. The default value is `magenta`.
+
+#### `PURE_PROMPT_ERROR_COLOR`
+
+Defines the prompt color. The default value is `red`.
+
 ### `PURE_GIT_DOWN_ARROW`
 
 Defines the git down arrow symbol. The default value is `⇣`.
@@ -120,6 +128,10 @@ Defines the git prompt arrow color. The default value is `cyan`.
 #### `PURE_PATH_COLOR`
 
 Defines the path color. The default value is `blue`.
+
+#### `PURE_TIME_COLOR`
+
+Defines the time color. The default value is `yellow`.
 
 ## Example
 

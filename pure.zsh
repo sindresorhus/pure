@@ -127,7 +127,7 @@ prompt_pure_preprompt_render() {
 	# Username and machine, if applicable.
 	[[ -n $prompt_pure_username ]] && preprompt_parts+=('$prompt_pure_username')
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=("%F{${PURE_TIME_COLOR:-yellow}}\${prompt_pure_cmd_exec_time}%f")
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH
@@ -464,7 +464,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+	PROMPT+='%(?.%F{${PURE_PROMPT_COLOR:-magenta}}.%F{${PURE_PROMPT_ERROR_COLOR:-red}})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
 
 prompt_pure_setup "$@"
