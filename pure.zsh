@@ -117,17 +117,17 @@ prompt_pure_preprompt_render() {
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+		preprompt_parts+=("%F{$git_color}${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f")
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}${prompt_pure_git_arrows}%f")
+		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}}${prompt_pure_git_arrows}%f")
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_username ]] && preprompt_parts+=('$prompt_pure_username')
+	[[ -n $prompt_pure_username ]] && preprompt_parts+=("$prompt_pure_username")
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=("%F{${PURE_TIME_COLOR:-yellow}}\${prompt_pure_cmd_exec_time}%f")
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=("%F{${PURE_TIME_COLOR:-yellow}}${prompt_pure_cmd_exec_time}%f")
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH
