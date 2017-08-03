@@ -241,7 +241,7 @@ prompt_pure_async_git_dirty() {
 
 	local -A info
 
-    git ls-files --other --exclude-standard 2> /dev/null
+    test -z `git ls-files --other --exclude-standard`
     info[untracked]=$?
 
     git diff --quiet 2> /dev/null
