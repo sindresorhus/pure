@@ -432,11 +432,11 @@ prompt_pure_setup() {
 	# disallow python virtualenvs from updating the prompt
 	export VIRTUAL_ENV_DISABLE_PROMPT=1
 
-	prompt_opts=(subst percent)
+	prompt_opts=(sp subst percent)
 
 	# borrowed from promptinit, sets the prompt options in case pure was not
 	# initialized via promptinit.
-	setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
+	setopt noprompt{bang,cr,percent,sp,subst} "prompt${^prompt_opts[@]}"
 
 	if [[ -z $prompt_newline ]]; then
 		# This variable needs to be set, usually set by promptinit.
