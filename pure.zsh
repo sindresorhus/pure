@@ -105,29 +105,29 @@ prompt_pure_preprompt_render() {
 
 	# Set color for git branch/dirty status, change color if dirty checking has
 	# been delayed.
-	local git_color=242
+	local git_color=${PURE_GIT_COLOR:-242}
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
 	# Set the path.
-	preprompt_parts+=('%F{blue}%~%f')
+	preprompt_parts+=("%F{${PURE_PATH_COLOR:-blue}}%~%b%f")
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f')
+		preprompt_parts+=("%F{$git_color}${prompt_pure_vcs_info[branch]}${prompt_pure_git_dirty}%f")
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=('%F{cyan}${prompt_pure_git_arrows}%f')
+		preprompt_parts+=("%F{${PURE_GIT_ARROW_COLOR:-cyan}}${prompt_pure_git_arrows}%f")
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_username ]] && preprompt_parts+=('$prompt_pure_username')
+	[[ -n $prompt_pure_username ]] && preprompt_parts+=("$prompt_pure_username")
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=("%F{${PURE_TIME_COLOR:-yellow}}${prompt_pure_cmd_exec_time}%f")
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH
@@ -234,21 +234,23 @@ prompt_pure_async_vcs_info() {
 	print -r - ${(@kvq)info}
 }
 
-# fastest possible way to check if repo is dirty
+# The git versions
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
-	local untracked_dirty=$1 dir=$2
+	builtin cd -q $1 2>/dev/null
 
-	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q $dir
+	local -A info
 
-	if [[ $untracked_dirty = 0 ]]; then
-		command git diff --no-ext-diff --quiet --exit-code
-	else
-		test -z "$(command git status --porcelain --ignore-submodules -unormal)"
-	fi
+    test -z `git ls-files --other --exclude-standard`
+    info[untracked]=$?
 
-	return $?
+    git diff --quiet 2> /dev/null
+    info[modified]=$?
+
+    git diff --cached --quiet 2> /dev/null
+    info[staged]=$?
+
+	print -r - ${(@kvq)info}
 }
 
 prompt_pure_async_git_fetch() {
@@ -331,7 +333,7 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
+		async_job "prompt_pure" prompt_pure_async_git_dirty $PWD
 	fi
 }
 
@@ -388,12 +390,20 @@ prompt_pure_async_callback() {
 			fi
 			;;
 		prompt_pure_async_git_dirty)
-			local prev_dirty=$prompt_pure_git_dirty
-			if (( code == 0 )); then
-				prompt_pure_git_dirty=
-			else
-				prompt_pure_git_dirty="*"
-			fi
+			local -A info
+            local prev_dirty=$prompt_pure_git_dirty
+			info=("${(Q@)${(z)output}}")
+
+            prompt_pure_git_dirty=""
+            if (( $info[modified] )); then
+                prompt_pure_git_dirty+="*"
+            fi
+            if (( $info[untracked] )); then
+                prompt_pure_git_dirty+="."
+            fi
+            if (( $info[staged] )); then
+                prompt_pure_git_dirty+="+"
+            fi
 
 			[[ $prev_dirty != $prompt_pure_git_dirty ]] && prompt_pure_preprompt_render
 
@@ -464,7 +474,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+	PROMPT+='%(?.%F{magenta}.%F{red})❯%f '
 }
 
 prompt_pure_setup "$@"
