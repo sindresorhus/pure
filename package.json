@@ -21,7 +21,7 @@
   "scripts": {
     "postinstall": "PURE_DEST=/usr/local/share/zsh/site-functions npm run --silent postinstall-link && exit 0; PURE_DEST=\"$PWD/functions\" npm run postinstall-link && npm run postinstall-fail-instructions",
     "postinstall-link": "mkdir -p \"$PURE_DEST\" && ln -sf \"$PWD/pure.zsh\" \"$PURE_DEST/prompt_pure_setup\" && ln -sf \"$PWD/async.zsh\" \"$PURE_DEST/async\"",
-    "postinstall-fail-instructions": "echo \"ERROR: Could not automagically symlink the prompt. Either:\\n1. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually\\n2. Or add the following to your \\`.zshrc\\`:\\n\\n    fpath+=(\\$fpath '$PWD/functions')\""
+    "postinstall-fail-instructions": "echo \"ERROR: Could not automagically symlink the prompt. Either:\\n1. Check out the readme on how to do it manually: https://github.com/sindresorhus/pure#manually\\n2. Or add the following to your \\`.zshrc\\`:\\n\\n    fpath+=('$PWD/functions')\""
   },
   "files": [
     "pure.zsh",
