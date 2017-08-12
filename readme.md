@@ -140,6 +140,8 @@ To have commands colorized as seen in the screenshot, install [zsh-syntax-highli
 1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
 2. Follow the Pure [Install](#install) instructions.
 
+**NOTE:** `oh-my-zsh` overrides the prompt so Pure must be activated *after* `source $ZSH/oh-my-zsh.sh`.
+
 ### [prezto](https://github.com/sorin-ionescu/prezto)
 
 Pure is bundled with Prezto. No need to install it.
