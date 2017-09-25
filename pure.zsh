@@ -161,6 +161,7 @@ prompt_pure_preprompt_render() {
 prompt_pure_precmd() {
 	# check exec time and store it in a variable
 	prompt_pure_check_cmd_exec_time
+	unset prompt_pure_cmd_timestamp
 
 	# shows the full path in the title
 	prompt_pure_set_title 'expand-prompt' '%~'
