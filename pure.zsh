@@ -178,7 +178,9 @@ prompt_pure_precmd() {
 
 	# store name of virtualenv in psvar if activated
 	psvar[12]=
-	[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+	if [ -z "${PURE_VIRTUAL_ENV_DISABLE_PROMPT-}" ] ; then
+		[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+	fi
 
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
@@ -430,7 +432,13 @@ prompt_pure_setup() {
 	export PROMPT_EOL_MARK=''
 
 	# disallow python virtualenvs from updating the prompt
-	export VIRTUAL_ENV_DISABLE_PROMPT=1
+	if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT-}" ]; then
+		# it was not set. set it to only have pure modify the shell.
+		export VIRTUAL_ENV_DISABLE_PROMPT=1
+	else
+		# it was already set. also disable pure display.
+		export PURE_VIRTUAL_ENV_DISABLE_PROMPT=1
+	fi
 
 	prompt_opts=(subst percent)
 
