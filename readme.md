@@ -111,11 +111,11 @@ Defines the git up arrow symbol. The default value is `⇡`.
 
 ### `:pure:git pull`
 
-Use `zstyle ":pure:git" pull 'no'` to prevent Pure from checking whether the current Git remote has been updated.
+Use `zstyle ":pure:git" pull 0` to prevent Pure from checking whether the current Git remote has been updated.
 
 ### `:pure:git untracked_dirty`
 
-Use `zstyle ":pure:git" untracked_dirty 'no'` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
+Use `zstyle ":pure:git" untracked_dirty 0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
 
 ### `:pure:git delay_dirty_check`
 
