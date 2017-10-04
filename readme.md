@@ -81,45 +81,45 @@ prompt pure
 
 ## Options
 
-### `PURE_CMD_MAX_EXEC_TIME`
+### `:pure:prompt cmd_max_exec_time`
 
 The max execution time of a process before its run time is shown when it exits. Defaults to `5` seconds.
 
-### `PURE_GIT_PULL`
-
-Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remote has been updated.
-
-### `PURE_GIT_UNTRACKED_DIRTY`
-
-Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
-
-### `PURE_GIT_DELAY_DIRTY_CHECK`
-
-Time in seconds to delay git dirty checking for large repositories (git status takes > 2 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
-
-### `PURE_PROMPT_SYMBOL`
+### `:pure:prompt symbol`
 
 Defines the prompt symbol. The default value is `❯`.
 
-### `PURE_PREPROMPT_COLOR`
+### `:pure:colors preprompt`
 
 Defines the color for the prepromt line. The default value is `blue`.
 
-### `PURE_SUCCESS_COLOR`
+### `:pure:colors success`
 
 Defines the color for the prompt with exit code `0`. The default value is `magenta`.
 
-### `PURE_ERROR_COLOR`
+### `:pure:colors error`
 
 Defines the color for the prompt with exit code different than `0`. The default value is `red`.
 
-### `PURE_GIT_DOWN_ARROW`
+### `:pure:git down_arrow`
 
 Defines the git down arrow symbol. The default value is `⇣`.
 
-### `PURE_GIT_UP_ARROW`
+### `:pure:git up_arrow`
 
 Defines the git up arrow symbol. The default value is `⇡`.
+
+### `:pure:git pull`
+
+Use `zstyle ":pure:git" pull 'no'` to prevent Pure from checking whether the current Git remote has been updated.
+
+### `:pure:git untracked_dirty`
+
+Use `zstyle ":pure:git" untracked_dirty 'no'` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
+
+### `:pure:git delay_dirty_check`
+
+Time in seconds to delay git dirty checking for large repositories (git status takes > 2 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
 
 ## Example
 
@@ -129,7 +129,7 @@ Defines the git up arrow symbol. The default value is `⇡`.
 autoload -U promptinit; promptinit
 
 # optionally define some options
-PURE_CMD_MAX_EXEC_TIME=10
+zstyle ":pure:prompt" cmd_max_exec_time 10
 
 prompt pure
 ```

@@ -44,10 +44,11 @@ prompt_pure_human_time_to_var() {
 
 # stores (into prompt_pure_cmd_exec_time) the exec time of the last command if set threshold was exceeded
 prompt_pure_check_cmd_exec_time() {
+	zstyle -a ":pure:prompt" cmd_max_exec_time option_cmd_max_exec_time
 	integer elapsed
 	(( elapsed = EPOCHSECONDS - ${prompt_pure_cmd_timestamp:-$EPOCHSECONDS} ))
 	prompt_pure_cmd_exec_time=
-	(( elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5} )) && {
+	(( elapsed > ${option_cmd_max_exec_time:=5} )) && {
 		prompt_pure_human_time_to_var $elapsed "prompt_pure_cmd_exec_time"
 	}
 }
@@ -120,7 +121,8 @@ prompt_pure_preprompt_render() {
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# construct preprompt, beginning with path
-	local preprompt="%F{${PURE_PREPROMPT_COLOR:-blue}}%~%f"
+	zstyle -a ":pure:colors" preprompt preprompt_color
+	local preprompt="%F{${preprompt_color:-blue}}%~%f"
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
@@ -319,17 +321,20 @@ prompt_pure_async_tasks() {
 	async_job "prompt_pure" prompt_pure_async_git_arrows $working_tree
 
 	# do not preform git fetch if it is disabled or working_tree == HOME
-	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
+	zstyle -a ":pure:git" pull git_pull
+	if (( ${git_pull:-1} )) && [[ $working_tree != $HOME ]]; then
 		# tell worker to do a git fetch
 		async_job "prompt_pure" prompt_pure_async_git_fetch $working_tree
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
 	integer time_since_last_dirty_check=$(( EPOCHSECONDS - ${prompt_pure_git_last_dirty_check_timestamp:-0} ))
-	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
+	zstyle -a ":pure:git" untracked_dirty git_untracked_dirty
+	zstyle -a ":pure:git" delay_dirty_check git_delay_dirty_check
+	if (( time_since_last_dirty_check > ${git_delay_dirty_check:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${git_untracked_dirty:-1} $working_tree
 	fi
 }
 
@@ -337,8 +342,10 @@ prompt_pure_check_git_arrows() {
 	setopt localoptions noshwordsplit
 	local arrows left=${1:-0} right=${2:-0}
 
-	(( right > 0 )) && arrows+=${PURE_GIT_DOWN_ARROW:-⇣}
-	(( left > 0 )) && arrows+=${PURE_GIT_UP_ARROW:-⇡}
+	zstyle -a ":pure:git" down_arrow git_down_arrow
+	zstyle -a ":pure:git" up_arrow git_up_arrow
+	(( right > 0 )) && arrows+=${git_down_arrow:-⇣}
+	(( left > 0 )) && arrows+=${git_up_arrow:-⇡}
 
 	[[ -n $arrows ]] || return
 	typeset -g REPLY=" $arrows"
@@ -430,7 +437,10 @@ prompt_pure_setup() {
 	[[ $UID -eq 0 ]] && prompt_pure_username=' %F{white}%n%f%F{242}@%m%f'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT="%(?.%F{${PURE_SUCCESS_COLOR:-magenta}}.%F{${PURE_ERROR_COLOR:-red}})${PURE_PROMPT_SYMBOL:-❯}%f "
+	zstyle -a ":pure:prompt" symbol prompt_symbol
+	zstyle -a ":pure:colors" success color_success
+	zstyle -a ":pure:colors" error color_error
+	PROMPT="%(?.%F{${color_success:-magenta}}.%F{${color_error:-red}})${prompt_symbol:-❯}%f "
 }
 
 prompt_pure_setup "$@"
