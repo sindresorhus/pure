@@ -203,6 +203,7 @@ $ sudo emerge -1 zsh
 
 On a default setup, running the command `kldload pty` should do the trick. If you have a custom kernel, you might need to add `device pty` to the configuration file ([example](https://github.com/nbari/freebsd/blob/58646a9c3c4aaabf6f6467ff505f27f09e29dc75/kernels/xen.kernel#L188)).
 
+
 ## Ports
 
 * **Bash**
@@ -214,6 +215,8 @@ On a default setup, running the command `kldload pty` should do the trick. If yo
   * [therealklanni/purity](https://github.com/therealklanni/purity): a more compact current working directory, important details on the main prompt line, and extra Git indicators.
   * [intelfx/pure](https://github.com/intelfx/pure): Solarized-friendly colors, highly verbose and fully async Git integration
   * [dfurnes/purer](https://github.com/dfurnes/purer): A compact single-line prompt with built-in Vim-mode indicator.
+* **Rust**
+  * [xcambar/purs](https://github.com/xcambar/purs): Pure-inspired prompt in Rust.
 
 
 ## Team
