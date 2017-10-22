@@ -39,7 +39,7 @@ That's it. Skip to [Getting started](#getting-started).
 1. Either…
   - Clone this repo
   - add it as a submodule, or
-  - just download `pure.zsh` and `async.zsh`
+  - just download [pure.zsh](pure.zsh) and [async.zsh](async.zsh)
 
 2. Symlink `pure.zsh` to somewhere in [`$fpath`](http://www.refining-linux.org/archives/46/ZSH-Gem-12-Autoloading-functions/) with the name `prompt_pure_setup`.
 
