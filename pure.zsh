@@ -399,7 +399,7 @@ prompt_pure_async_callback() {
 				local REPLY
 				prompt_pure_check_git_arrows ${(ps:\t:)output}
 				if [[ $prompt_pure_git_arrows != $REPLY ]]; then
-					prompt_pure_git_arrows=$REPLY
+					typeset -g prompt_pure_git_arrows=$REPLY
 					prompt_pure_preprompt_render
 				fi
 			elif (( code != 99 )); then
