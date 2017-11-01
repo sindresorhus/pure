@@ -73,6 +73,7 @@ prompt_pure_set_title() {
 prompt_pure_preexec() {
 	if [[ -n $prompt_pure_git_fetch_pattern ]]; then
 		# detect when git is performing pull/fetch (including git aliases).
+		local -H MATCH MBEGIN MEND match mbegin mend
 		if [[ $2 =~ (git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)(\ .*)?$ ]]; then
 			# we must flush the async jobs to cancel our git fetch in order
 			# to avoid conflicts with the user issued pull / fetch.
@@ -126,7 +127,7 @@ prompt_pure_preprompt_render() {
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
 	local cleaned_ps1=$PROMPT
-	local -H MATCH
+	local -H MATCH MBEGIN MEND
 	if [[ $PROMPT = *$prompt_newline* ]]; then
 		# When the prompt contains newlines, we keep everything before the first
 		# and after the last newline, leaving us with everything except the
@@ -134,6 +135,7 @@ prompt_pure_preprompt_render() {
 		# (e.g. virtualenv).
 		cleaned_ps1=${PROMPT%%${prompt_newline}*}${PROMPT##*${prompt_newline}}
 	fi
+	unset MATCH MBEGIN MEND
 
 	# Construct the new prompt with a clean preprompt.
 	local -ah ps1
@@ -275,7 +277,7 @@ prompt_pure_async_tasks() {
 
 	typeset -gA prompt_pure_vcs_info
 
-	local -H MATCH
+	local -H MATCH MBEGIN MEND
 	if ! [[ $PWD = ${prompt_pure_vcs_info[pwd]}* ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
@@ -288,7 +290,7 @@ prompt_pure_async_tasks() {
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
 	fi
-	unset MATCH
+	unset MATCH MBEGIN MEND
 
 	async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
 
@@ -347,7 +349,7 @@ prompt_pure_async_callback() {
 
 			# parse output (z) and unquote as array (Q@)
 			info=("${(Q@)${(z)output}}")
-			local -H MATCH
+			local -H MATCH MBEGIN MEND
 			# check if git toplevel has changed
 			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
 				# if stored pwd is part of $PWD, $PWD is shorter and likelier
@@ -359,7 +361,7 @@ prompt_pure_async_callback() {
 				# store $PWD to detect if we (maybe) left the git path
 				prompt_pure_vcs_info[pwd]=$PWD
 			fi
-			unset MATCH
+			unset MATCH MBEGIN MEND
 
 			# update has a git toplevel set which means we just entered a new
 			# git directory, run the async refresh tasks
