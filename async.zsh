@@ -3,7 +3,7 @@
 #
 # zsh-async
 #
-# version: 1.5.2
+# version: 1.6.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
@@ -202,6 +202,7 @@ _async_worker() {
 # 	$3 = resulting stdout from execution
 # 	$4 = execution time, floating point e.g. 2.05 seconds
 # 	$5 = resulting stderr from execution
+#	$6 = has next result in buffer (0 = buffer empty, 1 = yes)
 #
 async_process_results() {
 	setopt localoptions unset noshwordsplit noksharrays noposixidentifiers noposixstrings
@@ -234,7 +235,13 @@ async_process_results() {
 			# Remove the extracted items from the buffer.
 			ASYNC_PROCESS_BUFFER[$worker]=${ASYNC_PROCESS_BUFFER[$worker][$pos+1,$len]}
 
+			len=${#ASYNC_PROCESS_BUFFER[$worker]}
+			if (( len > 1 )); then
+				pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
+			fi
+
 			if (( $#items == 5 )); then
+				items+=($(( len != 0 )))
 				$callback "${(@)items}"  # Send all parsed items to the callback.
 			else
 				# In case of corrupt data, invoke callback with *async* as job
@@ -243,11 +250,6 @@ async_process_results() {
 			fi
 
 			(( num_processed++ ))
-
-			len=${#ASYNC_PROCESS_BUFFER[$worker]}
-			if (( len > 1 )); then
-				pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
-			fi
 		done
 	done
 
