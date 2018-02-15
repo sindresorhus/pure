@@ -109,6 +109,10 @@ Defines the git down arrow symbol. The default value is `⇣`.
 
 Defines the git up arrow symbol. The default value is `⇡`.
 
+### `PURE_ROOT_HASH`
+
+Set `PURE_ROOT_HASH=1` to prefix prompt with a red `#` if we are root.
+
 ## Example
 
 ```sh

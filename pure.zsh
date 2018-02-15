@@ -464,6 +464,11 @@ prompt_pure_setup() {
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
+	# if PURE_ROOT_HASH is set and we are root then prefix prompt with a red hash '#'
+	if (( ${PURE_ROOT_HASH:0} )) && [[ $UID -eq 0 ]]; then
+		PROMPT+='%F{red}# '
+	fi
+
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 }
