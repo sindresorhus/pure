@@ -128,6 +128,7 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
+  # dirty
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
 	if [[ $PROMPT = *$prompt_newline* ]]; then
@@ -328,7 +329,7 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${git_delay_dirty_check:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${git_untracked_dirty:-1} $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${git_untracked_dirty:-1} $PWD
 	fi
 }
 
