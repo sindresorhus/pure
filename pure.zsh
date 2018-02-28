@@ -109,7 +109,8 @@ prompt_pure_preprompt_render() {
 	local -a preprompt_parts
 
 	# Set the path.
-	preprompt_parts+=('%F{blue}%~%f')
+	zstyle -a ":pure:colors" preprompt preprompt_color
+	preprompt_parts+=("%F{${preprompt_color:-blue}}%~%f")
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
@@ -465,7 +466,9 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+	zstyle -a ":pure:colors" success color_success
+	zstyle -a ":pure:colors" error color_error
+	PROMPT+="%(?.%F{${color_success:-magenta}}.%F{${color_error:-red}})${PURE_PROMPT_SYMBOL:-❯}%f "
 }
 
 prompt_pure_setup "$@"
