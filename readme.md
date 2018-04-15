@@ -181,6 +181,15 @@ zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 ```
 
+### [zplugin](https://github.com/zdharma/zplugin)
+
+Update your `.zshrc` file with the following two lines (order matters):
+
+```sh
+zplugin ice pick"async.zsh" src"pure.zsh"
+zplugin light sindresorhus/pure
+```
+
 ## FAQ
 
 ### I am stuck in a shell loop in my terminal that asks me to authenticate. What should I do?
