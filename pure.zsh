@@ -56,6 +56,11 @@ prompt_pure_set_title() {
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
 
+	# disable auto title 
+	if "$DISABLE_AUTO_TITLE" == true; then
+		return
+	fi
+
 	# tell the terminal we are setting the title
 	print -n '\e]0;'
 	# show hostname if connected through ssh
