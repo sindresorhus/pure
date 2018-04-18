@@ -171,9 +171,26 @@ prompt_pure_precmd() {
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
-	# store name of virtualenv in psvar if activated
-	psvar[12]=
-	[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+  # handling of virtualenv
+  # The following states of the environment variable
+  # $VIRTUAL_ENV_DISABLE_PROMPT are used:
+  # - undefined or 0: set it to 2,
+  # - set and >0: set it to 3,
+  # - 2: show virtual env,
+  # - 3: don't show virtual env.
+  # Thus, the variable space remains uncluttered.
+  psvar[12]=
+	if [[ ! -n "${VIRTUAL_ENV_DISABLE_PROMPT}"  ||
+        "${VIRTUAL_ENV_DISABLE_PROMPT}" -eq 0 ]]; then
+		  # it was not set. set it to only have pure modify the shell.
+		  export VIRTUAL_ENV_DISABLE_PROMPT=2
+	elif [[ "${VIRTUAL_ENV_DISABLE_PROMPT}" -eq 1 ]]; then
+		  export VIRTUAL_ENV_DISABLE_PROMPT=3
+  fi
+  if [[ "${VIRTUAL_ENV_DISABLE_PROMPT}" -eq 2 ]]; then
+	    # store name of virtualenv in psvar if activated
+      psvar[12]="${VIRTUAL_ENV:t}"
+	fi
 
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
@@ -429,9 +446,6 @@ prompt_pure_async_callback() {
 prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
-
-	# disallow python virtualenvs from updating the prompt
-	export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 	prompt_opts=(subst percent)
 
