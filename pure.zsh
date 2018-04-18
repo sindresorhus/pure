@@ -85,6 +85,11 @@ prompt_pure_preexec() {
 
 	# shows the current dir and executed command in the title while a process is active
 	prompt_pure_set_title 'ignore-escape' "$PWD:t: $2"
+
+	# Disallow python virtualenv from updating the prompt, set it to 12 if
+	# untouched by the user to indicate that Pure modified it. Here we use
+	# magic number 12, same as in psvar.
+	export VIRTUAL_ENV_DISABLE_PROMPT=${VIRTUAL_ENV_DISABLE_PROMPT:-12}
 }
 
 # string length ignoring ansi escapes
@@ -171,9 +176,15 @@ prompt_pure_precmd() {
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
-	# store name of virtualenv in psvar if activated
+	# Check if we should display the virtual env, we use a sufficiently high
+	# index of psvar (12) here to avoid collisions with user defined entries.
 	psvar[12]=
-	[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
+	# Pure should take back control.
+	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
+		psvar[12]="${VIRTUAL_ENV:t}"
+		export VIRTUAL_ENV_DISABLE_PROMPT=12
+	fi
 
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
@@ -429,9 +440,6 @@ prompt_pure_async_callback() {
 prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
-
-	# disallow python virtualenvs from updating the prompt
-	export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 	prompt_opts=(subst percent)
 
