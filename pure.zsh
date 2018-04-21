@@ -53,8 +53,15 @@ prompt_pure_check_cmd_exec_time() {
 }
 
 prompt_pure_set_title() {
+	setopt localoptions noshwordsplit
+
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
+
+	case $TTY in
+		# Don't set title over serial console.
+		/dev/ttyS[0-9]*) return;;
+	esac
 
 	# tell the terminal we are setting the title
 	print -n '\e]0;'
