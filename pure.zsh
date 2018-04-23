@@ -197,6 +197,9 @@ prompt_pure_precmd() {
 		export VIRTUAL_ENV_DISABLE_PROMPT=12
 	fi
 
+	# Make sure VIM prompt is reset.
+	prompt_pure_reset_vim_prompt
+
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
 }
@@ -481,6 +484,18 @@ prompt_pure_async_callback() {
 	unset prompt_pure_async_render_requested
 }
 
+prompt_pure_update_vim_prompt() {
+	setopt localoptions noshwordsplit
+	prompt_pure_state[prompt]=${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
+	zle && zle .reset-prompt
+}
+
+prompt_pure_reset_vim_prompt() {
+	setopt localoptions noshwordsplit
+	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
+	zle && zle .reset-prompt
+}
+
 prompt_pure_state_setup() {
 	setopt localoptions noshwordsplit
 
@@ -526,6 +541,7 @@ prompt_pure_state_setup() {
 	typeset -gA prompt_pure_state
 	prompt_pure_state=(
 		username "$username"
+		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
 
@@ -549,6 +565,7 @@ prompt_pure_setup() {
 	zmodload zsh/parameter
 
 	autoload -Uz add-zsh-hook
+	autoload -Uz add-zle-hook-widget
 	autoload -Uz vcs_info
 	autoload -Uz async && async
 
@@ -557,11 +574,18 @@ prompt_pure_setup() {
 
 	prompt_pure_state_setup
 
+	zle -N prompt_pure_update_vim_prompt
+	zle -N prompt_pure_reset_vim_prompt
+	if (( $+functions[add-zle-hook-widget] )); then
+		add-zle-hook-widget zle-line-finish prompt_pure_reset_vim_prompt
+		add-zle-hook-widget zle-keymap-select prompt_pure_update_vim_prompt
+	fi
+
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+	PROMPT+='%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
