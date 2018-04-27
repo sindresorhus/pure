@@ -532,6 +532,14 @@ prompt_pure_setup() {
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
+
+	# Store %e (execution depth) for in-place expansion via (S%).
+	typeset -g prompt_pure_debug_depth='%e'
+
+	# Improve the debug prompt (PS4) with colors to highlight essential
+	# parts, show depth by repeating the +-sign and include the line number
+	# where the code resides (%I).
+	PROMPT4='%F{yellow}${(l:$(( ${(S%)prompt_pure_debug_depth} - 1 ))::+:)}%f%F{blue}%N%f%F{242}:%i:%I>%f '
 }
 
 prompt_pure_setup "$@"
