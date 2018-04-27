@@ -539,7 +539,7 @@ prompt_pure_setup() {
 	# Improve the debug prompt (PS4) with colors to highlight essential
 	# parts, show depth by repeating the +-sign and include the line number
 	# where the code resides (%I).
-	PROMPT4='%F{yellow}${(l:$(( ${(S%)prompt_pure_debug_depth} - 1 ))::+:)}%f%F{blue}%N%f%F{242}:%i:%I>%f '
+	PROMPT4='%F{yellow}${(l:${(S%)prompt_pure_debug_depth}::+:)} %f%F{blue}%N%f%F{242}:%i:%I>%f '
 }
 
 prompt_pure_setup "$@"
