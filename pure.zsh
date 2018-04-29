@@ -484,7 +484,8 @@ prompt_pure_state_setup() {
 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
 		# environment variable can be lost, attempt detection via who.
-		if who am i | grep -q '(.*)$' &>/dev/null; then
+		# Ignore local X sessions displayed as (:1).
+		if who am i | grep -v '(:[0-9]*)$' | grep -q '(.*)$' &>/dev/null; then
 			ssh_connection=true
 		fi
 	fi
@@ -496,7 +497,9 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state=(username "$username")
+	prompt_pure_state=(
+		username "$username"
+	)
 }
 
 prompt_pure_setup() {
