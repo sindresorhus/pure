@@ -134,7 +134,7 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_username ]] && preprompt_parts+=('$prompt_pure_username')
+	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('${prompt_pure_state[username]}')
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
@@ -445,6 +445,8 @@ prompt_pure_async_callback() {
 }
 
 prompt_pure_setup() {
+	setopt localoptions noshwordsplit
+
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
@@ -470,11 +472,25 @@ prompt_pure_setup() {
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
+	local ssh_connection=$SSH_CONNECTION
+	local username
+	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
+		# When changing user on a remote system, the $SSH_CONNECTION
+		# environment variable can be lost, attempt detection via who.
+		if who am i | grep -q '(.*)$' &>/dev/null; then
+			ssh_connection=true
+		fi
+	fi
+
 	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%F{242}%n@%m%f'
+	[[ -n $ssh_connection ]] && username='%F{242}%n@%m%f'
 
 	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%f%F{242}@%m%f'
+	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
+
+	typeset -gA prompt_pure_state=(
+		username "$username"
+	)
 
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
