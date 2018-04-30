@@ -63,18 +63,22 @@ prompt_pure_set_title() {
 		/dev/ttyS[0-9]*) return;;
 	esac
 
-	# tell the terminal we are setting the title
-	print -n '\e]0;'
-	# show hostname if connected through ssh
-	[[ -n $SSH_CONNECTION ]] && print -Pn '(%m) '
+	# Show hostname if connected via ssh.
+	local hostname=
+	if [[ -n $prompt_pure_state[username] ]]; then
+		# Expand in-place in case ignore-escape is used.
+		hostname="${(%):-(%m) }"
+	fi
+
+	local -a opts
 	case $1 in
-		expand-prompt)
-			print -Pn $2;;
-		ignore-escape)
-			print -rn $2;;
+		expand-prompt) opts=(-P);;
+		ignore-escape) opts=(-r);;
 	esac
-	# end set title
-	print -n '\a'
+
+	# Set title atomically in one print statement so that it works
+	# when XTRACE is enabled.
+	print -n $opts $'\e]0;'${hostname}${2}$'\a'
 }
 
 prompt_pure_preexec() {
