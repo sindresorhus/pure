@@ -445,8 +445,6 @@ prompt_pure_async_callback() {
 }
 
 prompt_pure_setup() {
-	setopt localoptions noshwordsplit
-
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
@@ -455,6 +453,9 @@ prompt_pure_setup() {
 	# borrowed from promptinit, sets the prompt options in case pure was not
 	# initialized via promptinit.
 	setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
+
+	# Turn on local options after setting the global prompt options above.
+	setopt localoptions noshwordsplit
 
 	if [[ -z $prompt_newline ]]; then
 		# This variable needs to be set, usually set by promptinit.
