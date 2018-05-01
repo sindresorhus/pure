@@ -489,9 +489,8 @@ prompt_pure_setup() {
 	# show username@host if root, with username in white
 	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
 
-	typeset -gA prompt_pure_state=(
-		username "$username"
-	)
+	typeset -gA prompt_pure_state
+	prompt_pure_state=(username "$username")
 
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
