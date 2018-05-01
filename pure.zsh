@@ -471,7 +471,6 @@ prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
-	local -a prompt_opts
 	prompt_opts=(subst percent)
 
 	# borrowed from promptinit, sets the prompt options in case pure was not
