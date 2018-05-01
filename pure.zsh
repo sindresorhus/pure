@@ -444,34 +444,8 @@ prompt_pure_async_callback() {
 	unset prompt_pure_async_render_requested
 }
 
-prompt_pure_setup() {
-	# Prevent percentage showing up if output doesn't end with a newline.
-	export PROMPT_EOL_MARK=''
-
-	prompt_opts=(subst percent)
-
-	# borrowed from promptinit, sets the prompt options in case pure was not
-	# initialized via promptinit.
-	setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
-
-	# Turn on local options after setting the global prompt options above.
+prompt_pure_state_setup() {
 	setopt localoptions noshwordsplit
-
-	if [[ -z $prompt_newline ]]; then
-		# This variable needs to be set, usually set by promptinit.
-		typeset -g prompt_newline=$'\n%{\r%}'
-	fi
-
-	zmodload zsh/datetime
-	zmodload zsh/zle
-	zmodload zsh/parameter
-
-	autoload -Uz add-zsh-hook
-	autoload -Uz vcs_info
-	autoload -Uz async && async
-
-	add-zsh-hook precmd prompt_pure_precmd
-	add-zsh-hook preexec prompt_pure_preexec
 
 	local ssh_connection=$SSH_CONNECTION
 	local username
@@ -491,6 +465,36 @@ prompt_pure_setup() {
 
 	typeset -gA prompt_pure_state
 	prompt_pure_state=(username "$username")
+}
+
+prompt_pure_setup() {
+	# Prevent percentage showing up if output doesn't end with a newline.
+	export PROMPT_EOL_MARK=''
+
+	local -a prompt_opts
+	prompt_opts=(subst percent)
+
+	# borrowed from promptinit, sets the prompt options in case pure was not
+	# initialized via promptinit.
+	setopt noprompt{bang,cr,percent,subst} "prompt${^prompt_opts[@]}"
+
+	if [[ -z $prompt_newline ]]; then
+		# This variable needs to be set, usually set by promptinit.
+		typeset -g prompt_newline=$'\n%{\r%}'
+	fi
+
+	zmodload zsh/datetime
+	zmodload zsh/zle
+	zmodload zsh/parameter
+
+	autoload -Uz add-zsh-hook
+	autoload -Uz vcs_info
+	autoload -Uz async && async
+
+	add-zsh-hook precmd prompt_pure_precmd
+	add-zsh-hook preexec prompt_pure_preexec
+
+	prompt_pure_state_setup
 
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
