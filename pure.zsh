@@ -275,7 +275,30 @@ prompt_pure_async_git_fetch() {
 	# set ssh BachMode to disable all interactive ssh password prompting
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
-	command git -c gc.auto=0 fetch &>/dev/null || return 99
+	# Default return code, indicates Git fetch failure.
+	local fail_code=99
+
+	# Guard against all forms of password prompts. By setting the shell into
+	# MONITOR mode we can notice when a child process prompts for user input
+	# because it will be suspended. Since we are inside an async worker, we
+	# have no way of transmitting the password and the only option is to
+	# kill it. If we don't do it this way, the process will corrupt with the
+	# async worker.
+	setopt localtraps monitor
+	trap '
+		# Unset trap to prevent infinite loop
+		trap - CHLD
+		if [[ $jobstates = suspended* ]]; then
+			# Set fail code to password prompt and kill the fetch.
+			fail_code=98
+			kill %%
+		fi
+	' CHLD
+
+	command git -c gc.auto=0 fetch >/dev/null &
+	wait $! || return $fail_code
+
+	unsetopt monitor
 
 	# check arrow status after a successful git fetch
 	prompt_pure_async_git_arrows $1
@@ -420,22 +443,27 @@ prompt_pure_async_callback() {
 		prompt_pure_async_git_fetch|prompt_pure_async_git_arrows)
 			# prompt_pure_async_git_fetch executes prompt_pure_async_git_arrows
 			# after a successful fetch.
-			if (( code == 0 )); then
-				local REPLY
-				prompt_pure_check_git_arrows ${(ps:\t:)output}
-				if [[ $prompt_pure_git_arrows != $REPLY ]]; then
-					typeset -g prompt_pure_git_arrows=$REPLY
-					do_render=1
-				fi
-			elif (( code != 99 )); then
-				# Unless the exit code is 99, prompt_pure_async_git_arrows
-				# failed with a non-zero exit status, meaning there is no
-				# upstream configured.
-				if [[ -n $prompt_pure_git_arrows ]]; then
-					unset prompt_pure_git_arrows
-					do_render=1
-				fi
-			fi
+			case $code in
+				0)
+					local REPLY
+					prompt_pure_check_git_arrows ${(ps:\t:)output}
+					if [[ $prompt_pure_git_arrows != $REPLY ]]; then
+						typeset -g prompt_pure_git_arrows=$REPLY
+						do_render=1
+					fi
+					;;
+				99|98)
+					# Git fetch failed.
+					;;
+				*)
+					# Non-zero exit status from prompt_pure_async_git_arrows,
+					# indicating that there is no upstream configured.
+					if [[ -n $prompt_pure_git_arrows ]]; then
+						unset prompt_pure_git_arrows
+						do_render=1
+					fi
+					;;
+			esac
 			;;
 	esac
 
