@@ -479,7 +479,8 @@ prompt_pure_async_callback() {
 prompt_pure_state_setup() {
 	setopt localoptions noshwordsplit
 
-	local ssh_connection=$SSH_CONNECTION
+	# Check SSH_CONNECTION and the current state.
+	local ssh_connection=${SSH_CONNECTION:-$prompt_pure_detected_ssh_connection}
 	local username
 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
@@ -502,6 +503,11 @@ prompt_pure_state_setup() {
 		local -H MATCH MBEGIN MEND
 		if [[ $who_out =~ "\(?($reIPv4|$reIPv6|$reHostname)\)?\$" ]]; then
 			ssh_connection=true
+
+			# Export variable to allow detection propagation inside
+			# shells spawned by this one (e.g. tmux does not always
+			# inherit the same tty, which breaks detection).
+			export prompt_pure_detected_ssh_connection=true
 		fi
 		unset MATCH MBEGIN MEND
 	fi
