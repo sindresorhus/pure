@@ -534,12 +534,31 @@ prompt_pure_setup() {
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 
 	# Store %e (execution depth) for in-place expansion via (S%).
-	typeset -g prompt_pure_debug_depth='%e'
+	typeset -ga prompt_pure_debug_depth
+	prompt_pure_debug_depth=('%e' '%N' '%x')
 
 	# Improve the debug prompt (PS4) with colors to highlight essential
 	# parts, show depth by repeating the +-sign and include the line number
 	# where the code resides (%I).
-	PROMPT4='%F{yellow}${(l:${(%)prompt_pure_debug_depth}::+:)}%f %F{blue}%N%f%F{242}:%i:%I>%f '
+
+	# Compare is used to check if %N equals %x. When they differ, the main
+	# prompt is used to allow displaying both file name and function. When
+	# they match, we use the secondary prompt to avoid displaying duplicate
+	# information.
+	local -A ps4_parts
+	ps4_parts=(
+		depth 	  '%F{yellow}${(l:${(%)prompt_pure_debug_depth[1]}::+:)}%f'
+		compare   '${${(%)prompt_pure_debug_depth[2]}:#${(%)prompt_pure_debug_depth[3]}}'
+		main      '%F{blue}${${(%)prompt_pure_debug_depth[3]}:t}%f%F{242}:%I%f %F{242}@%f%F{blue}%N%f%F{242}:%i%f'
+		secondary '%F{blue}%N%f%F{242}:%i'
+		prompt 	  '%F{242}>%f '
+	)
+	# Combine the parts with conditional logic. First the `:+` operator is
+	# used to replace `compare` either with `main` or an ampty string. Then
+	# the `:-` operator is used so that if `compare` becomes an empty
+	# string, it is replaced with `secondary`.
+	local ps4_symbols='${${'${ps4_parts[compare]}':+"'${ps4_parts[main]}'"}:-"'${ps4_parts[secondary]}'"}'
+	PROMPT4="${ps4_parts[depth]} ${ps4_symbols}${ps4_parts[prompt]}"
 }
 
 prompt_pure_setup "$@"
