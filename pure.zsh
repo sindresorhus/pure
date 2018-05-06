@@ -533,13 +533,10 @@ prompt_pure_setup() {
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${PURE_PROMPT_SYMBOL:-❯}%f '
 
-	# Store %e (execution depth) for in-place expansion via (S%).
+	# Store prompt expansion symbols for in-place expansion via (%). For
+	# some reason it does not work without storing them in a variable first.
 	typeset -ga prompt_pure_debug_depth
 	prompt_pure_debug_depth=('%e' '%N' '%x')
-
-	# Improve the debug prompt (PS4) with colors to highlight essential
-	# parts, show depth by repeating the +-sign and include the line number
-	# where the code resides (%I).
 
 	# Compare is used to check if %N equals %x. When they differ, the main
 	# prompt is used to allow displaying both file name and function. When
@@ -558,6 +555,9 @@ prompt_pure_setup() {
 	# the `:-` operator is used so that if `compare` becomes an empty
 	# string, it is replaced with `secondary`.
 	local ps4_symbols='${${'${ps4_parts[compare]}':+"'${ps4_parts[main]}'"}:-"'${ps4_parts[secondary]}'"}'
+
+	# Improve the debug prompt (PS4), show depth by repeating the +-sign and
+	# add colors to highlight essential parts like file and function name.
 	PROMPT4="${ps4_parts[depth]} ${ps4_symbols}${ps4_parts[prompt]}"
 }
 
