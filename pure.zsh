@@ -565,9 +565,12 @@ prompt_pure_setup() {
 	zmodload zsh/parameter
 
 	autoload -Uz add-zsh-hook
-	autoload -Uz add-zle-hook-widget
 	autoload -Uz vcs_info
 	autoload -Uz async && async
+
+	# The add-zle-hook-widget function is not guaranteed
+	# to be available, it was added in Zsh 5.3.
+	autoload -Uz +X add-zle-hook-widget 2>/dev/null
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec

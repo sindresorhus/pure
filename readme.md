@@ -19,7 +19,7 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Command execution time will be displayed if it exceeds the set threshold.
 - Username and host only displayed when in an SSH session.
 - Shows the current path in the title and the [current folder & command](screenshot-title-cmd.png) when a process is running.
-- Support VI-mode indication by reverse prompt symbol.
+- Support VI-mode indication by reverse prompt symbol (Zsh 5.3+).
 - Makes an excellent starting point for your own custom prompt.
 
 
