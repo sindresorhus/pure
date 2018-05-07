@@ -81,33 +81,15 @@ prompt pure
 
 ## Options
 
-### `PURE_CMD_MAX_EXEC_TIME`
-
-The max execution time of a process before its run time is shown when it exits. Defaults to `5` seconds.
-
-### `PURE_GIT_PULL`
-
-Set `PURE_GIT_PULL=0` to prevent Pure from checking whether the current Git remote has been updated.
-
-### `PURE_GIT_UNTRACKED_DIRTY`
-
-Set `PURE_GIT_UNTRACKED_DIRTY=0` to not include untracked files in dirtiness check. Only really useful on extremely huge repos like the WebKit repo.
-
-### `PURE_GIT_DELAY_DIRTY_CHECK`
-
-Time in seconds to delay git dirty checking for large repositories (git status takes > 5 seconds). The check is performed asynchronously, this is to save CPU. Defaults to `1800` seconds.
-
-### `PURE_PROMPT_SYMBOL`
-
-Defines the prompt symbol. The default value is `❯`.
-
-### `PURE_GIT_DOWN_ARROW`
-
-Defines the git down arrow symbol. The default value is `⇣`.
-
-### `PURE_GIT_UP_ARROW`
-
-Defines the git up arrow symbol. The default value is `⇡`.
+| Option                           | Description                                                                                    | Default value  |
+| :------------------------------- | :--------------------------------------------------------------------------------------------- | :------------- |
+| **`PURE_CMD_MAX_EXEC_TIME`**     | The max execution time of a process before its run time is shown when it exits.                | `5` seconds    |
+| **`PURE_GIT_PULL=0`**            | Prevents Pure from checking whether the current Git remote has been updated.                   |                |
+| **`PURE_GIT_UNTRACKED_DIRTY=0`** | Do not include untracked files in dirtiness check. Mostly useful on large repos (like WebKit). |                |
+| **`PURE_GIT_DELAY_DIRTY_CHECK`** | Time in seconds to delay git dirty checking when `git status` takes > 5 seconds.               | `1800` seconds |
+| **`PURE_PROMPT_SYMBOL`**         | Defines the prompt symbol.                                                                     | `❯`            |
+| **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
+| **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 
 ## Example
 
