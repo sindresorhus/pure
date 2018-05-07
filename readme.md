@@ -192,26 +192,9 @@ zplugin light sindresorhus/pure
 
 ## FAQ
 
-### I am stuck in a shell loop in my terminal that asks me to authenticate. What should I do?
+There are currently no FAQs.
 
-[This is a known issue](https://github.com/sindresorhus/pure/issues/76).
-Using `git pull` when you get the username prompt should help you to break the loop by giving you a real prompt for this. **[This has been fixed in git 2.3](https://github.com/sindresorhus/pure/commit/f43ab97e1cf4a276b7a6e33eac055ee16610be15)**
-
-### I am seeing the error `zpty: can't open pseudo terminal: bad file descriptor`.
-
-[This is a known issue](https://github.com/sindresorhus/pure/issues/117). `zsh/zpty` requires either legacy bsd ptys or access to `/dev/ptmx`. Here are some known solutions.
-
-#### Gentoo
-
-```console
-$ sudo sh -c "echo 'SANDBOX_WRITE=\"/dev/ptmx\"' > /etc/sandbox.d/10zsh"
-$ sudo emerge -1 zsh
-```
-
-#### FreeBSD 10.1
-
-On a default setup, running the command `kldload pty` should do the trick. If you have a custom kernel, you might need to add `device pty` to the configuration file ([example](https://github.com/nbari/freebsd/blob/58646a9c3c4aaabf6f6467ff505f27f09e29dc75/kernels/xen.kernel#L188)).
-
+See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for previous FAQs.
 
 ## Ports
 
