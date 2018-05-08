@@ -285,6 +285,11 @@ prompt_pure_async_git_fetch() {
 	# kill it. If we don't do it this way, the process will corrupt with the
 	# async worker.
 	setopt localtraps monitor
+
+	# Make sure local HUP trap is unset to allow for signal propagation when
+	# the async worker is flushed.
+	trap - HUP
+
 	trap '
 		# Unset trap to prevent infinite loop
 		trap - CHLD
