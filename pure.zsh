@@ -484,14 +484,37 @@ prompt_pure_async_callback() {
 prompt_pure_state_setup() {
 	setopt localoptions noshwordsplit
 
-	local ssh_connection=$SSH_CONNECTION
+	# Check SSH_CONNECTION and the current state.
+	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
 	local username
 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
 		# environment variable can be lost, attempt detection via who.
-		if who am i | grep -q '(.*)$' &>/dev/null; then
-			ssh_connection=true
+		local who_out
+		who_out=$(who -m 2>/dev/null)
+		if (( $? )); then
+			# Who am I not supported, fallback to plain who.
+			who_out=$(who 2>/dev/null | grep ${TTY#/dev/})
 		fi
+
+		local reIPv6='([a-f0-9:]+:+)+[a-f0-9]+'  # Simplified, but matches loopback as well (::1).
+		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
+		# Here we assume two non-consecutive periods represents a
+		# hostname. This matches foo.bar.baz, but not foo.bar.
+		local reHostname='([.][^. ]+){2}'
+
+		# Usually the remote address is surrounded by parenthesis, but
+		# not on all systems (e.g. busybox).
+		local -H MATCH MBEGIN MEND
+		if [[ $who_out =~ "\(?($reIPv4|$reIPv6|$reHostname)\)?\$" ]]; then
+			ssh_connection=$MATCH
+
+			# Export variable to allow detection propagation inside
+			# shells spawned by this one (e.g. tmux does not always
+			# inherit the same tty, which breaks detection).
+			export PROMPT_PURE_SSH_CONNECTION=$ssh_connection
+		fi
+		unset MATCH MBEGIN MEND
 	fi
 
 	# show username@host if logged in through SSH
@@ -501,7 +524,9 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state=(username "$username")
+	prompt_pure_state=(
+		username "$username"
+	)
 }
 
 prompt_pure_setup() {
