@@ -497,7 +497,7 @@ prompt_pure_state_setup() {
 			who_out=$(who 2>/dev/null | grep ${TTY#/dev/})
 		fi
 
-		local reIPv6='([a-f0-9:]+:+)+[a-f0-9]+'  # Simplified, but matches loopback as well (::1).
+		local reIPv6='(([0-9a-fA-F]+:)|:){2,}[0-9a-fA-F]+'  # Simplified, only checks partial pattern.
 		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
 		# Here we assume two non-consecutive periods represents a
 		# hostname. This matches foo.bar.baz, but not foo.bar.
