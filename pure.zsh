@@ -103,16 +103,6 @@ prompt_pure_preexec() {
 	export VIRTUAL_ENV_DISABLE_PROMPT=${VIRTUAL_ENV_DISABLE_PROMPT:-12}
 }
 
-# string length ignoring ansi escapes
-prompt_pure_string_length_to_var() {
-	local str=$1 var=$2 length
-	# perform expansion on str and check length
-	length=$(( ${#${(S%%)str//(\%([KF1]|)\{*\}|\%[Bbkf])}} ))
-
-	# store string length in variable as specified by caller
-	typeset -g "${var}"="${length}"
-}
-
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
