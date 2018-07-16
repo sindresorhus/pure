@@ -34,7 +34,7 @@ $ npm install --global pure-prompt
 
 That's it. Skip to [Getting started](#getting-started).
 
-### Manually (per user)
+### Manually
 
 1. Clone this repo into /some/dir
 
