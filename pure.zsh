@@ -241,6 +241,7 @@ prompt_pure_async_vcs_info() {
 	vcs_info
 
 	local -A info
+	info[pwd]=$1
 	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
 
@@ -327,7 +328,7 @@ prompt_pure_async_tasks() {
 	typeset -gA prompt_pure_vcs_info
 
 	local -H MATCH MBEGIN MEND
-	if ! [[ $PWD = ${prompt_pure_vcs_info[pwd]}* ]]; then
+	if [[ $PWD != ${prompt_pure_vcs_info[pwd]}* ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
@@ -400,6 +401,10 @@ prompt_pure_async_callback() {
 			# parse output (z) and unquote as array (Q@)
 			info=("${(Q@)${(z)output}}")
 			local -H MATCH MBEGIN MEND
+			if [[ $info[pwd] != $PWD ]]; then
+				# The path has changed since the check started, abort.
+				return
+			fi
 			# check if git toplevel has changed
 			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
 				# if stored pwd is part of $PWD, $PWD is shorter and likelier
