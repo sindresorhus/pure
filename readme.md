@@ -123,6 +123,7 @@ To have commands colorized as seen in the screenshot, install [zsh-syntax-highli
 
 1. Set `ZSH_THEME=""` in your `.zshrc` to disable oh-my-zsh themes.
 2. Follow the Pure [Install](#install) instructions.
+3. Do not enable the following (incompatible) plugins: `vi-mode`, `virtualenv`.
 
 **NOTE:** `oh-my-zsh` overrides the prompt so Pure must be activated *after* `source $ZSH/oh-my-zsh.sh`.
 
