@@ -3,13 +3,25 @@
 #
 # zsh-async
 #
-# version: 1.6.0
+# version: 1.7.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
+typeset -g ASYNC_VERSION=1.7.0
 # Produce debug output from zsh-async when set to 1.
 typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
+
+# Execute commands that can manipulate the environment inside the async worker. Return output via callback.
+_async_eval() {
+	local ASYNC_JOB_NAME
+	# Rename job to _async_eval and redirect all eval output to cat running
+	# in _async_job. Here, stdout and stderr are not separated for
+	# simplicity, this could be improved in the future.
+	{
+		eval "$@"
+	} &> >(ASYNC_JOB_NAME=[async/eval] _async_job 'cat')
+}
 
 # Wrapper for jobs executed by the async worker, gives output in parseable format with execution time
 _async_job() {
@@ -25,6 +37,7 @@ _async_job() {
 	# block, after the command block has completed, the stdin for `cat` is
 	# closed, causing stderr to be appended with a $'\0' at the end to mark the
 	# end of output from this job.
+	local jobname=${ASYNC_JOB_NAME:-$1}
 	local stdout stderr ret tok
 	{
 		stdout=$(eval "$@")
@@ -35,7 +48,7 @@ _async_job() {
 		read -r -k 1 -p tok || exit 1
 
 		# Return output (<job_name> <return_code> <stdout> <duration> <stderr>).
-		print -r -n - ${(q)1} $ret ${(q)stdout} $duration
+		print -r -n - $'\0'${(q)jobname} $ret ${(q)stdout} $duration
 	} 2> >(stderr=$(cat) && print -r -n - " "${(q)stderr}$'\0')
 
 	# Unlock mutex by inserting a token.
@@ -131,7 +144,7 @@ _async_worker() {
 		coproc_pid=0   # Reset pid.
 	}
 
-	local request
+	local request do_eval=0
 	local -a cmd
 	while :; do
 		# Wait for jobs sent by async_job.
@@ -146,8 +159,9 @@ _async_worker() {
 
 		# Check for non-job commands sent to worker
 		case $request in
-			_unset_trap) notify_parent=0; continue;;
-			_killjobs)   killjobs; continue;;
+			_unset_trap)  notify_parent=0; continue;;
+			_killjobs)    killjobs; continue;;
+			_async_eval*) do_eval=1;;
 		esac
 
 		# Parse the request using shell parsing (z) to allow commands
@@ -180,18 +194,27 @@ _async_worker() {
 			print -n -p "t"
 		fi
 
-		# Run job in background, completed jobs are printed to stdout.
-		_async_job $cmd &
-		# Store pid because zsh job manager is extremely unflexible (show jobname as non-unique '$job')...
-		storage[$job]="$!"
+		if (( do_eval )); then
+			shift cmd  # Strip _async_eval from cmd.
+			_async_eval $cmd
+			do_eval=0
+		else
+			# Run job in background, completed jobs are printed to stdout.
+			_async_job $cmd &
+			# Store pid because zsh job manager is extremely unflexible (show jobname as non-unique '$job')...
+			storage[$job]="$!"
+		fi
 
 		processing=0  # Disable guard.
 	done
 }
 
 #
-#  Get results from finnished jobs and pass it to the to callback function. This is the only way to reliably return the
-#  job name, return code, output and execution time and with minimal effort.
+# Get results from finished jobs and pass it to the to callback function. This is the only way to reliably return the
+# job name, return code, output and execution time and with minimal effort.
+#
+# If the async process buffer becomes corrupt, the callback will be invoked with the first argument being `[async]` (job
+# name), non-zero return code and fifth argument describing the error (stderr).
 #
 # usage:
 # 	async_process_results <worker_name> <callback_function>
@@ -212,7 +235,7 @@ async_process_results() {
 	local caller=$3
 	local -a items
 	local null=$'\0' data
-	integer -l len pos num_processed
+	integer -l len pos num_processed has_next
 
 	typeset -gA ASYNC_PROCESS_BUFFER
 
@@ -240,16 +263,19 @@ async_process_results() {
 				pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
 			fi
 
+			has_next=$(( len != 0 ))
 			if (( $#items == 5 )); then
-				items+=($(( len != 0 )))
+				items+=($has_next)
 				$callback "${(@)items}"  # Send all parsed items to the callback.
+				(( num_processed++ ))
+			elif [[ -z $items ]]; then
+				# Empty items occur between results due to double-null ($'\0\0')
+				# caused by commands being both pre and suffixed with null.
 			else
 				# In case of corrupt data, invoke callback with *async* as job
 				# name, non-zero exit status and an error message on stderr.
-				$callback "async" 1 "" 0 "$0:$LINENO: error: bad format, got ${#items} items (${(@q)items})"
+				$callback "[async]" 1 "" 0 "$0:$LINENO: error: bad format, got ${#items} items (${(q)items})" $has_next
 			fi
-
-			(( num_processed++ ))
 		done
 	done
 
@@ -293,6 +319,30 @@ async_job() {
 
 	# Quote the cmd in case RC_EXPAND_PARAM is set.
 	zpty -w $worker "$cmd"$'\0'
+}
+
+#
+# Evaluate a command (like async_job) inside the async worker, then worker environment can be manipulated. For example,
+# issuing a cd command will change the PWD of the worker which will then be inherited by all future async jobs.
+#
+# Output will be returned via callback, job name will be [async/eval].
+#
+# usage:
+# 	async_worker_eval <worker_name> <my_function> [<function_params>]
+#
+async_worker_eval() {
+	setopt localoptions noshwordsplit noksharrays noposixidentifiers noposixstrings
+
+	local worker=$1; shift
+
+	local -a cmd
+	cmd=("$@")
+	if (( $#cmd > 1 )); then
+		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
+	fi
+
+	# Quote the cmd in case RC_EXPAND_PARAM is set.
+	zpty -w $worker "_async_eval $cmd"$'\0'
 }
 
 # This function traps notification signals and calls all registered callbacks
