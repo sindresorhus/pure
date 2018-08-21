@@ -202,11 +202,7 @@ prompt_pure_precmd() {
 
 prompt_pure_async_git_aliases() {
 	setopt localoptions noshwordsplit
-	local dir=$1
 	local -a gitalias pullalias
-
-	# we enter repo to get local aliases as well.
-	builtin cd -q $dir
 
 	# list all aliases and split on newline.
 	gitalias=(${(@f)"$(command git config --get-regexp "^alias\.")"})
@@ -226,7 +222,6 @@ prompt_pure_async_git_aliases() {
 
 prompt_pure_async_vcs_info() {
 	setopt localoptions noshwordsplit
-	builtin cd -q $1 2>/dev/null
 
 	# configure vcs_info inside async task, this frees up vcs_info
 	# to be used or configured as the user pleases.
@@ -241,7 +236,7 @@ prompt_pure_async_vcs_info() {
 	vcs_info
 
 	local -A info
-	info[pwd]=$1
+	info[pwd]=$PWD
 	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
 
@@ -251,10 +246,7 @@ prompt_pure_async_vcs_info() {
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
-	local untracked_dirty=$1 dir=$2
-
-	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q $dir
+	local untracked_dirty=$1
 
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
@@ -267,8 +259,6 @@ prompt_pure_async_git_dirty() {
 
 prompt_pure_async_git_fetch() {
 	setopt localoptions noshwordsplit
-	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q $1
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	export GIT_TERMINAL_PROMPT=0
@@ -306,12 +296,11 @@ prompt_pure_async_git_fetch() {
 	unsetopt monitor
 
 	# check arrow status after a successful git fetch
-	prompt_pure_async_git_arrows $1
+	prompt_pure_async_git_arrows
 }
 
 prompt_pure_async_git_arrows() {
 	setopt localoptions noshwordsplit
-	builtin cd -q $1
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
@@ -324,6 +313,9 @@ prompt_pure_async_tasks() {
 		async_register_callback "prompt_pure" prompt_pure_async_callback
 		typeset -g prompt_pure_async_init=1
 	}
+
+	# Update the current working directory of the async worker.
+	async_worker_eval "prompt_pure" builtin cd -q $PWD
 
 	typeset -gA prompt_pure_vcs_info
 
@@ -342,7 +334,7 @@ prompt_pure_async_tasks() {
 	fi
 	unset MATCH MBEGIN MEND
 
-	async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
+	async_job "prompt_pure" prompt_pure_async_vcs_info
 
 	# # only perform tasks inside git working tree
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
@@ -357,15 +349,15 @@ prompt_pure_async_refresh() {
 		# we set the pattern here to avoid redoing the pattern check until the
 		# working three has changed. pull and fetch are always valid patterns.
 		typeset -g prompt_pure_git_fetch_pattern="pull|fetch"
-		async_job "prompt_pure" prompt_pure_async_git_aliases $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_aliases
 	fi
 
-	async_job "prompt_pure" prompt_pure_async_git_arrows $PWD
+	async_job "prompt_pure" prompt_pure_async_git_arrows
 
-	# do not preform git fetch if it is disabled or working_tree == HOME
-	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
+	# do not preform git fetch if it is disabled or in home folder.
+	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
 		# tell worker to do a git fetch
-		async_job "prompt_pure" prompt_pure_async_git_fetch $PWD
+		async_job "prompt_pure" prompt_pure_async_git_fetch
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
@@ -373,7 +365,7 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
 	fi
 }
 
