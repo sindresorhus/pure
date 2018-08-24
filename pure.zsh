@@ -188,7 +188,7 @@ prompt_pure_precmd() {
 	fi
 
 	# Make sure VIM prompt is reset.
-	prompt_pure_reset_vim_prompt
+	prompt_pure_reset_prompt_symbol
 
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
@@ -477,15 +477,19 @@ prompt_pure_async_callback() {
 	unset prompt_pure_async_render_requested
 }
 
-prompt_pure_update_vim_prompt() {
+prompt_pure_reset_prompt_symbol() {
+	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
+}
+
+prompt_pure_update_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
 	prompt_pure_state[prompt]=${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
 	zle && zle .reset-prompt
 }
 
-prompt_pure_reset_vim_prompt() {
+prompt_pure_reset_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
-	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
+	prompt_pure_reset_prompt_symbol
 	zle && zle .reset-prompt
 }
 
@@ -570,11 +574,11 @@ prompt_pure_setup() {
 
 	prompt_pure_state_setup
 
-	zle -N prompt_pure_update_vim_prompt
-	zle -N prompt_pure_reset_vim_prompt
+	zle -N prompt_pure_update_vim_prompt_widget
+	zle -N prompt_pure_reset_vim_prompt_widget
 	if (( $+functions[add-zle-hook-widget] )); then
-		add-zle-hook-widget zle-line-finish prompt_pure_reset_vim_prompt
-		add-zle-hook-widget zle-keymap-select prompt_pure_update_vim_prompt
+		add-zle-hook-widget zle-line-finish prompt_pure_reset_vim_prompt_widget
+		add-zle-hook-widget zle-keymap-select prompt_pure_update_vim_prompt_widget
 	fi
 
 	# if a virtualenv is activated, display it in grey
