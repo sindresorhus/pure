@@ -484,7 +484,9 @@ prompt_pure_reset_prompt_symbol() {
 prompt_pure_update_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
 	prompt_pure_state[prompt]=${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
-	zle && zle .reset-prompt
+	if (( $KEYS_QUEUED_COUNT == 0 )) ; then
+		zle && zle .reset-prompt
+	fi
 }
 
 prompt_pure_reset_vim_prompt_widget() {
