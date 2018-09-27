@@ -549,10 +549,55 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state=(
+	prompt_pure_state[version]="1.8.0"
+	prompt_pure_state+=(
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
+}
+
+prompt_pure_system_report() {
+	setopt localoptions noshwordsplit
+
+	print - "- Zsh: $(zsh --version)"
+	print -n - "- Operating system: "
+	case "$(uname -s)" in
+		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
+		*)	print "$(uname -s) ($(uname -v))";;
+	esac
+	print - "- Terminal program: $TERM_PROGRAM ($TERM_PROGRAM_VERSION)"
+
+	local git_version
+	git_version=($(git --version))  # Remove newlines, if hub is present.
+	print - "- Git: $git_version"
+
+	print - "- Pure state:"
+	for k v in "${(@kv)prompt_pure_state}"; do
+		print - "\t- $k: ${(q)v}"
+	done
+	print - "- Virtualenv: $(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)"
+	print - "- Prompt: $(typeset -p PROMPT)"
+
+	local ohmyzsh=0
+	typeset -la frameworks
+	(( $+ANTIBODY_HOME )) && frameworks+=("Antibody")
+	(( $+ADOTDIR )) && frameworks+=("Antigen")
+	(( $+ANTIGEN_HS_HOME )) && frameworks+=("Antigen-hs")
+	(( $+functions[upgrade_oh_my_zsh] )) && {
+		ohmyzsh=1
+		frameworks+=("Oh My Zsh")
+	}
+	(( $+ZPREZTODIR )) && frameworks+=("Prezto")
+	(( $+ZPLUG_ROOT )) && frameworks+=("Zplug")
+	(( $+ZPLGM )) && frameworks+=("Zplugin")
+
+	(( $#frameworks == 0 )) && frameworks+=("None")
+	print - "- Detected frameworks: ${(j:, :)frameworks}"
+
+	if (( ohmyzsh )); then
+		print - "\t- Oh My Zsh:"
+		print - "\t\t- Plugins: ${(j:, :)plugins}"
+	fi
 }
 
 prompt_pure_setup() {
