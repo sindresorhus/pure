@@ -166,6 +166,21 @@ prompt_pure_preprompt_render() {
 	typeset -g prompt_pure_last_prompt=$expanded_prompt
 }
 
+prompt_pure_virtual() {
+	# index of psvar (12) here to avoid collisions with user defined entries.
+	psvar[12]=
+	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
+	# Pure should take back control.
+	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
+		psvar[12]="${VIRTUAL_ENV:t}"
+		export VIRTUAL_ENV_DISABLE_PROMPT=12
+	fi
+	if [[ -n $CONDA_DEFAULT_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
+		psvar[12]="${CONDA_DEFAULT_ENV:t}"
+		export VIRTUAL_ENV_DISABLE_PROMPT=12
+	fi
+}
+
 prompt_pure_precmd() {
 	# check exec time and store it in a variable
 	prompt_pure_check_cmd_exec_time
@@ -178,14 +193,7 @@ prompt_pure_precmd() {
 	prompt_pure_async_tasks
 
 	# Check if we should display the virtual env, we use a sufficiently high
-	# index of psvar (12) here to avoid collisions with user defined entries.
-	psvar[12]=
-	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
-	# Pure should take back control.
-	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
-		psvar[12]="${VIRTUAL_ENV:t}"
-		export VIRTUAL_ENV_DISABLE_PROMPT=12
-	fi
+	prompt_pure_virtual
 
 	# Make sure VIM prompt is reset.
 	prompt_pure_reset_prompt_symbol
