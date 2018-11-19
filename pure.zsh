@@ -185,6 +185,8 @@ prompt_pure_precmd() {
 	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
 		psvar[12]="${VIRTUAL_ENV:t}"
 		export VIRTUAL_ENV_DISABLE_PROMPT=12
+	elif [[ -n $CONDA_DEFAULT_ENV ]]; then
+		psvar[12]="${CONDA_DEFAULT_ENV}"
 	fi
 
 	# Make sure VIM prompt is reset.
