@@ -386,6 +386,10 @@ prompt_pure_async_callback() {
 	local do_render=0
 
 	case $job in
+		\[async])
+			# our worker died unexpectedly
+			typeset -g prompt_pure_async_init=0
+			;;
 		prompt_pure_async_vcs_info)
 			local -A info
 			typeset -gA prompt_pure_vcs_info

@@ -3,12 +3,12 @@
 #
 # zsh-async
 #
-# version: 1.7.0
+# version: 1.7.1
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
-typeset -g ASYNC_VERSION=1.7.0
+typeset -g ASYNC_VERSION=1.7.1
 # Produce debug output from zsh-async when set to 1.
 typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
 
@@ -92,7 +92,7 @@ _async_worker() {
 	unset $zsh_hook_functions           # And hooks with registered functions.
 	unset zsh_hooks zsh_hook_functions  # Cleanup.
 
-	child_exit() {
+	close_idle_coproc() {
 		local -a pids
 		pids=(${${(v)jobstates##*:*:}%\=*})
 
@@ -102,6 +102,10 @@ _async_worker() {
 			coproc :
 			coproc_pid=0
 		fi
+	}
+
+	child_exit() {
+		close_idle_coproc
 
 		# On older version of zsh (pre 5.2) we notify the parent through a
 		# SIGWINCH signal because `zpty` did not return a file descriptor (fd)
@@ -197,7 +201,6 @@ _async_worker() {
 		if (( do_eval )); then
 			shift cmd  # Strip _async_eval from cmd.
 			_async_eval $cmd
-			do_eval=0
 		else
 			# Run job in background, completed jobs are printed to stdout.
 			_async_job $cmd &
@@ -206,6 +209,14 @@ _async_worker() {
 		fi
 
 		processing=0  # Disable guard.
+
+		if (( do_eval )); then
+			do_eval=0
+
+			# When there are no active jobs we can't rely on the CHLD trap to
+			# manage the coproc lifetime.
+			close_idle_coproc
+		fi
 	done
 }
 
@@ -294,6 +305,22 @@ _async_zle_watcher() {
 	typeset -gA ASYNC_PTYS ASYNC_CALLBACKS
 	local worker=$ASYNC_PTYS[$1]
 	local callback=$ASYNC_CALLBACKS[$worker]
+
+	if [[ -n $2 ]]; then
+		# from man zshzle(1):
+		# `hup' for a disconnect, `nval' for a closed or otherwise
+		# invalid descriptor, or `err' for any other condition.
+		# Systems that support only the `select' system call always use
+		# `err'.
+
+		# this has the side effect to unregister the broken file descriptor
+		async_stop_worker $worker
+
+		if [[ -n $callback ]]; then
+			$callback '[async]' 2 "" 0 "$worker:zle -F $1 returned error $2" 0
+		fi
+		return
+	fi;
 
 	if [[ -n $callback ]]; then
 		async_process_results $worker $callback watcher
