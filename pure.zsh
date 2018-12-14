@@ -391,8 +391,11 @@ prompt_pure_async_callback() {
 
 	case $job in
 		\[async])
-			# our worker died unexpectedly
-			typeset -g prompt_pure_async_init=0
+			# code is 1 for corrupted worker output and 2 for dead worker
+			if [[ $code -eq 2 ]]; then
+				# our worker died unexpectedly
+				typeset -g prompt_pure_async_init=0
+			fi
 			;;
 		prompt_pure_async_vcs_info)
 			local -A info
