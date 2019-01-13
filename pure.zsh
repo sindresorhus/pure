@@ -390,6 +390,13 @@ prompt_pure_async_callback() {
 	local do_render=0
 
 	case $job in
+		\[async])
+			# code is 1 for corrupted worker output and 2 for dead worker
+			if [[ $code -eq 2 ]]; then
+				# our worker died unexpectedly
+				typeset -g prompt_pure_async_init=0
+			fi
+			;;
 		prompt_pure_async_vcs_info)
 			local -A info
 			typeset -gA prompt_pure_vcs_info
