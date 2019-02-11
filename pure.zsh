@@ -26,7 +26,7 @@
 
 +vi-git-stash() {
 	local -a stashes
-	stashes=$(git stash list 2>/dev/null | wc -l | tr -d ' ')
+	stashes=$(git stash list 2>/dev/null | wc -l)
 	if [[ $stashes -gt 0 ]]; then
 		hook_com[misc]="stash=${stashes}"
 	fi
