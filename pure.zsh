@@ -155,7 +155,7 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git stash symbol.
 	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
-		preprompt_parts+=('%F{cyan}≡%f')
+		preprompt_parts+=('%F{cyan}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
 
 	# Username and machine, if applicable.
