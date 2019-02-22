@@ -53,21 +53,32 @@ prompt_pure_check_cmd_exec_time() {
 }
 
 prompt_pure_set_title() {
+	setopt localoptions noshwordsplit
+
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
 
-	# tell the terminal we are setting the title
-	print -n '\e]0;'
-	# show hostname if connected through ssh
-	[[ -n $SSH_CONNECTION ]] && print -Pn '(%m) '
-	case $1 in
-		expand-prompt)
-			print -Pn $2;;
-		ignore-escape)
-			print -rn $2;;
+	case $TTY in
+		# Don't set title over serial console.
+		/dev/ttyS[0-9]*) return;;
 	esac
-	# end set title
-	print -n '\a'
+
+	# Show hostname if connected via ssh.
+	local hostname=
+	if [[ -n $prompt_pure_state[username] ]]; then
+		# Expand in-place in case ignore-escape is used.
+		hostname="${(%):-(%m) }"
+	fi
+
+	local -a opts
+	case $1 in
+		expand-prompt) opts=(-P);;
+		ignore-escape) opts=(-r);;
+	esac
+
+	# Set title atomically in one print statement so that it works
+	# when XTRACE is enabled.
+	print -n $opts $'\e]0;'${hostname}${2}$'\a'
 }
 
 prompt_pure_preexec() {
@@ -85,16 +96,11 @@ prompt_pure_preexec() {
 
 	# shows the current dir and executed command in the title while a process is active
 	prompt_pure_set_title 'ignore-escape' "$PWD:t: $2"
-}
 
-# string length ignoring ansi escapes
-prompt_pure_string_length_to_var() {
-	local str=$1 var=$2 length
-	# perform expansion on str and check length
-	length=$(( ${#${(S%%)str//(\%([KF1]|)\{*\}|\%[Bbkf])}} ))
-
-	# store string length in variable as specified by caller
-	typeset -g "${var}"="${length}"
+	# Disallow python virtualenv from updating the prompt, set it to 12 if
+	# untouched by the user to indicate that Pure modified it. Here we use
+	# magic number 12, same as in psvar.
+	export VIRTUAL_ENV_DISABLE_PROMPT=${VIRTUAL_ENV_DISABLE_PROMPT:-12}
 }
 
 prompt_pure_preprompt_render() {
@@ -123,25 +129,22 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_username ]] && preprompt_parts+=('$prompt_pure_username')
+	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('${prompt_pure_state[username]}')
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
 	if [[ $PROMPT = *$prompt_newline* ]]; then
-		# When the prompt contains newlines, we keep everything before the first
-		# and after the last newline, leaving us with everything except the
-		# preprompt. This is needed because some software prefixes the prompt
-		# (e.g. virtualenv).
-		cleaned_ps1=${PROMPT%%${prompt_newline}*}${PROMPT##*${prompt_newline}}
+		# Remove everything from the prompt until the newline. This
+		# removes the preprompt and only the original PROMPT remains.
+		cleaned_ps1=${PROMPT##*${prompt_newline}}
 	fi
 	unset MATCH MBEGIN MEND
 
 	# Construct the new prompt with a clean preprompt.
 	local -ah ps1
 	ps1=(
-		$prompt_newline           # Initial newline, for spaciousness.
 		${(j. .)preprompt_parts}  # Join parts, space separated.
 		$prompt_newline           # Separate preprompt and prompt.
 		$cleaned_ps1
@@ -153,7 +156,10 @@ prompt_pure_preprompt_render() {
 	local expanded_prompt
 	expanded_prompt="${(S%%)PROMPT}"
 
-	if [[ $1 != precmd ]] && [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
+	if [[ $1 == precmd ]]; then
+		# Initial newline, for spaciousness.
+		print
+	elif [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
 		# Redraw the prompt.
 		zle && zle .reset-prompt
 	fi
@@ -172,21 +178,36 @@ prompt_pure_precmd() {
 	# preform async git dirty check and fetch
 	prompt_pure_async_tasks
 
-	# store name of virtualenv in psvar if activated
+	# Check if we should display the virtual env, we use a sufficiently high
+	# index of psvar (12) here to avoid collisions with user defined entries.
 	psvar[12]=
-	[[ -n $VIRTUAL_ENV ]] && psvar[12]="${VIRTUAL_ENV:t}"
+	# Check if a conda environment is active and display it's name
+	if [[ -n $CONDA_DEFAULT_ENV ]]; then
+		psvar[12]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
+	fi
+	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
+	# Pure should take back control.
+	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
+		psvar[12]="${VIRTUAL_ENV:t}"
+		export VIRTUAL_ENV_DISABLE_PROMPT=12
+	fi
+
+	# Make sure VIM prompt is reset.
+	prompt_pure_reset_prompt_symbol
 
 	# print the preprompt
 	prompt_pure_preprompt_render "precmd"
+
+	if [[ -n $ZSH_THEME ]]; then
+		print "WARNING: Oh My Zsh themes are enabled (ZSH_THEME='${ZSH_THEME}'). Pure might not be working correctly."
+		print "For more information, see: https://github.com/sindresorhus/pure#oh-my-zsh"
+		unset ZSH_THEME  # Only show this warning once.
+	fi
 }
 
 prompt_pure_async_git_aliases() {
 	setopt localoptions noshwordsplit
-	local dir=$1
 	local -a gitalias pullalias
-
-	# we enter repo to get local aliases as well.
-	builtin cd -q $dir
 
 	# list all aliases and split on newline.
 	gitalias=(${(@f)"$(command git config --get-regexp "^alias\.")"})
@@ -206,7 +227,6 @@ prompt_pure_async_git_aliases() {
 
 prompt_pure_async_vcs_info() {
 	setopt localoptions noshwordsplit
-	builtin cd -q $1 2>/dev/null
 
 	# configure vcs_info inside async task, this frees up vcs_info
 	# to be used or configured as the user pleases.
@@ -221,6 +241,7 @@ prompt_pure_async_vcs_info() {
 	vcs_info
 
 	local -A info
+	info[pwd]=$PWD
 	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
 
@@ -230,10 +251,7 @@ prompt_pure_async_vcs_info() {
 # fastest possible way to check if repo is dirty
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
-	local untracked_dirty=$1 dir=$2
-
-	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q $dir
+	local untracked_dirty=$1
 
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
@@ -246,23 +264,48 @@ prompt_pure_async_git_dirty() {
 
 prompt_pure_async_git_fetch() {
 	setopt localoptions noshwordsplit
-	# use cd -q to avoid side effects of changing directory, e.g. chpwd hooks
-	builtin cd -q $1
 
 	# set GIT_TERMINAL_PROMPT=0 to disable auth prompting for git fetch (git 2.3+)
 	export GIT_TERMINAL_PROMPT=0
 	# set ssh BachMode to disable all interactive ssh password prompting
-	export GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-"ssh -o BatchMode=yes"}
+	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
-	command git -c gc.auto=0 fetch &>/dev/null || return 99
+	# Default return code, indicates Git fetch failure.
+	local fail_code=99
+
+	# Guard against all forms of password prompts. By setting the shell into
+	# MONITOR mode we can notice when a child process prompts for user input
+	# because it will be suspended. Since we are inside an async worker, we
+	# have no way of transmitting the password and the only option is to
+	# kill it. If we don't do it this way, the process will corrupt with the
+	# async worker.
+	setopt localtraps monitor
+
+	# Make sure local HUP trap is unset to allow for signal propagation when
+	# the async worker is flushed.
+	trap - HUP
+
+	trap '
+		# Unset trap to prevent infinite loop
+		trap - CHLD
+		if [[ $jobstates = suspended* ]]; then
+			# Set fail code to password prompt and kill the fetch.
+			fail_code=98
+			kill %%
+		fi
+	' CHLD
+
+	command git -c gc.auto=0 fetch >/dev/null &
+	wait $! || return $fail_code
+
+	unsetopt monitor
 
 	# check arrow status after a successful git fetch
-	prompt_pure_async_git_arrows $1
+	prompt_pure_async_git_arrows
 }
 
 prompt_pure_async_git_arrows() {
 	setopt localoptions noshwordsplit
-	builtin cd -q $1
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
@@ -276,10 +319,13 @@ prompt_pure_async_tasks() {
 		typeset -g prompt_pure_async_init=1
 	}
 
+	# Update the current working directory of the async worker.
+	async_worker_eval "prompt_pure" builtin cd -q $PWD
+
 	typeset -gA prompt_pure_vcs_info
 
 	local -H MATCH MBEGIN MEND
-	if ! [[ $PWD = ${prompt_pure_vcs_info[pwd]}* ]]; then
+	if [[ $PWD != ${prompt_pure_vcs_info[pwd]}* ]]; then
 		# stop any running async jobs
 		async_flush_jobs "prompt_pure"
 
@@ -293,7 +339,7 @@ prompt_pure_async_tasks() {
 	fi
 	unset MATCH MBEGIN MEND
 
-	async_job "prompt_pure" prompt_pure_async_vcs_info $PWD
+	async_job "prompt_pure" prompt_pure_async_vcs_info
 
 	# # only perform tasks inside git working tree
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
@@ -308,15 +354,15 @@ prompt_pure_async_refresh() {
 		# we set the pattern here to avoid redoing the pattern check until the
 		# working three has changed. pull and fetch are always valid patterns.
 		typeset -g prompt_pure_git_fetch_pattern="pull|fetch"
-		async_job "prompt_pure" prompt_pure_async_git_aliases $working_tree
+		async_job "prompt_pure" prompt_pure_async_git_aliases
 	fi
 
-	async_job "prompt_pure" prompt_pure_async_git_arrows $PWD
+	async_job "prompt_pure" prompt_pure_async_git_arrows
 
-	# do not preform git fetch if it is disabled or working_tree == HOME
-	if (( ${PURE_GIT_PULL:-1} )) && [[ $working_tree != $HOME ]]; then
+	# do not preform git fetch if it is disabled or in home folder.
+	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
 		# tell worker to do a git fetch
-		async_job "prompt_pure" prompt_pure_async_git_fetch $PWD
+		async_job "prompt_pure" prompt_pure_async_git_fetch
 	fi
 
 	# if dirty checking is sufficiently fast, tell worker to check it again, or wait for timeout
@@ -324,7 +370,7 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# check check if there is anything to pull
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $PWD
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
 	fi
 }
 
@@ -345,6 +391,13 @@ prompt_pure_async_callback() {
 	local do_render=0
 
 	case $job in
+		\[async])
+			# code is 1 for corrupted worker output and 2 for dead worker
+			if [[ $code -eq 2 ]]; then
+				# our worker died unexpectedly
+				typeset -g prompt_pure_async_init=0
+			fi
+			;;
 		prompt_pure_async_vcs_info)
 			local -A info
 			typeset -gA prompt_pure_vcs_info
@@ -352,6 +405,10 @@ prompt_pure_async_callback() {
 			# parse output (z) and unquote as array (Q@)
 			info=("${(Q@)${(z)output}}")
 			local -H MATCH MBEGIN MEND
+			if [[ $info[pwd] != $PWD ]]; then
+				# The path has changed since the check started, abort.
+				return
+			fi
 			# check if git toplevel has changed
 			if [[ $info[top] = $prompt_pure_vcs_info[top] ]]; then
 				# if stored pwd is part of $PWD, $PWD is shorter and likelier
@@ -399,22 +456,27 @@ prompt_pure_async_callback() {
 		prompt_pure_async_git_fetch|prompt_pure_async_git_arrows)
 			# prompt_pure_async_git_fetch executes prompt_pure_async_git_arrows
 			# after a successful fetch.
-			if (( code == 0 )); then
-				local REPLY
-				prompt_pure_check_git_arrows ${(ps:\t:)output}
-				if [[ $prompt_pure_git_arrows != $REPLY ]]; then
-					typeset -g prompt_pure_git_arrows=$REPLY
-					do_render=1
-				fi
-			elif (( code != 99 )); then
-				# Unless the exit code is 99, prompt_pure_async_git_arrows
-				# failed with a non-zero exit status, meaning there is no
-				# upstream configured.
-				if [[ -n $prompt_pure_git_arrows ]]; then
-					unset prompt_pure_git_arrows
-					do_render=1
-				fi
-			fi
+			case $code in
+				0)
+					local REPLY
+					prompt_pure_check_git_arrows ${(ps:\t:)output}
+					if [[ $prompt_pure_git_arrows != $REPLY ]]; then
+						typeset -g prompt_pure_git_arrows=$REPLY
+						do_render=1
+					fi
+					;;
+				99|98)
+					# Git fetch failed.
+					;;
+				*)
+					# Non-zero exit status from prompt_pure_async_git_arrows,
+					# indicating that there is no upstream configured.
+					if [[ -n $prompt_pure_git_arrows ]]; then
+						unset prompt_pure_git_arrows
+						do_render=1
+					fi
+					;;
+			esac
 			;;
 	esac
 
@@ -427,12 +489,76 @@ prompt_pure_async_callback() {
 	unset prompt_pure_async_render_requested
 }
 
+prompt_pure_reset_prompt_symbol() {
+	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
+}
+
+prompt_pure_update_vim_prompt_widget() {
+	setopt localoptions noshwordsplit
+	prompt_pure_state[prompt]=${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
+	zle && zle .reset-prompt
+}
+
+prompt_pure_reset_vim_prompt_widget() {
+	setopt localoptions noshwordsplit
+	prompt_pure_reset_prompt_symbol
+	zle && zle .reset-prompt
+}
+
+prompt_pure_state_setup() {
+	setopt localoptions noshwordsplit
+
+	# Check SSH_CONNECTION and the current state.
+	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
+	local username
+	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
+		# When changing user on a remote system, the $SSH_CONNECTION
+		# environment variable can be lost, attempt detection via who.
+		local who_out
+		who_out=$(who -m 2>/dev/null)
+		if (( $? )); then
+			# Who am I not supported, fallback to plain who.
+			local -a who_in
+			who_in=( ${(f)"$(who 2>/dev/null)"} )
+			who_out="${(M)who_in:#*[[:space:]]${TTY#/dev/}[[:space:]]*}"
+		fi
+
+		local reIPv6='(([0-9a-fA-F]+:)|:){2,}[0-9a-fA-F]+'  # Simplified, only checks partial pattern.
+		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
+		# Here we assume two non-consecutive periods represents a
+		# hostname. This matches foo.bar.baz, but not foo.bar.
+		local reHostname='([.][^. ]+){2}'
+
+		# Usually the remote address is surrounded by parenthesis, but
+		# not on all systems (e.g. busybox).
+		local -H MATCH MBEGIN MEND
+		if [[ $who_out =~ "\(?($reIPv4|$reIPv6|$reHostname)\)?\$" ]]; then
+			ssh_connection=$MATCH
+
+			# Export variable to allow detection propagation inside
+			# shells spawned by this one (e.g. tmux does not always
+			# inherit the same tty, which breaks detection).
+			export PROMPT_PURE_SSH_CONNECTION=$ssh_connection
+		fi
+		unset MATCH MBEGIN MEND
+	fi
+
+	# show username@host if logged in through SSH
+	[[ -n $ssh_connection ]] && username='%F{242}%n@%m%f'
+
+	# show username@host if root, with username in white
+	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
+
+	typeset -gA prompt_pure_state
+	prompt_pure_state=(
+		username "$username"
+		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
+	)
+}
+
 prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
-
-	# disallow python virtualenvs from updating the prompt
-	export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 	prompt_opts=(subst percent)
 
@@ -453,14 +579,21 @@ prompt_pure_setup() {
 	autoload -Uz vcs_info
 	autoload -Uz async && async
 
+	# The add-zle-hook-widget function is not guaranteed
+	# to be available, it was added in Zsh 5.3.
+	autoload -Uz +X add-zle-hook-widget 2>/dev/null
+
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
-	# show username@host if logged in through SSH
-	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%F{242}%n@%m%f'
+	prompt_pure_state_setup
 
-	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && prompt_pure_username='%F{white}%n%f%F{242}@%m%f'
+	zle -N prompt_pure_update_vim_prompt_widget
+	zle -N prompt_pure_reset_vim_prompt_widget
+	if (( $+functions[add-zle-hook-widget] )); then
+		add-zle-hook-widget zle-line-finish prompt_pure_reset_vim_prompt_widget
+		add-zle-hook-widget zle-keymap-select prompt_pure_update_vim_prompt_widget
+	fi
 
 	# if a virtualenv is activated, display it in grey
 	PROMPT='%(12V.%F{242}%12v%f .)'
@@ -469,6 +602,35 @@ prompt_pure_setup() {
 	zstyle -a ":pure:colors" success color_success
 	zstyle -a ":pure:colors" error color_error
 	PROMPT+="%(?.%F{${color_success:-magenta}}.%F{${color_error:-red}})${PURE_PROMPT_SYMBOL:-❯}%f "
+
+	# Store prompt expansion symbols for in-place expansion via (%). For
+	# some reason it does not work without storing them in a variable first.
+	typeset -ga prompt_pure_debug_depth
+	prompt_pure_debug_depth=('%e' '%N' '%x')
+
+	# Compare is used to check if %N equals %x. When they differ, the main
+	# prompt is used to allow displaying both file name and function. When
+	# they match, we use the secondary prompt to avoid displaying duplicate
+	# information.
+	local -A ps4_parts
+	ps4_parts=(
+		depth 	  '%F{yellow}${(l:${(%)prompt_pure_debug_depth[1]}::+:)}%f'
+		compare   '${${(%)prompt_pure_debug_depth[2]}:#${(%)prompt_pure_debug_depth[3]}}'
+		main      '%F{blue}${${(%)prompt_pure_debug_depth[3]}:t}%f%F{242}:%I%f %F{242}@%f%F{blue}%N%f%F{242}:%i%f'
+		secondary '%F{blue}%N%f%F{242}:%i'
+		prompt 	  '%F{242}>%f '
+	)
+	# Combine the parts with conditional logic. First the `:+` operator is
+	# used to replace `compare` either with `main` or an ampty string. Then
+	# the `:-` operator is used so that if `compare` becomes an empty
+	# string, it is replaced with `secondary`.
+	local ps4_symbols='${${'${ps4_parts[compare]}':+"'${ps4_parts[main]}'"}:-"'${ps4_parts[secondary]}'"}'
+
+	# Improve the debug prompt (PS4), show depth by repeating the +-sign and
+	# add colors to highlight essential parts like file and function name.
+	PROMPT4="${ps4_parts[depth]} ${ps4_symbols}${ps4_parts[prompt]}"
+
+	unset ZSH_THEME  # Guard against Oh My Zsh themes overriding Pure.
 }
 
 prompt_pure_setup "$@"
