@@ -601,7 +601,7 @@ prompt_pure_setup() {
 	# prompt turns red if the previous command didn't exit with 0
 	zstyle -a ":pure:colors" success color_success
 	zstyle -a ":pure:colors" error color_error
-	PROMPT+="%(?.%F{${color_success:-magenta}}.%F{${color_error:-red}})${PURE_PROMPT_SYMBOL:-❯}%f "
+	PROMPT+='%(?.%F{${color_success:-magenta}}.%F{${color_error:-red}})${prompt_pure_state[prompt]}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
