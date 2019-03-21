@@ -573,10 +573,10 @@ prompt_pure_system_report() {
 
 	print - "- Pure state:"
 	for k v in "${(@kv)prompt_pure_state}"; do
-		print - "\t- $k: ${(q)v}"
+		print - "\t- $k: \`${(q)v}\`"
 	done
-	print - "- Virtualenv: $(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)"
-	print - "- Prompt: $(typeset -p PROMPT)"
+	print - "- Virtualenv: \`$(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)\`"
+	print - "- Prompt: \`$(typeset -p PROMPT)\`"
 
 	local ohmyzsh=0
 	typeset -la frameworks
