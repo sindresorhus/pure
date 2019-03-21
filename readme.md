@@ -197,7 +197,8 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 	- [xcambar/purs](https://github.com/xcambar/purs) - Pure-inspired prompt in Rust.
 - **Go**
 	- [talal/mimir](https://github.com/talal/mimir) - Pure-inspired prompt in Go with Kubernetes and OpenStack cloud support. Not intended to have feature parity.
-
+- **PowerShell**
+	- [nickcox/pure-pwsh](https://github.com/nickcox/pure-pwsh/) - PowerShell/PS Core implementation of the Pure prompt.
 
 ## Team
 
