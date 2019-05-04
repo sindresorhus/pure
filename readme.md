@@ -93,6 +93,36 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 
+## Colors
+
+Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default and what part they affect are:
+- `exec_time` (yellow), the execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`
+- `git:arrow` (cyan), for `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`
+- `git:branch` (242), the name of the current branch when in a git repository
+- `git:branch:cached` (red), the name of the current branch when the data isn't fresh
+- `host` (242), the hostname when on a remote machine
+- `path` (blue), the current path ie. `PWD`
+- `prompt:error` (red), the `PURE_PROMPT_SYMBOL` when the previous command has *failed*
+- `prompt:success` (magenta), the `PURE_PROMPT_SYMBOL` when the previous command has *succeded*
+- `user` (242), the username when on remote machine
+- `user:root` (default), the username when the user is root
+- `virtualenv` (242), the name of the python virtualenv when in use
+
+The following diagram shows where each colors are applied on the prompt.
+``` text
+path
+|          git:branch
+|          |       git:arrow
+|          |       |        host
+|          |       |        |
+~/dev/pure master* ⇡ zaphod@heartofgold  42s
+venv ❯               |                   |
+|    |               |                   exec_time
+|    |               user
+|    prompt
+virtualenv
+```
+
 ## Example
 
 ```sh
@@ -102,6 +132,10 @@ autoload -U promptinit; promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
+# change path color
+zstyle :prompt:pure:path color white
+# set the prompt color whatever the result of the last command
+zstyle ':prompt:pure:prompt:*' color green
 
 prompt pure
 ```
