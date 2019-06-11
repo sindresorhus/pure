@@ -549,7 +549,7 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.8.0"
+	prompt_pure_state[version]="1.9.0"
 	prompt_pure_state+=(
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
