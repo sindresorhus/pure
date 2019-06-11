@@ -642,6 +642,7 @@ prompt_pure_setup() {
 
 	prompt_pure_state_setup
 
+	zle -N prompt-pure-reset-prompt prompt_pure_reset_prompt
 	zle -N prompt_pure_update_vim_prompt_widget
 	zle -N prompt_pure_reset_vim_prompt_widget
 	if (( $+functions[add-zle-hook-widget] )); then
