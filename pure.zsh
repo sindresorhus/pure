@@ -517,7 +517,8 @@ prompt_pure_reset_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
 	prompt_pure_reset_prompt_symbol
 
-	prompt_pure_reset_prompt
+	# We can't perform a prompt reset at this point because it
+	# removes the prompt marks inserted by macOS Terminal.
 }
 
 prompt_pure_state_setup() {
