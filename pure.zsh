@@ -160,7 +160,7 @@ prompt_pure_preprompt_render() {
 		print
 	elif [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
 		# Redraw the prompt.
-		zle && zle .reset-prompt
+		prompt_pure_reset_prompt
 	fi
 
 	typeset -g prompt_pure_last_prompt=$expanded_prompt
@@ -488,6 +488,20 @@ prompt_pure_async_callback() {
 	unset prompt_pure_async_render_requested
 }
 
+prompt_pure_reset_prompt() {
+	if [[ $CONTEXT == cont ]]; then
+		# When the context is "cont", PS2 is active and calling
+		# reset-prompt will have no effect on PS1, but it will
+		# reset the execution context (%_) of PS2 which we don't
+		# want. Unfortunately, we can't save the output of "%_"
+		# either because it is only ever rendered as part of the
+		# prompt, expanding in-place won't work.
+		return
+	fi
+
+	zle && zle .reset-prompt
+}
+
 prompt_pure_reset_prompt_symbol() {
 	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
 }
@@ -495,13 +509,15 @@ prompt_pure_reset_prompt_symbol() {
 prompt_pure_update_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
 	prompt_pure_state[prompt]=${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
-	zle && zle .reset-prompt
+
+	prompt_pure_reset_prompt
 }
 
 prompt_pure_reset_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
 	prompt_pure_reset_prompt_symbol
-	zle && zle .reset-prompt
+
+	prompt_pure_reset_prompt
 }
 
 prompt_pure_state_setup() {
@@ -632,6 +648,7 @@ prompt_pure_setup() {
 
 	prompt_pure_state_setup
 
+	zle -N prompt_pure_reset_prompt
 	zle -N prompt_pure_update_vim_prompt_widget
 	zle -N prompt_pure_reset_vim_prompt_widget
 	if (( $+functions[add-zle-hook-widget] )); then
@@ -644,6 +661,9 @@ prompt_pure_setup() {
 
 	# prompt turns red if the previous command didn't exit with 0
 	PROMPT+='%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
+
+	# Indicate continuation prompt by ... and use a darker color for it.
+	PROMPT2='%F{242}... %(1_.%_ .%_)%f%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
