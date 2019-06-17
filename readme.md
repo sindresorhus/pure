@@ -132,9 +132,11 @@ autoload -U promptinit; promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
-# change path color
+
+# change the path color
 zstyle :prompt:pure:path color white
-# set the prompt color whatever the result of the last command
+
+# set the color for both `prompt:success` and `prompt:error`
 zstyle ':prompt:pure:prompt:*' color green
 
 prompt pure
