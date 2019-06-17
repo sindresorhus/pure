@@ -139,8 +139,8 @@ PURE_CMD_MAX_EXEC_TIME=10
 # change the path color
 zstyle :prompt:pure:path color white
 
-# set the color for both `prompt:success` and `prompt:error`
-zstyle ':prompt:pure:prompt:*' color green
+# change the color for both `prompt:success` and `prompt:error`
+zstyle ':prompt:pure:prompt:*' color cyan
 
 prompt pure
 ```
