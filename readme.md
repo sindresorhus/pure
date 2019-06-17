@@ -96,6 +96,11 @@ prompt pure
 
 ## Colors
 
+As explained in ZSH's[manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting) color values can be:
+- a decimal integer corresponding to the color index of your terminal, if your `$TERM` is `xterm-256color` see this [chart](https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg)
+- the name of one of the following nine colours: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white` and `default` (the terminal’s default foreground)
+- ‘#’ followed by an RGB triplet in hexadecimal format (ex. `#424242`), *only* if your terminal support 24bit colors or when the module [`zsh/nearcolor`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) is loaded
+
 Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
 - `exec_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`
@@ -125,6 +130,15 @@ venv ❯               |                   |
 virtualenv
 ```
 
+### RGB colors
+
+There is two way to use RGB colors with the hexadecimal format. The correct way is to use a terminal that support 24bit colors and enable this feature as explained in it's documentation.
+If you can't use such terminal the module [`zsh/nearcolor`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) is here for you, it will map any hexadecimal color to the nearest color in the 88 or 256 color palettes of your termial but without using the first 16 colors since their values can be modifed by the user. Understand that when using this module you won't be able to display true RGB colors, it only allows you to specify colors in a more convenient way. Following is an example on how to use this module:
+```sh
+# .zshrc
+zmodload zsh/nearcolor
+zstyle :prompt:pure:path color '#FF0000'
+```
 
 ## Example
 
