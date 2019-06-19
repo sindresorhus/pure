@@ -109,10 +109,10 @@ prompt_pure_set_colors() {
 	for key val in ${(kv)prompt_pure_colors}; do
 		zstyle -t ":prompt:pure:$key" color "$val"
 		case $? in
-			1) # current style is diffrent than the one from zstyle
+			1) # The current style is different from the one from zstyle
 				zstyle -s ":prompt:pure:$key" color color_temp
 				prompt_pure_colors[$key]=$color_temp ;;
-			2) # no style is defined
+			2) # No style is defined
 				prompt_pure_colors[$key]=$prompt_pure_colors_default[$key] ;;
 		esac
 	done
