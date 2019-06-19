@@ -106,8 +106,8 @@ prompt_pure_preexec() {
 # Change the colors if their value are different from the current ones
 prompt_pure_set_colors() {
 	local color_temp
-	for key val in ${(kv)prompt_pure_colors}; do
-		zstyle -t ":prompt:pure:$key" color "$val"
+	for key value in ${(kv)prompt_pure_colors}; do
+		zstyle -t ":prompt:pure:$key" color "$value"
 		case $? in
 			1) # The current style is different from the one from zstyle
 				zstyle -s ":prompt:pure:$key" color color_temp
