@@ -93,6 +93,56 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 
+
+## Colors
+
+As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:
+- A decimal integer corresponding to the color index of your terminal. If your `$TERM` is `xterm-256color`, see this [chart](https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg).
+- The name of one of the following nine colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, and `default` (the terminal’s default foreground)
+- `#` followed by an RGB triplet in hexadecimal format, for example `#424242`. Only if your terminal supports 24-bit colors (true color) or when the [`zsh/nearcolor` module](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) is loaded.
+
+Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
+- `exec_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
+- `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
+- `git:branch` (242) - The name of the current branch when in a Git repository.
+- `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
+- `host` (242) - The hostname when on a remote machine.
+- `path` (blue) - The current path, for example, `PWD`.
+- `prompt:error` (red) - The `PURE_PROMPT_SYMBOL` when the previous command has *failed*.
+- `prompt:success` (magenta) - The `PURE_PROMPT_SYMBOL` when the previous command has *succeded*.
+- `user` (242) - The username when on remote machine.
+- `user:root` (default) - The username when the user is root.
+- `virtualenv` (242) - The name of the Python `virtualenv` when in use.
+
+The following diagram shows where each color is applied on the prompt:
+
+```
+path
+|          git:branch
+|          |       git:arrow
+|          |       |        host
+|          |       |        |
+~/dev/pure master* ⇡ zaphod@heartofgold  42s
+venv ❯               |                   |
+|    |               |                   exec_time
+|    |               user
+|    prompt
+virtualenv
+```
+
+### RGB colors
+
+There are two ways to use RGB colors with the hexadecimal format. The correct way is to use a [terminal that support 24-bit colors](https://gist.github.com/XVilka/8346728) and enable this feature as explained in the terminal's documentation.
+
+If you can't use such terminal, the module [`zsh/nearcolor`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) can be useful. It will map any hexadecimal color to the nearest color in the 88 or 256 color palettes of your termial, but without using the first 16 colors, since their values can be modified by the user. Keep in mind that when using this module you won't be able to display true RGB colors. It only allows you to specify colors in a more convenient way. The following is an example on how to use this module:
+
+```sh
+# .zshrc
+zmodload zsh/nearcolor
+zstyle :prompt:pure:path color '#FF0000'
+```
+
+
 ## Example
 
 ```sh
@@ -102,6 +152,12 @@ autoload -U promptinit; promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
+
+# change the path color
+zstyle :prompt:pure:path color white
+
+# change the color for both `prompt:success` and `prompt:error`
+zstyle ':prompt:pure:prompt:*' color cyan
 
 prompt pure
 ```
