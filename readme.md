@@ -58,7 +58,7 @@ For a user-specific installation (which would not require escalated privileges),
 
 ```sh
 # .zshenv or .zshrc
-fpath=( "$HOME/.zfunctions" $fpath )
+fpath=("$HOME/.zfunctions" $fpath)
 ```
 
 Then install the theme there:
@@ -231,11 +231,13 @@ zplugin ice pick"async.zsh" src"pure.zsh"
 zplugin light sindresorhus/pure
 ```
 
+
 ## FAQ
 
 There are currently no FAQs.
 
 See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for previous FAQs.
+
 
 ## Ports
 
@@ -257,13 +259,9 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 - **PowerShell**
 	- [nickcox/pure-pwsh](https://github.com/nickcox/pure-pwsh/) - PowerShell/PS Core implementation of the Pure prompt.
 
+
 ## Team
 
 [![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](http://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
 ---|---
 [Sindre Sorhus](https://github.com/sindresorhus) | [Mathias Fredriksson](https://github.com/mafredri)
-
-
-## License
-
-MIT © [Sindre Sorhus](https://sindresorhus.com)
