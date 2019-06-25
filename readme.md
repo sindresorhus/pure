@@ -90,6 +90,7 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 - `path` (blue) - The current path, for example, `PWD`.
 - `prompt:error` (red) - The `PURE_PROMPT_SYMBOL` when the previous command has *failed*.
 - `prompt:success` (magenta) - The `PURE_PROMPT_SYMBOL` when the previous command has *succeded*.
+- `prompt2:faded` (242) - The color for showing the state of the parser in the continuation prompt (PS2).
 - `user` (242) - The username when on remote machine.
 - `user:root` (default) - The username when the user is root.
 - `virtualenv` (242) - The name of the Python `virtualenv` when in use.
