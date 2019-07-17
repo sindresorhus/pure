@@ -84,6 +84,7 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
 - `git:branch` (242) - The name of the current branch when in a Git repository.
 - `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
+- `git:action` (242) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
 - `host` (242) - The hostname when on a remote machine.
 - `path` (blue) - The current path, for example, `PWD`.
 - `prompt:error` (red) - The `PURE_PROMPT_SYMBOL` when the previous command has *failed*.
@@ -97,15 +98,15 @@ The following diagram shows where each color is applied on the prompt:
 ```
 ┌───────────────────────────────────────────── path
 │          ┌────────────────────────────────── git:branch
-│          │       ┌────────────────────────── git:arrow
-│          │       │        ┌───────────────── host
-│          │       │        │
-~/dev/pure master* ⇡ zaphod@heartofgold 42s
-venv ❯               │                  │
-│    │               │                  └───── execution_time
-│    │               └──────────────────────── user
-│    └──────────────────────────────────────── prompt
-└───────────────────────────────────────────── virtualenv
+│          │      ┌─────────────────────────── git:action
+│          │      │         ┌───────────────── host
+│          │      │         │
+~/dev/pure master|rebase-i* ⇡ zaphod@heartofgold 42s
+venv ❯                        │                  │
+│    │                        │                  └───── execution_time
+│    │                        └──────────────────────── user
+│    └───────────────────────────────────────────────── prompt
+└────────────────────────────────────────────────────── virtualenv
 ```
 
 ### RGB colors
