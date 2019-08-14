@@ -123,6 +123,7 @@ prompt_pure_preprompt_render() {
 
 	# Set color for Git branch/dirty status and change color if dirty checking has been delayed.
 	local git_color=$prompt_pure_colors[git:branch]
+	local git_dirty_color=$prompt_pure_colors[git:branch:dirty]
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=$prompt_pure_colors[git:branch:cached]
 
 	# Initialize the preprompt array.
@@ -138,7 +139,7 @@ prompt_pure_preprompt_render() {
 		if [[ -n $prompt_pure_vcs_info[action] ]]; then
 			branch+="|%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]'"%F{$git_color}"
 		fi
-		preprompt_parts+=("$branch"'${prompt_pure_git_dirty}%f')
+		preprompt_parts+=("$branch""%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
@@ -679,6 +680,7 @@ prompt_pure_setup() {
 		git:branch           242
 		git:branch:cached    red
 		git:action           242
+		git:branch:dirty     218
 		host                 242
 		path                 blue
 		prompt:error         red
