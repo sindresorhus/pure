@@ -117,17 +117,17 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 The following diagram shows where each color is applied on the prompt:
 
 ```
-path
-|          git:branch
-|          |       git:arrow
-|          |       |        host
-|          |       |        |
+┌───────────────────────────────────────────── path
+│          ┌────────────────────────────────── git:branch
+│          │       ┌────────────────────────── git:arrow
+│          │       │        ┌───────────────── host
+│          │       │        │
 ~/dev/pure master* ⇡ zaphod@heartofgold  42s
-venv ❯               |                   |
-|    |               |                   execution_time
-|    |               user
-|    prompt
-virtualenv
+venv ❯               │                   │
+│    │               │                   └──── execution_time
+│    │               └──────────────────────── user
+│    └──────────────────────────────────────── prompt
+└───────────────────────────────────────────── virtualenv
 ```
 
 ### RGB colors
