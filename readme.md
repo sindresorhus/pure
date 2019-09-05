@@ -46,6 +46,7 @@ git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
 fpath+=("$HOME/.zsh/pure")
 ```
 
+
 ## Getting started
 
 Initialize the prompt system (if not so already) and choose `pure`:
