@@ -100,9 +100,9 @@ The following diagram shows where each color is applied on the prompt:
 │          │       ┌────────────────────────── git:arrow
 │          │       │        ┌───────────────── host
 │          │       │        │
-~/dev/pure master* ⇡ zaphod@heartofgold  42s
-venv ❯               │                   │
-│    │               │                   └──── execution_time
+~/dev/pure master* ⇡ zaphod@heartofgold 42s
+venv ❯               │                  │
+│    │               │                  └──── execution_time
 │    │               └──────────────────────── user
 │    └──────────────────────────────────────── prompt
 └───────────────────────────────────────────── virtualenv
