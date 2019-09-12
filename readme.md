@@ -102,7 +102,7 @@ The following diagram shows where each color is applied on the prompt:
 │          │       │        │
 ~/dev/pure master* ⇡ zaphod@heartofgold 42s
 venv ❯               │                  │
-│    │               │                  └──── execution_time
+│    │               │                  └───── execution_time
 │    │               └──────────────────────── user
 │    └──────────────────────────────────────── prompt
 └───────────────────────────────────────────── virtualenv
