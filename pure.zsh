@@ -701,8 +701,8 @@ prompt_pure_setup() {
 	# Prompt turns red if the previous command didn't exit with 0.
 	PROMPT+='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
 
-	# Indicate continuation prompt by ... and use a darker color for it.
-	PROMPT2='%F{242}... %(1_.%_ .%_)%f%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
+	# Indicate continuation prompt by … and use a darker color for it.
+	PROMPT2='%F{242}%_… %f%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
