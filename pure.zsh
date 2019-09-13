@@ -115,7 +115,8 @@ prompt_pure_preprompt_render() {
 	local -a preprompt_parts
 	local default_prompt_pre='%F{blue}'
 	# Set the path.
-	preprompt_parts+=(${PURE_PROMPT_PRE:-$default_prompt_pre}'%~%f')
+	reset=${reset:-$(tput sgr0)}
+	preprompt_parts+=(${PURE_PROMPT_PRE:-$default_prompt_pre}'%~%f'"$reset")
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
