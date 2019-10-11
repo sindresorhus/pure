@@ -99,8 +99,9 @@ The following diagram shows where each color is applied on the prompt:
 ┌───────────────────────────────────────────── path
 │          ┌────────────────────────────────── git:branch
 │          │      ┌─────────────────────────── git:action
-│          │      │         ┌───────────────── host
-│          │      │         │
+│          │      │         ┌───────────────── git:arrow
+│          │      │         │        ┌──────── host
+│          │      │         │        │
 ~/dev/pure master|rebase-i* ⇡ zaphod@heartofgold 42s
 venv ❯                        │                  │
 │    │                        │                  └───── execution_time
