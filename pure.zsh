@@ -680,7 +680,7 @@ prompt_pure_setup() {
 		git:branch           242
 		git:branch:cached    red
 		git:action           242
-		git:dirty     		 218
+		git:dirty            218
 		host                 242
 		path                 blue
 		prompt:error         red
