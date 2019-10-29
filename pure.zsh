@@ -746,7 +746,7 @@ prompt_pure_setup() {
 		git:stash            cyan
 		git:branch           242
 		git:branch:cached    red
-		git:action           242
+		git:action           yellow
 		git:dirty            218
 		host                 242
 		path                 blue
