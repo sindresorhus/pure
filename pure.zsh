@@ -143,14 +143,14 @@ prompt_pure_preprompt_render() {
 	# Set the path.
 	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
 
-	# Add Git branch and dirty status info.
+	# Git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
-		local branch="%F{$git_color}"'${prompt_pure_vcs_info[branch]}'
-		if [[ -n $prompt_pure_vcs_info[action] ]]; then
-			branch+="|%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]'"%F{$git_color}"
-		fi
-		preprompt_parts+=("$branch""%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
+		preprompt_parts+=("%F{$git_color}"'${prompt_pure_vcs_info[branch]}'"%F{$git_dirty_color}"'${prompt_pure_git_dirty}%f')
+	fi
+	# Git action (e.g. "merge")
+	if [[ -n $prompt_pure_vcs_info[action] ]]; then
+		preprompt_parts+=("%F{$prompt_pure_colors[git:action]}"'$prompt_pure_vcs_info[action]%f')
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
