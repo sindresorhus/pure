@@ -3,12 +3,12 @@
 #
 # zsh-async
 #
-# version: 1.7.2
+# version: 1.8.0-dev
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
-typeset -g ASYNC_VERSION=1.7.2
+typeset -g ASYNC_VERSION=1.8.0-dev
 # Produce debug output from zsh-async when set to 1.
 typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
 
@@ -37,19 +37,27 @@ _async_job() {
 	# block, after the command block has completed, the stdin for `cat` is
 	# closed, causing stderr to be appended with a $'\0' at the end to mark the
 	# end of output from this job.
-	local jobname=${ASYNC_JOB_NAME:-$1}
-	local stdout stderr ret tok
-	{
-		stdout=$(eval "$@")
-		ret=$?
-		duration=$(( EPOCHREALTIME - duration ))  # Calculate duration.
+	local jobname=${ASYNC_JOB_NAME:-$1} out
+	out="$(
+		local stdout stderr ret tok
+		{
+			stdout=$(eval "$@")
+			ret=$?
+			duration=$(( EPOCHREALTIME - duration ))  # Calculate duration.
 
-		# Grab mutex lock, stalls until token is available.
-		read -r -k 1 -p tok || exit 1
+			print -r -n - $'\0'${(q)jobname} $ret ${(q)stdout} $duration
+		} 2> >(stderr=$(cat) && print -r -n - " "${(q)stderr}$'\0')
+	)"
+	if [[ $out != $'\0'*$'\0' ]]; then
+		# Corrupted output (probably a aborted job?), skipping.
+		return
+	fi
 
-		# Return output (<job_name> <return_code> <stdout> <duration> <stderr>).
-		print -r -n - $'\0'${(q)jobname} $ret ${(q)stdout} $duration
-	} 2> >(stderr=$(cat) && print -r -n - " "${(q)stderr}$'\0')
+	# Grab mutex lock, stalls until token is available.
+	read -r -k 1 -p tok || exit 1
+
+	# Return output (<job_name> <return_code> <stdout> <duration> <stderr>).
+	print -r -n - "$out"
 
 	# Unlock mutex by inserting a token.
 	print -n -p $tok
@@ -158,7 +166,12 @@ _async_worker() {
 			# closed. This is why we propagate the signal to all children and
 			# exit manually.
 			kill -HUP -$$  # Send SIGHUP to all jobs.
-			exit 0
+
+			# We can no longer read on the fd, but in case this was
+			# a crash, let's try to send our last hurrah.
+			print -r -n $'\0'"'[async]'" $(( 127 + 3 )) "''" 0 "'$0:$LINENO: zpty fd died, exiting'"$'\0'
+
+			exit $(( 127 + 3 ))  # Let's pretend we SIGQUIT.
 		}
 
 		# Check for non-job commands sent to worker
@@ -175,9 +188,11 @@ _async_worker() {
 		# Name of the job (first argument).
 		local job=$cmd[1]
 
-		# If worker should perform unique jobs
-		if (( unique )); then
-			# Check if a previous job is still running, if yes, let it finnish
+		# Check if a worker should perform unique jobs, unless
+		# this is an eval since they run synchronously.
+		if (( !do_eval )) && (( unique )); then
+			# Check if a previous job is still running, if yes,
+			# skip this job and let the previous one finish.
 			for pid in ${${(v)jobstates##*:*:}%\=*}; do
 				if [[ ${storage[$job]} == $pid ]]; then
 					continue 2
@@ -317,7 +332,7 @@ _async_zle_watcher() {
 		async_stop_worker $worker
 
 		if [[ -n $callback ]]; then
-			$callback '[async]' 2 "" 0 "$worker:zle -F $1 returned error $2" 0
+			$callback '[async]' 2 "" 0 "$0:$LINENO: error: fd for $worker failed: zle -F $1 returned error $2" 0
 		fi
 		return
 	fi;
@@ -325,6 +340,34 @@ _async_zle_watcher() {
 	if [[ -n $callback ]]; then
 		async_process_results $worker $callback watcher
 	fi
+}
+
+_async_send_job() {
+	setopt localoptions noshwordsplit noksharrays noposixidentifiers noposixstrings
+
+	local caller=$1
+	local worker=$2
+	shift 2
+
+	local -a cmd
+	cmd=("$@")
+	if (( $#cmd > 1 )); then
+		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
+	fi
+
+	zpty -t $worker || {
+		typeset -gA ASYNC_PTYS ASYNC_CALLBACKS
+		local callback=$ASYNC_CALLBACKS[$worker]
+
+		if [[ -n $callback ]]; then
+			$callback '[async]' 3 "" 0 "$0:$LINENO: error: no such worker: $worker" 0
+		else
+			print -u2 "$caller: no sych async worker: $worker"
+			return 1
+		fi
+	}
+
+	zpty -w $worker "$cmd"$'\0'
 }
 
 #
@@ -338,14 +381,7 @@ async_job() {
 
 	local worker=$1; shift
 
-	local -a cmd
-	cmd=("$@")
-	if (( $#cmd > 1 )); then
-		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
-	fi
-
-	# Quote the cmd in case RC_EXPAND_PARAM is set.
-	zpty -w $worker "$cmd"$'\0'
+	_async_send_job $0 $worker "$@"
 }
 
 #
@@ -362,14 +398,7 @@ async_worker_eval() {
 
 	local worker=$1; shift
 
-	local -a cmd
-	cmd=("$@")
-	if (( $#cmd > 1 )); then
-		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
-	fi
-
-	# Quote the cmd in case RC_EXPAND_PARAM is set.
-	zpty -w $worker "_async_eval $cmd"$'\0'
+	_async_send_job $0 $worker _async_eval "$@"
 }
 
 # This function traps notification signals and calls all registered callbacks
