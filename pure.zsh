@@ -467,10 +467,24 @@ prompt_pure_async_callback() {
 
 	case $job in
 		\[async])
-			# Code is 1 for corrupted worker output and 2 for dead worker.
-			if [[ $code -eq 2 ]]; then
-				# Our worker died unexpectedly.
+			# Error codes from zsh-async:
+			#     1 Corrupted worker output.
+			#     2 ZLE watcher detected an error on the worker fd.
+			#     3 Response from async_job when worker is missing.
+			#   130 Async worker exited, this should never happen in
+			#       Pure so the file descriptor is corrupted.
+			if (( code == 2 )) || (( code == 3 )) || (( code == 130 )); then
+				# Our worker died unexpectedly, recovery
+				# will happen on next prompt.
 				typeset -g prompt_pure_async_init=0
+				async_stop_worker prompt_pure
+			fi
+			;;
+		\[async/eval])
+			if (( code )); then
+				# Looks like async_worker_eval failed,
+				# rerun async tasks just in case.
+				prompt_pure_async_tasks
 			fi
 			;;
 		prompt_pure_async_vcs_info)
