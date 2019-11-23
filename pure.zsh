@@ -742,6 +742,10 @@ prompt_pure_setup() {
 
 	# Guard against Oh My Zsh themes overriding Pure.
 	unset ZSH_THEME
+
+	# Guard against (ana)conda changing the PS1 prompt
+	# (we manually insert the env when it's available).
+	export CONDA_CHANGEPS1=no
 }
 
 prompt_pure_setup "$@"
