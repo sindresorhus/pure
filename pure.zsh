@@ -603,13 +603,15 @@ prompt_pure_state_setup() {
 prompt_pure_system_report() {
 	setopt localoptions noshwordsplit
 
-	print - "- Zsh: $(zsh --version)"
+	print - "- Zsh: $($SHELL --version) ($SHELL)"
 	print -n - "- Operating system: "
 	case "$(uname -s)" in
 		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
 		*)	print "$(uname -s) ($(uname -v))";;
 	esac
-	print - "- Terminal program: $TERM_PROGRAM ($TERM_PROGRAM_VERSION)"
+	print - "- Terminal program: ${TERM_PROGRAM:-unknown} (${TERM_PROGRAM_VERSION:-unknown})"
+	print -n - "- Tmux: "
+	[[ -n $TMUX ]] && print "yes" || print "no"
 
 	local git_version
 	git_version=($(git --version))  # Remove newlines, if hub is present.
@@ -617,10 +619,12 @@ prompt_pure_system_report() {
 
 	print - "- Pure state:"
 	for k v in "${(@kv)prompt_pure_state}"; do
-		print - "\t- $k: \`${(q)v}\`"
+		print - "    - $k: \`${(q)v}\`"
 	done
+	print - "- PROMPT: \`$(typeset -p PROMPT)\`"
+	print - "- Colors: \`$(typeset -p prompt_pure_colors)\`"
 	print - "- Virtualenv: \`$(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)\`"
-	print - "- Prompt: \`$(typeset -p PROMPT)\`"
+	print - "- Conda: \`$(typeset -p CONDA_CHANGEPS1)\`"
 
 	local ohmyzsh=0
 	typeset -la frameworks
@@ -639,8 +643,8 @@ prompt_pure_system_report() {
 	print - "- Detected frameworks: ${(j:, :)frameworks}"
 
 	if (( ohmyzsh )); then
-		print - "\t- Oh My Zsh:"
-		print - "\t\t- Plugins: ${(j:, :)plugins}"
+		print - "    - Oh My Zsh:"
+		print - "        - Plugins: ${(j:, :)plugins}"
 	fi
 }
 
