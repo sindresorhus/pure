@@ -9,8 +9,7 @@
 #### Other information
 
 <!--
-If you can't load Pure to create a system report,
-please report the following information:
+If you can't load Pure to create a system report, please report the following information:
 
 - Pure version: 1.x.x
 - ZSH version: 5.x.x
@@ -22,7 +21,7 @@ please report the following information:
 #### I have:
 
 - [ ] Tested with another terminal program and can reproduce the issue: <!-- e.g. iTerm, etc. -->
-- [ ] Followed the [Integration](https://github.com/sindresorhus/pure#integration) instructions for my framework
+- [ ] Followed the [integration](https://github.com/sindresorhus/pure#integration) instructions for my framework
 
 ### Problem description
 
@@ -38,8 +37,7 @@ please report the following information:
 
 <!--
 Please provide a minimal `.zshrc` that reproduces the issue.
-Try to remove everything that that does not affect the issue,
-the fewer lines, the better.
+Try to remove everything that that does not affect the issue, the fewer lines, the better.
 
 Example:
 
