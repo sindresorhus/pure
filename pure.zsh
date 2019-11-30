@@ -331,6 +331,8 @@ prompt_pure_async_git_arrows() {
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
+# try to lower the priority of the worker so that disk heavy operations
+# like git status impact the responsivity of the system somewhat less.
 prompt_pure_async_renice() {
 	setopt localoptions noshwordsplit
 	if command -v renice >/dev/null; then
