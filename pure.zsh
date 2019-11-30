@@ -341,7 +341,7 @@ prompt_pure_async_renice() {
 	fi
 
 	if command -v ionice >/dev/null; then
-		command ionice -c 3 -p $$
+		command ionice --class 3 --pid $$
 	fi
 }
 
