@@ -155,7 +155,7 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git stash symbol.
 	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
-		preprompt_parts+=('%F{cyan}${PURE_GIT_STASH_SYMBOL:-≡}%f')
+		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
 
 	# Username and machine, if applicable.
@@ -699,6 +699,7 @@ prompt_pure_setup() {
 	prompt_pure_colors_default=(
 		execution_time       yellow
 		git:arrow            cyan
+		git:stash            cyan
 		git:branch           242
 		git:branch:cached    red
 		git:action           242

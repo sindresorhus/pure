@@ -83,6 +83,7 @@ As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-E
 Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
 - `execution_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
+- `git:stash` (cyan) - For `PURE_GIT_STASH_SYMBOL`.
 - `git:branch` (242) - The name of the current branch when in a Git repository.
 - `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
 - `git:action` (242) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
@@ -101,11 +102,12 @@ The following diagram shows where each color is applied on the prompt:
 ┌───────────────────────────────────────────── path
 │          ┌────────────────────────────────── git:branch
 │          │      ┌─────────────────────────── git:action
-|          |      |       ┌─────────────────── git:dirty
+│          │      │       ┌─────────────────── git:dirty
 │          │      │       │ ┌───────────────── git:arrow
-│          │      │       │ │        ┌──────── host
-│          │      │       │ │        │
-~/dev/pure master|rebase-i* ⇡ zaphod@heartofgold 42s
+│          │      │       │ │ ┌─────────────── git:stash
+│          │      │       │ │ │        ┌────── host
+│          │      │       │ │ │        │
+~/dev/pure master|rebase-i* ⇡ ≡ zaphod@heartofgold 42s
 venv ❯                        │                  │
 │    │                        │                  └───── execution_time
 │    │                        └──────────────────────── user
