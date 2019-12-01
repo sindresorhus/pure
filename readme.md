@@ -72,6 +72,9 @@ prompt pure
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
 
+Showing git stash status as part of the prompt is not activated by default. To activate this you'll need to opt in via `zstyle`:
+
+`zstyle :prompt:pure:git:stash show yes`
 
 ## Colors
 
@@ -143,6 +146,9 @@ zstyle :prompt:pure:path color white
 
 # change the color for both `prompt:success` and `prompt:error`
 zstyle ':prompt:pure:prompt:*' color cyan
+
+# turn on git stash status
+zstyle :prompt:pure:git:stash show yes
 
 prompt pure
 ```

@@ -153,7 +153,7 @@ prompt_pure_preprompt_render() {
 	if [[ -n $prompt_pure_git_arrows ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
-	# Git stash symbol.
+	# Git stash symbol (if opted in).
 	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
@@ -271,7 +271,10 @@ prompt_pure_async_vcs_info() {
 	# and stash information via misc (%m).
 	zstyle ':vcs_info:git*' formats '%b' '%R' '%a' '%m'
 	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a' '%m'
-	zstyle ':vcs_info:git*+set-message:*' hooks git-stash
+	zstyle -t ":prompt:pure:git:stash" show
+	if [[ $? == 0 ]]; then
+		zstyle ':vcs_info:git*+set-message:*' hooks git-stash
+	fi
 
 	vcs_info
 
