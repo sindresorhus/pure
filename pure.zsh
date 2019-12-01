@@ -394,14 +394,14 @@ prompt_pure_async_refresh() {
 
 	if [[ -z $prompt_pure_git_fetch_pattern ]]; then
 		# We set the pattern here to avoid redoing the pattern check until the
-		# working three has changed. Pull and fetch are always valid patterns.
+		# working tree has changed. Pull and fetch are always valid patterns.
 		typeset -g prompt_pure_git_fetch_pattern="pull|fetch"
 		async_job "prompt_pure" prompt_pure_async_git_aliases
 	fi
 
 	async_job "prompt_pure" prompt_pure_async_git_arrows
 
-	# Do not preform `git fetch` if it is disabled or in home folder.
+	# Do not perform `git fetch` if it is disabled or in home folder.
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
 		# Tell the async worker to do a `git fetch`.
 		async_job "prompt_pure" prompt_pure_async_git_fetch
