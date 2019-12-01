@@ -271,8 +271,7 @@ prompt_pure_async_vcs_info() {
 	# and stash information via misc (%m).
 	zstyle ':vcs_info:git*' formats '%b' '%R' '%a' '%m'
 	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a' '%m'
-	zstyle -t ":prompt:pure:git:stash" show
-	if [[ $? == 0 ]]; then
+	if [[ $1 == 0 ]]; then
 		zstyle ':vcs_info:git*+set-message:*' hooks git-stash
 	fi
 
@@ -381,7 +380,8 @@ prompt_pure_async_tasks() {
 	fi
 	unset MATCH MBEGIN MEND
 
-	async_job "prompt_pure" prompt_pure_async_vcs_info
+	zstyle -t ":prompt:pure:git:stash" show
+	async_job "prompt_pure" prompt_pure_async_vcs_info $?
 
 	# Only perform tasks inside a Git working tree.
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
