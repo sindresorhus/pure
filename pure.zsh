@@ -689,7 +689,7 @@ prompt_pure_setup() {
 		path                 blue
 		prompt:error         red
 		prompt:success       magenta
-		prompt2:faded        242
+		prompt:continuation  242
 		user                 242
 		user:root            default
 		virtualenv           242
@@ -717,7 +717,7 @@ prompt_pure_setup() {
 	PROMPT+=$prompt_indicator
 
 	# Indicate continuation prompt by … and use a darker color for it.
-	PROMPT2='%F{$prompt_pure_colors[prompt2:faded]}… %(1_.%_ .%_)%f'$prompt_indicator
+	PROMPT2='%F{$prompt_pure_colors[prompt:continuation]}… %(1_.%_ .%_)%f'$prompt_indicator
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
