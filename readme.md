@@ -43,7 +43,6 @@ That's it. Skip to [Getting started](#getting-started).
 ```sh
 mkdir -p "$HOME/.zsh"
 git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
-fpath+=("$HOME/.zsh/pure")
 ```
 
 
@@ -53,6 +52,7 @@ Initialize the prompt system (if not so already) and choose `pure`:
 
 ```sh
 # .zshrc
+fpath+=$HOME/.zsh/pure
 autoload -U promptinit; promptinit
 prompt pure
 ```
