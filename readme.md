@@ -38,13 +38,17 @@ That's it. Skip to [Getting started](#getting-started).
 ### Manually
 
 1. Clone this repo somewhere. Here we'll use `$HOME/.zsh/pure`.
-2. Add the path of the cloned repo to `$fpath` in `$HOME/.zshrc`.
 
 ```sh
 mkdir -p "$HOME/.zsh"
 git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
 ```
 
+2. Add the path of the cloned repo to `$fpath` in `$HOME/.zshrc`.
+```sh
+# .zshrc
+fpath+=$HOME/.zsh/pure
+```
 
 ## Getting started
 
@@ -52,7 +56,6 @@ Initialize the prompt system (if not so already) and choose `pure`:
 
 ```sh
 # .zshrc
-fpath+=$HOME/.zsh/pure
 autoload -U promptinit; promptinit
 prompt pure
 ```
