@@ -331,6 +331,20 @@ prompt_pure_async_git_arrows() {
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
+# Try to lower the priority of the worker so that disk heavy operations
+# like `git status` has less impact on the system responsivity.
+prompt_pure_async_renice() {
+	setopt localoptions noshwordsplit
+
+	if command -v renice >/dev/null; then
+		command renice +15 -p $$
+	fi
+
+	if command -v ionice >/dev/null; then
+		command ionice -c 3 -p $$
+	fi
+}
+
 prompt_pure_async_tasks() {
 	setopt localoptions noshwordsplit
 
@@ -339,6 +353,7 @@ prompt_pure_async_tasks() {
 		async_start_worker "prompt_pure" -u -n
 		async_register_callback "prompt_pure" prompt_pure_async_callback
 		typeset -g prompt_pure_async_init=1
+		async_job "prompt_pure" prompt_pure_async_renice
 	}
 
 	# Update the current working directory of the async worker.
@@ -502,6 +517,8 @@ prompt_pure_async_callback() {
 					fi
 					;;
 			esac
+			;;
+		prompt_pure_async_renice)
 			;;
 	esac
 
