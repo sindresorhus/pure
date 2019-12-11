@@ -57,7 +57,7 @@ prompt_pure_set_title() {
 	setopt localoptions noshwordsplit
 
 	# Emacs terminal does not support settings the title.
-	(( ${+EMACS} )) && return
+	(( ${+EMACS} || ${+INSIDE_EMACS} )) && return
 
 	case $TTY in
 		# Don't set title over serial console.
