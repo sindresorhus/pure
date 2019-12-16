@@ -4,6 +4,34 @@
 
 <img src="screenshot.png" width="864">
 
+<br>
+
+---
+
+<div align="center">
+	<p>
+		<p>
+			<sup>
+				<a href="https://github.com/sponsors/sindresorhus">Sindre's open source work is supported by the community</a>
+			</sup>
+		</p>
+		<sup>Special thanks to:</sup>
+		<br>
+		<br>
+		<a href="https://github.com/botpress/botpress">
+			<img src="https://sindresorhus.com/assets/thanks/botpress-logo.svg" width="260" alt="Botpress">
+		</a>
+		<br>
+		<sub><b>Botpress is an open-source conversational assistant creation platform.</b></sub>
+		<br>
+		<sub>They <a href="https://github.com/botpress/botpress/blob/master/.github/CONTRIBUTING.md">welcome contributions</a> from anyone, whether you're into machine learning,<br>want to get started in open-source, or just have an improvement idea.</sub>
+		<br>
+	</p>
+</div>
+
+---
+
+<br>
 
 ## Overview
 
