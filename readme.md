@@ -202,9 +202,7 @@ Add `prompt pure` to your `~/.zpreztorc`.
 
 ### [zim](https://github.com/Eriner/zim)
 
-Pure is bundled with Zim. No need to install it.
-
-Set `zprompt_theme='pure'` in `~/.zimrc`.
+Add `zmodule sindresorhus/pure --source async.zsh --source pure.zsh` to your `.zimrc` and run `zimfw install`.
 
 ### [antigen](https://github.com/zsh-users/antigen)
 
