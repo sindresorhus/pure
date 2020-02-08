@@ -292,6 +292,16 @@ prompt_pure_async_git_fetch() {
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
+	local ref
+	ref=$(command git symbolic-ref -q HEAD)
+	local -a remote
+	remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
+
+	if [[ -z $remote[1] ]]; then
+		# No remote specified for this branch, skip fetch.
+		return 97
+	fi
+
 	# Default return code, which indicates Git fetch failure.
 	local fail_code=99
 
@@ -317,7 +327,13 @@ prompt_pure_async_git_fetch() {
 		fi
 	' CHLD
 
-	command git -c gc.auto=0 fetch >/dev/null &
+	# Only fetch information for the current branch and avoid
+	# fetching tags or submodules to speed up the process.
+	command git -c gc.auto=0 fetch \
+		--quiet \
+		--no-tags \
+		--recurse-submodules=no \
+		$remote &>/dev/null &
 	wait $! || return $fail_code
 
 	unsetopt monitor
@@ -502,6 +518,13 @@ prompt_pure_async_callback() {
 					prompt_pure_check_git_arrows ${(ps:\t:)output}
 					if [[ $prompt_pure_git_arrows != $REPLY ]]; then
 						typeset -g prompt_pure_git_arrows=$REPLY
+						do_render=1
+					fi
+					;;
+				97)
+					# No remote available, make sure to clear git arrows if set.
+					if [[ -n $prompt_pure_git_arrows ]]; then
+						typeset -g prompt_pure_git_arrows=
 						do_render=1
 					fi
 					;;
