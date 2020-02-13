@@ -129,6 +129,9 @@ prompt_pure_preprompt_render() {
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
+    # Username and machine, if applicable.
+	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
+
 	# Set the path.
 	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
 
@@ -146,8 +149,6 @@ prompt_pure_preprompt_render() {
 		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
 
-	# Username and machine, if applicable.
-	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
 
