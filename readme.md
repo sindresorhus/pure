@@ -234,13 +234,13 @@ zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 ```
 
-### [zplugin](https://github.com/zdharma/zplugin)
+### [zinit](https://github.com/zdharma/zinit)
 
 Update your `.zshrc` file with the following two lines (order matters):
 
 ```sh
-zplugin ice pick"async.zsh" src"pure.zsh"
-zplugin light sindresorhus/pure
+zinit ice compile'(pure|async).zsh' pick'async.zsh' src'pure.zsh'
+zinit light sindresorhus/pure
 ```
 
 
