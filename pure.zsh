@@ -24,6 +24,14 @@
 # \e[2K => clear everything on the current line
 
 
++vi-git-stash() {
+	local -a stashes
+	stashes=$(git stash list 2>/dev/null | wc -l)
+	if [[ $stashes -gt 0 ]]; then
+		hook_com[misc]="stash=${stashes}"
+	fi
+}
+
 # Turns seconds into human readable time.
 # 165392 => 1d 21h 56m 32s
 # https://github.com/sindresorhus/pretty-time-zsh
@@ -145,6 +153,10 @@ prompt_pure_preprompt_render() {
 	if [[ -n $prompt_pure_git_arrows ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
+	# Git stash symbol (if opted in).
+	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
+		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
+	fi
 
 	# Username and machine, if applicable.
 	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
@@ -253,19 +265,24 @@ prompt_pure_async_vcs_info() {
 	# to be used or configured as the user pleases.
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
-	# Only export three message variables from `vcs_info`.
-	zstyle ':vcs_info:*' max-exports 3
-	# Export branch (%b), Git toplevel (%R), and action (rebase/cherry-pick) (%a).
-	zstyle ':vcs_info:git*' formats '%b' '%R'
-	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a'
+	# Only export four message variables from `vcs_info`.
+	zstyle ':vcs_info:*' max-exports 4
+	# Export branch (%b), Git toplevel (%R), action (rebase/cherry-pick) (%a),
+	# and stash information via misc (%m).
+	zstyle ':vcs_info:git*' formats '%b' '%R' '%a' '%m'
+	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a' '%m'
+	if [[ $1 == 0 ]]; then
+		zstyle ':vcs_info:git*+set-message:*' hooks git-stash
+	fi
 
 	vcs_info
 
 	local -A info
 	info[pwd]=$PWD
-	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
+	info[top]=$vcs_info_msg_1_
 	info[action]=$vcs_info_msg_2_
+	info[stash]=$vcs_info_msg_3_
 
 	print -r - ${(@kvq)info}
 }
@@ -386,13 +403,16 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_last_dirty_check_timestamp
 		unset prompt_pure_git_arrows
+		unset prompt_pure_git_stash
 		unset prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
+		prompt_pure_vcs_info[stash]=
 	fi
 	unset MATCH MBEGIN MEND
 
-	async_job "prompt_pure" prompt_pure_async_vcs_info
+	zstyle -t ":prompt:pure:git:stash" show
+	async_job "prompt_pure" prompt_pure_async_vcs_info $?
 
 	# Only perform tasks inside a Git working tree.
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
@@ -405,14 +425,14 @@ prompt_pure_async_refresh() {
 
 	if [[ -z $prompt_pure_git_fetch_pattern ]]; then
 		# We set the pattern here to avoid redoing the pattern check until the
-		# working three has changed. Pull and fetch are always valid patterns.
+		# working tree has changed. Pull and fetch are always valid patterns.
 		typeset -g prompt_pure_git_fetch_pattern="pull|fetch"
 		async_job "prompt_pure" prompt_pure_async_git_aliases
 	fi
 
 	async_job "prompt_pure" prompt_pure_async_git_arrows
 
-	# Do not preform `git fetch` if it is disabled or in home folder.
+	# Do not perform `git fetch` if it is disabled or in home folder.
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
 		# Tell the async worker to do a `git fetch`.
 		async_job "prompt_pure" prompt_pure_async_git_fetch
@@ -480,10 +500,11 @@ prompt_pure_async_callback() {
 			# Git directory. Run the async refresh tasks.
 			[[ -n $info[top] ]] && [[ -z $prompt_pure_vcs_info[top] ]] && prompt_pure_async_refresh
 
-			# Always update branch and top-level.
+			# Always update branch, top-level and stash.
 			prompt_pure_vcs_info[branch]=$info[branch]
 			prompt_pure_vcs_info[top]=$info[top]
 			prompt_pure_vcs_info[action]=$info[action]
+			prompt_pure_vcs_info[stash]=$info[stash]
 
 			do_render=1
 			;;
@@ -721,6 +742,7 @@ prompt_pure_setup() {
 	prompt_pure_colors_default=(
 		execution_time       yellow
 		git:arrow            cyan
+		git:stash            cyan
 		git:branch           242
 		git:branch:cached    red
 		git:action           242

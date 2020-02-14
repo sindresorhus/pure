@@ -101,7 +101,11 @@ prompt pure
 | **`PURE_PROMPT_VICMD_SYMBOL`**   | Defines the prompt symbol used when the `vicmd` keymap is active (VI-mode).                    | `❮`            |
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
+| **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
 
+Showing git stash status as part of the prompt is not activated by default. To activate this you'll need to opt in via `zstyle`:
+
+`zstyle :prompt:pure:git:stash show yes`
 
 ## Colors
 
@@ -113,6 +117,7 @@ As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-E
 Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
 - `execution_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
+- `git:stash` (cyan) - For `PURE_GIT_STASH_SYMBOL`.
 - `git:branch` (242) - The name of the current branch when in a Git repository.
 - `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
 - `git:action` (242) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
@@ -132,11 +137,12 @@ The following diagram shows where each color is applied on the prompt:
 ┌───────────────────────────────────────────── path
 │          ┌────────────────────────────────── git:branch
 │          │      ┌─────────────────────────── git:action
-|          |      |       ┌─────────────────── git:dirty
+│          │      │       ┌─────────────────── git:dirty
 │          │      │       │ ┌───────────────── git:arrow
-│          │      │       │ │        ┌──────── host
-│          │      │       │ │        │
-~/dev/pure master|rebase-i* ⇡ zaphod@heartofgold 42s
+│          │      │       │ │ ┌─────────────── git:stash
+│          │      │       │ │ │        ┌────── host
+│          │      │       │ │ │        │
+~/dev/pure master|rebase-i* ⇡ ≡ zaphod@heartofgold 42s
 venv ❯                        │                  │
 │    │                        │                  └───── execution_time
 │    │                        └──────────────────────── user
@@ -172,6 +178,9 @@ zstyle :prompt:pure:path color white
 
 # change the color for both `prompt:success` and `prompt:error`
 zstyle ':prompt:pure:prompt:*' color cyan
+
+# turn on git stash status
+zstyle :prompt:pure:git:stash show yes
 
 prompt pure
 ```
