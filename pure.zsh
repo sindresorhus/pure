@@ -153,8 +153,8 @@ prompt_pure_preprompt_render() {
 	if [[ -n $prompt_pure_git_arrows ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
-	# Git stash symbol (if opted in).
-	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
+	# Git stash symbol (if opted in and not during action).
+	if [[ -n $prompt_pure_vcs_info[stash] && -z $prompt_pure_vcs_info[action] ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
 
@@ -270,7 +270,7 @@ prompt_pure_async_vcs_info() {
 	# Export branch (%b), Git toplevel (%R), action (rebase/cherry-pick) (%a),
 	# and stash information via misc (%m).
 	zstyle ':vcs_info:git*' formats '%b' '%R' '%a' '%m'
-	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a' '%m'
+	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a'
 	if [[ $1 == 0 ]]; then
 		zstyle ':vcs_info:git*+set-message:*' hooks git-stash
 	fi
@@ -403,7 +403,6 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_dirty
 		unset prompt_pure_git_last_dirty_check_timestamp
 		unset prompt_pure_git_arrows
-		unset prompt_pure_git_stash
 		unset prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
