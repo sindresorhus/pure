@@ -762,7 +762,7 @@ prompt_pure_setup() {
 		os:apple             16
 		user                 242
 		user:root            default
-		virtualenv           242
+		virtualenv           yellow
 	)
 	prompt_pure_colors=("${(@kv)prompt_pure_colors_default}")
 
@@ -780,7 +780,7 @@ prompt_pure_setup() {
 	fi
 
 	# If a virtualenv is activated, display it in grey.
-	PROMPT='%(12V.%F{$prompt_pure_colors[virtualenv]}%12v%f .)'
+	PROMPT='%(12V.%F{$prompt_pure_colors[virtualenv]} %12v%f .)'
 
 	# Prompt turns red if the previous command didn't exit with 0.
 	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
