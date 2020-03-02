@@ -170,6 +170,11 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
 
+	# NodeJS version display
+	if [[ -n $prompt_pure_nodejs ]]; then
+		preprompt_parts+=('%F{$prompt_pure_colors[nodejs]} ${prompt_pure_nodejs}%f')
+	fi
+
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
 	if [[ $PROMPT = *$prompt_newline* ]]; then
@@ -385,6 +390,13 @@ prompt_pure_async_renice() {
 	fi
 }
 
+prompt_pure_async_nodejs() {
+	local expected_node_version
+	if [[ -f "./.nvmrc" ]]; then
+		expected_node_version=$(command cat "./.nvmrc")
+	fi
+}
+
 prompt_pure_async_tasks() {
 	setopt localoptions noshwordsplit
 
@@ -453,6 +465,8 @@ prompt_pure_async_refresh() {
 		# Check check if there is anything to pull.
 		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
 	fi
+
+	async_job "prompt_pure" prompt_pure_async_nodejs
 }
 
 prompt_pure_check_git_arrows() {
@@ -570,6 +584,10 @@ prompt_pure_async_callback() {
 			esac
 			;;
 		prompt_pure_async_renice)
+			;;
+		prompt_pure_async_nodejs)
+			prompt_pure_nodejs=$3
+			do_render=1
 			;;
 	esac
 
