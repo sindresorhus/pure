@@ -163,6 +163,8 @@ prompt_pure_preprompt_render() {
 
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
+	# Print non-zero exit code
+	preprompt_parts+=('%F{red}%(?..✘ $?)%f')
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
