@@ -615,6 +615,7 @@ prompt_pure_state_setup() {
 	# Check SSH_CONNECTION and the current state.
 	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
 	local username hostname
+
 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
 		# environment variable can be lost. Attempt detection via `who`.
@@ -647,9 +648,13 @@ prompt_pure_state_setup() {
 		unset MATCH MBEGIN MEND
 	fi
 
+	zstyle -t ":prompt:pure:host" show
+	local show_host=$?
+	[[ $show_host -eq 2 ]] && [[ -n "$ssh_connection" ]] && show_host=1
+
 	hostname='%F{$prompt_pure_colors[host]}@%m%f'
 	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+	[[ -n $show_host ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
 
 	# Show `username@host` if root, with username in default color.
 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"

@@ -182,6 +182,12 @@ zstyle ':prompt:pure:prompt:*' color cyan
 # turn on git stash status
 zstyle :prompt:pure:git:stash show yes
 
+# Always show user@host
+zstyle :prompt:pure:host show yes
+
+# Always hide user@host
+zstyle :prompt:pure:host show no
+
 prompt pure
 ```
 
