@@ -353,7 +353,7 @@ prompt_pure_async_git_arrows() {
 }
 
 prompt_pure_async_git_stash() {
-    git rev-list --walk-reflogs --count refs/stash
+	git rev-list --walk-reflogs --count refs/stash
 }
 
 # Try to lower the priority of the worker so that disk heavy operations
