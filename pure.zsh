@@ -129,6 +129,8 @@ prompt_pure_set_colors() {
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
+	unset prompt_pure_async_render_requested
+
 	# Set color for Git branch/dirty status and change color if dirty checking has been delayed.
 	local git_color=$prompt_pure_colors[git:branch]
 	local git_dirty_color=$prompt_pure_colors[git:dirty]
@@ -137,7 +139,7 @@ prompt_pure_preprompt_render() {
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
-    # Username and machine, if applicable.
+	# Username and machine, if applicable.
 	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
 
 	# Set the path.
@@ -587,8 +589,6 @@ prompt_pure_async_callback() {
 					fi
 					;;
 			esac
-			;;
-		prompt_pure_async_renice)
 			;;
 	esac
 
