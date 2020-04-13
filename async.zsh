@@ -3,12 +3,12 @@
 #
 # zsh-async
 #
-# version: 1.8.0-dev
+# version: 1.8.0
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
-typeset -g ASYNC_VERSION=1.8.0-dev
+typeset -g ASYNC_VERSION=1.8.0
 # Produce debug output from zsh-async when set to 1.
 typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
 
@@ -49,12 +49,12 @@ _async_job() {
 		} 2> >(stderr=$(cat) && print -r -n - " "${(q)stderr}$'\0')
 	)"
 	if [[ $out != $'\0'*$'\0' ]]; then
-		# Corrupted output (probably a aborted job?), skipping.
+		# Corrupted output (aborted job?), skipping.
 		return
 	fi
 
 	# Grab mutex lock, stalls until token is available.
-	read -r -k 1 -p tok || exit 1
+	read -r -k 1 -p tok || return 1
 
 	# Return output (<job_name> <return_code> <stdout> <duration> <stderr>).
 	print -r -n - "$out"
@@ -81,10 +81,13 @@ _async_worker() {
 	# When a zpty is deleted (using -d) all the zpty instances created before
 	# the one being deleted receive a SIGHUP, unless we catch it, the async
 	# worker would simply exit (stop working) even though visible in the list
-	# of zpty's (zpty -L).
-	TRAPHUP() {
-		return 0  # Return 0, indicating signal was handled.
-	}
+	# of zpty's (zpty -L). This has been fixed around the time of Zsh 5.4
+	# (not released).
+	if ! is-at-least 5.4.1; then
+		TRAPHUP() {
+			return 0  # Return 0, indicating signal was handled.
+		}
+	fi
 
 	local -A storage
 	local unique=0
@@ -129,14 +132,32 @@ _async_worker() {
 	# Register a SIGCHLD trap to handle the completion of child processes.
 	trap child_exit CHLD
 
-	# Process option parameters passed to worker
-	while getopts "np:u" opt; do
+	# Process option parameters passed to worker.
+	while getopts "np:uz" opt; do
 		case $opt in
 			n) notify_parent=1;;
 			p) parent_pid=$OPTARG;;
 			u) unique=1;;
+			z) notify_parent=0;;  # Uses ZLE watcher instead.
 		esac
 	done
+
+	# Terminate all running jobs, note that this function does not
+	# reinstall the child trap.
+	terminate_jobs() {
+		trap - CHLD   # Ignore child exits during kill.
+		coproc :      # Quit coproc.
+		coproc_pid=0  # Reset pid.
+
+		if is-at-least 5.4.1; then
+			trap '' HUP    # Catch the HUP sent to this process.
+			kill -HUP -$$  # Send to entire process group.
+			trap - HUP     # Disable HUP trap.
+		else
+			# We already handle HUP for Zsh < 5.4.1.
+			kill -HUP -$$  # Send to entire process group.
+		fi
+	}
 
 	killjobs() {
 		local tok
@@ -151,9 +172,8 @@ _async_worker() {
 		# process is in the middle of writing to stdin during kill.
 		(( coproc_pid )) && read -r -k 1 -p tok
 
-		kill -HUP -$$  # Send to entire process group.
-		coproc :       # Quit coproc.
-		coproc_pid=0   # Reset pid.
+		terminate_jobs
+		trap child_exit CHLD  # Reinstall child trap.
 	}
 
 	local request do_eval=0
@@ -161,22 +181,27 @@ _async_worker() {
 	while :; do
 		# Wait for jobs sent by async_job.
 		read -r -d $'\0' request || {
-			# Since we handle SIGHUP above (and thus do not know when `zpty -d`)
-			# occurs, a failure to read probably indicates that stdin has
-			# closed. This is why we propagate the signal to all children and
-			# exit manually.
-			kill -HUP -$$  # Send SIGHUP to all jobs.
+			# Unknown error occurred while reading from stdin, the zpty
+			# worker is likely in a broken state, so we shut down.
+			terminate_jobs
 
-			# We can no longer read on the fd, but in case this was
-			# a crash, let's try to send our last hurrah.
+			# Stdin is broken and in case this was an unintended
+			# crash, we try to report it as a last hurrah.
 			print -r -n $'\0'"'[async]'" $(( 127 + 3 )) "''" 0 "'$0:$LINENO: zpty fd died, exiting'"$'\0'
 
-			exit $(( 127 + 3 ))  # Let's pretend we SIGQUIT.
+			# We use `return` to abort here because using `exit` may
+			# result in an infinite loop that never exits and, as a
+			# result, high CPU utilization.
+			return $(( 127 + 1 ))
 		}
+
+		# We need to clean the input here because sometimes when a zpty
+		# has died and been respawned, messages will be prefixed with a
+		# carraige return (\r, or \C-M).
+		request=${request#$'\C-M'}
 
 		# Check for non-job commands sent to worker
 		case $request in
-			_unset_trap)  notify_parent=0; continue;;
 			_killjobs)    killjobs; continue;;
 			_async_eval*) do_eval=1;;
 		esac
@@ -349,25 +374,19 @@ _async_send_job() {
 	local worker=$2
 	shift 2
 
-	local -a cmd
-	cmd=("$@")
-	if (( $#cmd > 1 )); then
-		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
-	fi
-
-	zpty -t $worker || {
-		typeset -gA ASYNC_PTYS ASYNC_CALLBACKS
+	zpty -t $worker &>/dev/null || {
+		typeset -gA ASYNC_CALLBACKS
 		local callback=$ASYNC_CALLBACKS[$worker]
 
 		if [[ -n $callback ]]; then
 			$callback '[async]' 3 "" 0 "$0:$LINENO: error: no such worker: $worker" 0
 		else
-			print -u2 "$caller: no sych async worker: $worker"
-			return 1
+			print -u2 "$caller: no such async worker: $worker"
 		fi
+		return 1
 	}
 
-	zpty -w $worker "$cmd"$'\0'
+	zpty -w $worker "$@"$'\0'
 }
 
 #
@@ -381,7 +400,13 @@ async_job() {
 
 	local worker=$1; shift
 
-	_async_send_job $0 $worker "$@"
+	local -a cmd
+	cmd=("$@")
+	if (( $#cmd > 1 )); then
+		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
+	fi
+
+	_async_send_job $0 $worker "$cmd"
 }
 
 #
@@ -398,7 +423,14 @@ async_worker_eval() {
 
 	local worker=$1; shift
 
-	_async_send_job $0 $worker _async_eval "$@"
+	local -a cmd
+	cmd=("$@")
+	if (( $#cmd > 1 )); then
+		cmd=(${(q)cmd})  # Quote special characters in multi argument commands.
+	fi
+
+	# Quote the cmd in case RC_EXPAND_PARAM is set.
+	_async_send_job $0 $worker "_async_eval $cmd"
 }
 
 # This function traps notification signals and calls all registered callbacks
@@ -421,7 +453,7 @@ _async_notify_trap() {
 async_register_callback() {
 	setopt localoptions noshwordsplit nolocaltraps
 
-	typeset -gA ASYNC_CALLBACKS
+	typeset -gA ASYNC_PTYS ASYNC_CALLBACKS
 	local worker=$1; shift
 
 	ASYNC_CALLBACKS[$worker]="$*"
@@ -430,6 +462,14 @@ async_register_callback() {
 	# workers to notify (via -n) when a job is done.
 	if [[ ! -o interactive ]] || [[ ! -o zle ]]; then
 		trap '_async_notify_trap' WINCH
+	elif [[ -o interactive ]] && [[ -o zle ]]; then
+		local fd w
+		for fd w in ${(@kv)ASYNC_PTYS}; do
+			if [[ $w == $worker ]]; then
+				zle -F $fd _async_zle_watcher  # Register the ZLE handler.
+				break
+			fi
+		done
 	fi
 }
 
@@ -494,6 +534,8 @@ async_start_worker() {
 	setopt localoptions noshwordsplit
 
 	local worker=$1; shift
+	local -a args
+	args=("$@")
 	zpty -t $worker &>/dev/null && return
 
 	typeset -gA ASYNC_PTYS
@@ -507,15 +549,21 @@ async_start_worker() {
 		unsetopt xtrace
 	}
 
-	if (( ! ASYNC_ZPTY_RETURNS_FD )) && [[ -o interactive ]] && [[ -o zle ]]; then
-		# When zpty doesn't return a file descriptor (on older versions of zsh)
-		# we try to guess it anyway.
-		integer -l zptyfd
-		exec {zptyfd}>&1  # Open a new file descriptor (above 10).
-		exec {zptyfd}>&-  # Close it so it's free to be used by zpty.
+	if [[ -o interactive ]] && [[ -o zle ]]; then
+		# Inform the worker to ignore the notify flag and that we're
+		# using a ZLE watcher instead.
+		args+=(-z)
+
+		if (( ! ASYNC_ZPTY_RETURNS_FD )); then
+			# When zpty doesn't return a file descriptor (on older versions of zsh)
+			# we try to guess it anyway.
+			integer -l zptyfd
+			exec {zptyfd}>&1  # Open a new file descriptor (above 10).
+			exec {zptyfd}>&-  # Close it so it's free to be used by zpty.
+		fi
 	fi
 
-	zpty -b $worker _async_worker -p $$ $@ || {
+	zpty -b $worker _async_worker -p $$ $args || {
 		async_stop_worker $worker
 		return 1
 	}
@@ -523,7 +571,7 @@ async_start_worker() {
 	# Re-enable it if it was enabled, for debugging.
 	(( has_xtrace )) && setopt xtrace
 
-	if [[ $ZSH_VERSION < 5.0.8 ]]; then
+	if ! is-at-least 5.0.8; then
 		# For ZSH versions older than 5.0.8 we delay a bit to give
 		# time for the worker to start before issuing commands,
 		# otherwise it will not be ready to receive them.
@@ -535,11 +583,7 @@ async_start_worker() {
 			REPLY=$zptyfd  # Use the guessed value for the file desciptor.
 		fi
 
-		ASYNC_PTYS[$REPLY]=$worker        # Map the file desciptor to the worker.
-		zle -F $REPLY _async_zle_watcher  # Register the ZLE handler.
-
-		# Disable trap in favor of ZLE handler when notify is enabled (-n).
-		async_job $worker _unset_trap
+		ASYNC_PTYS[$REPLY]=$worker  # Map the file desciptor to the worker.
 	fi
 }
 
@@ -584,6 +628,9 @@ async_init() {
 
 	zmodload zsh/zpty
 	zmodload zsh/datetime
+
+	# Load is-at-least for reliable version check.
+	autoload -Uz is-at-least
 
 	# Check if zsh/zpty returns a file descriptor or not,
 	# shell must also be interactive with zle enabled.
