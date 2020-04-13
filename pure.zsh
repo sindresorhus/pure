@@ -560,7 +560,7 @@ prompt_pure_async_callback() {
 			;;
 		prompt_pure_async_git_stash)
 			local prev_stash=$prompt_pure_git_stash
-			prompt_pure_git_stash=$output
+			typeset -g prompt_pure_git_stash=$output
 			[[ $prev_stash != $prompt_pure_git_stash ]] && do_render=1
 			;;
 		prompt_pure_async_renice)
