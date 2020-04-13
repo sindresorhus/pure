@@ -24,14 +24,6 @@
 # \e[2K => clear everything on the current line
 
 
-+vi-git-stash() {
-	local -a stashes
-	stashes=$(git stash list 2>/dev/null | wc -l)
-	if [[ $stashes -gt 0 ]]; then
-		hook_com[misc]="stash=${stashes}"
-	fi
-}
-
 # Turns seconds into human readable time.
 # 165392 => 1d 21h 56m 32s
 # https://github.com/sindresorhus/pretty-time-zsh
@@ -157,7 +149,7 @@ prompt_pure_preprompt_render() {
 		preprompt_parts+=('%F{$prompt_pure_colors[git:arrow]}${prompt_pure_git_arrows}%f')
 	fi
 	# Git stash symbol (if opted in).
-	if [[ -n $prompt_pure_vcs_info[stash] ]]; then
+	if [[ -n $prompt_pure_git_stash ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
 
@@ -267,14 +259,10 @@ prompt_pure_async_vcs_info() {
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
 	# Only export four message variables from `vcs_info`.
-	zstyle ':vcs_info:*' max-exports 4
-	# Export branch (%b), Git toplevel (%R), action (rebase/cherry-pick) (%a),
-	# and stash information via misc (%m).
-	zstyle ':vcs_info:git*' formats '%b' '%R' '%a' '%m'
-	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a' '%m'
-	if [[ $1 == 0 ]]; then
-		zstyle ':vcs_info:git*+set-message:*' hooks git-stash
-	fi
+	zstyle ':vcs_info:*' max-exports 3
+	# Export branch (%b), Git toplevel (%R), action (rebase/cherry-pick) (%a)
+	zstyle ':vcs_info:git*' formats '%b' '%R' '%a'
+	zstyle ':vcs_info:git*' actionformats '%b' '%R' '%a'
 
 	vcs_info
 
@@ -283,7 +271,6 @@ prompt_pure_async_vcs_info() {
 	info[branch]=$vcs_info_msg_0_
 	info[top]=$vcs_info_msg_1_
 	info[action]=$vcs_info_msg_2_
-	info[stash]=$vcs_info_msg_3_
 
 	print -r - ${(@kvq)info}
 }
@@ -365,6 +352,10 @@ prompt_pure_async_git_arrows() {
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
+prompt_pure_async_git_stash() {
+	git rev-list --walk-reflogs --count refs/stash
+}
+
 # Try to lower the priority of the worker so that disk heavy operations
 # like `git status` has less impact on the system responsivity.
 prompt_pure_async_renice() {
@@ -408,12 +399,10 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
-		prompt_pure_vcs_info[stash]=
 	fi
 	unset MATCH MBEGIN MEND
 
-	zstyle -t ":prompt:pure:git:stash" show
-	async_job "prompt_pure" prompt_pure_async_vcs_info $?
+	async_job "prompt_pure" prompt_pure_async_vcs_info
 
 	# Only perform tasks inside a Git working tree.
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
@@ -446,6 +435,13 @@ prompt_pure_async_refresh() {
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# Check check if there is anything to pull.
 		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
+	fi
+
+	# If stash is enabled, tell async worker to count stashes
+	if zstyle -t ":prompt:pure:git:stash" show; then
+		async_job "prompt_pure" prompt_pure_async_git_stash
+	else
+		unset prompt_pure_git_stash
 	fi
 }
 
@@ -505,7 +501,6 @@ prompt_pure_async_callback() {
 			prompt_pure_vcs_info[branch]=$info[branch]
 			prompt_pure_vcs_info[top]=$info[top]
 			prompt_pure_vcs_info[action]=$info[action]
-			prompt_pure_vcs_info[stash]=$info[stash]
 
 			do_render=1
 			;;
@@ -562,6 +557,11 @@ prompt_pure_async_callback() {
 					fi
 					;;
 			esac
+			;;
+		prompt_pure_async_git_stash)
+			local prev_stash=$prompt_pure_git_stash
+			typeset -g prompt_pure_git_stash=$output
+			[[ $prev_stash != $prompt_pure_git_stash ]] && do_render=1
 			;;
 		prompt_pure_async_renice)
 			;;
