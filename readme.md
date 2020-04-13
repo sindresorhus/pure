@@ -134,18 +134,19 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 The following diagram shows where each color is applied on the prompt:
 
 ```
-┌───────────────────────────────────────────── path
-│          ┌────────────────────────────────── git:branch
-│          │      ┌─────────────────────────── git:action
-│          │      │       ┌─────────────────── git:dirty
-│          │      │       │ ┌───────────────── git:arrow
-│          │      │       │ │ ┌─────────────── git:stash
-│          │      │       │ │ │        ┌────── host
-│          │      │       │ │ │        │
-~/dev/pure master|rebase-i* ⇡ ≡ zaphod@heartofgold 42s
-venv ❯                        │                  │
-│    │                        │                  └───── execution_time
-│    │                        └──────────────────────── user
+┌────────────────────────────────────────────────────── user
+│      ┌─────────────────────────────────────────────── host
+│      │           ┌─────────────────────────────────── path
+│      │           │          ┌──────────────────────── git:branch
+│      │           │          │     ┌────────────────── git:dirty
+│      │           │          │     │ ┌──────────────── git:action
+│      │           │          │     │ │        ┌─────── git:arrow
+│      │           │          │     │ │        │ ┌───── git:stash
+│      │           │          │     │ │        │ │ ┌─── execution_time
+│      │           │          │     │ │        │ │ │
+zaphod@heartofgold ~/dev/pure master* rebase-i ⇡ ≡ 42s
+venv ❯
+│    │
 │    └───────────────────────────────────────────────── prompt
 └────────────────────────────────────────────────────── virtualenv (or prompt:continuation)
 ```
