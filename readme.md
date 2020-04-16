@@ -50,7 +50,6 @@ Most prompts are cluttered, ugly and slow. I wanted something visually pleasing 
 - Support VI-mode indication by reverse prompt symbol (Zsh 5.3+).
 - Makes an excellent starting point for your own custom prompt.
 
-
 ## Install
 
 Can be installed with `npm` or manually. Requires Git 2.0.0+ and ZSH 5.2+. Older versions of ZSH are known to work, but they are **not** recommended.
@@ -87,7 +86,6 @@ Initialize the prompt system (if not so already) and choose `pure`:
 autoload -U promptinit; promptinit
 prompt pure
 ```
-
 
 ## Options
 
@@ -163,7 +161,6 @@ zmodload zsh/nearcolor
 zstyle :prompt:pure:path color '#FF0000'
 ```
 
-
 ## Example
 
 ```sh
@@ -186,7 +183,6 @@ zstyle :prompt:pure:git:stash show yes
 prompt pure
 ```
 
-
 ## Tips
 
 In the screenshot you see Pure running in [Hyper](https://hyper.is) with the [hyper-snazzy](https://github.com/sindresorhus/hyper-snazzy) theme and Menlo font.
@@ -195,7 +191,6 @@ The [Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) th
 *Just make sure you have anti-aliasing enabled in your terminal.*
 
 To have commands colorized as seen in the screenshot, install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
-
 
 ## Integration
 
@@ -253,13 +248,11 @@ zinit ice compile'(pure|async).zsh' pick'async.zsh' src'pure.zsh'
 zinit light sindresorhus/pure
 ```
 
-
 ## FAQ
 
 There are currently no FAQs.
 
 See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for previous FAQs.
-
 
 ## Ports
 
@@ -281,9 +274,8 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 - **PowerShell**
 	- [nickcox/pure-pwsh](https://github.com/nickcox/pure-pwsh/) - PowerShell/PS Core implementation of the Pure prompt.
 
-
 ## Team
 
-[![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](http://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
+[![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](https://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
 ---|---
 [Sindre Sorhus](https://github.com/sindresorhus) | [Mathias Fredriksson](https://github.com/mafredri)
