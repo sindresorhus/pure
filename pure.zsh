@@ -121,6 +121,8 @@ prompt_pure_set_colors() {
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
+	unset prompt_pure_async_render_requested
+
 	# Set color for Git branch/dirty status and change color if dirty checking has been delayed.
 	local git_color=$prompt_pure_colors[git:branch]
 	local git_dirty_color=$prompt_pure_colors[git:dirty]
@@ -129,7 +131,7 @@ prompt_pure_preprompt_render() {
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
-    # Username and machine, if applicable.
+	# Username and machine, if applicable.
 	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
 
 	# Set the path.
@@ -191,6 +193,8 @@ prompt_pure_preprompt_render() {
 }
 
 prompt_pure_precmd() {
+	setopt localoptions noshwordsplit
+
 	# Check execution time and store it in a variable.
 	prompt_pure_check_cmd_exec_time
 	unset prompt_pure_cmd_timestamp
@@ -370,16 +374,22 @@ prompt_pure_async_renice() {
 	fi
 }
 
+prompt_pure_async_init() {
+	typeset -g prompt_pure_async_inited
+	if ((${prompt_pure_async_inited:-0})); then
+		return
+	fi
+	prompt_pure_async_inited=1
+	async_start_worker "prompt_pure" -u -n
+	async_register_callback "prompt_pure" prompt_pure_async_callback
+	async_worker_eval "prompt_pure" prompt_pure_async_renice
+}
+
 prompt_pure_async_tasks() {
 	setopt localoptions noshwordsplit
 
 	# Initialize the async worker.
-	((!${prompt_pure_async_init:-0})) && {
-		async_start_worker "prompt_pure" -u -n
-		async_register_callback "prompt_pure" prompt_pure_async_callback
-		typeset -g prompt_pure_async_init=1
-		async_job "prompt_pure" prompt_pure_async_renice
-	}
+	prompt_pure_async_init
 
 	# Update the current working directory of the async worker.
 	async_worker_eval "prompt_pure" builtin cd -q $PWD
@@ -463,10 +473,27 @@ prompt_pure_async_callback() {
 
 	case $job in
 		\[async])
-			# Code is 1 for corrupted worker output and 2 for dead worker.
-			if [[ $code -eq 2 ]]; then
-				# Our worker died unexpectedly.
-				typeset -g prompt_pure_async_init=0
+			# Handle all the errors that could indicate a crashed
+			# async worker. See zsh-async documentation for the
+			# definition of the exit codes.
+			if (( code == 2 )) || (( code == 3 )) || (( code == 130 )); then
+				# Our worker died unexpectedly, try to recover immediately.
+				# TODO(mafredri): Do we need to handle next_pending
+				#                 and defer the restart?
+				typeset -g prompt_pure_async_inited=0
+				async_stop_worker prompt_pure
+				prompt_pure_async_init   # Reinit the worker.
+				prompt_pure_async_tasks  # Restart all tasks.
+
+				# Reset render state due to restart.
+				unset prompt_pure_async_render_requested
+			fi
+			;;
+		\[async/eval])
+			if (( code )); then
+				# Looks like async_worker_eval failed,
+				# rerun async tasks just in case.
+				prompt_pure_async_tasks
 			fi
 			;;
 		prompt_pure_async_vcs_info)
@@ -562,8 +589,6 @@ prompt_pure_async_callback() {
 			local prev_stash=$prompt_pure_git_stash
 			typeset -g prompt_pure_git_stash=$output
 			[[ $prev_stash != $prompt_pure_git_stash ]] && do_render=1
-			;;
-		prompt_pure_async_renice)
 			;;
 	esac
 
