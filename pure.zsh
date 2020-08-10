@@ -283,11 +283,15 @@ prompt_pure_async_vcs_info() {
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
 	local untracked_dirty=$1
+	local untracked_git_mode=$(command git config --get status.showUntrackedFiles)
+	if [[ "$untracked_git_mode" != 'no' ]]; then
+		untracked_git_mode='normal'
+	fi
 
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
 	else
-		test -z "$(command git --no-optional-locks status --porcelain --ignore-submodules -unormal)"
+		test -z "$(command git --no-optional-locks status --porcelain --ignore-submodules -u${untracked_git_mode})"
 	fi
 
 	return $?
