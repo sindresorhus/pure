@@ -794,6 +794,7 @@ prompt_pure_setup() {
 		virtualenv           242
 	)
 	prompt_pure_colors=("${(@kv)prompt_pure_colors_default}")
+
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
