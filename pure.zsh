@@ -696,8 +696,8 @@ prompt_pure_state_setup() {
 
 # Return true if executing inside a Docker or LXC container.
 prompt_pure_is_inside_container() {
-	( [[ -r /proc/1/cgroup ]] && (( $(grep --count --extended-regexp "(lxc|docker)" /proc/1/cgroup ) > 0 )) ) ||
-		(( $(env | grep --count 'container=lxc') > 0 ))
+	([[ -r /proc/1/cgroup ]] && $(grep -q -E "(lxc|docker)" /proc/1/cgroup )) \
+		|| [[ "$container" == "lxc" ]]
 }
 
 prompt_pure_system_report() {
