@@ -3,12 +3,12 @@
 #
 # zsh-async
 #
-# version: 1.8.0
+# version: 1.8.3
 # author: Mathias Fredriksson
 # url: https://github.com/mafredri/zsh-async
 #
 
-typeset -g ASYNC_VERSION=1.8.0
+typeset -g ASYNC_VERSION=1.8.3
 # Produce debug output from zsh-async when set to 1.
 typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
 
@@ -563,10 +563,18 @@ async_start_worker() {
 		fi
 	fi
 
-	zpty -b $worker _async_worker -p $$ $args || {
+	# Workaround for stderr in the main shell sometimes (incorrectly) being
+	# reassigned to /dev/null by the reassignment done inside the async
+	# worker.
+	# See https://github.com/mafredri/zsh-async/issues/35.
+	integer errfd
+	exec {errfd}>&2
+	zpty -b $worker _async_worker -p $$ $args 2>&$errfd || {
+		exec {errfd}>& -
 		async_stop_worker $worker
 		return 1
 	}
+	exec {errfd}>& -
 
 	# Re-enable it if it was enabled, for debugging.
 	(( has_xtrace )) && setopt xtrace
