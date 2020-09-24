@@ -680,6 +680,9 @@ prompt_pure_state_setup() {
 	# Show `username@host` if logged in through SSH.
 	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
 
+	# Show `username@host` if inside a container.
+	prompt_pure_is_inside_container && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+
 	# Show `username@host` if root, with username in default color.
 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
 
@@ -689,6 +692,12 @@ prompt_pure_state_setup() {
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
+}
+
+# Return true if executing inside a Docker or LXC container.
+prompt_pure_is_inside_container() {
+	([[ -r /proc/1/cgroup ]] && grep -q -E "(lxc|docker)" /proc/1/cgroup ) \
+		|| [[ "$container" == "lxc" ]]
 }
 
 prompt_pure_system_report() {
