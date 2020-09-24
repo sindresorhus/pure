@@ -694,7 +694,11 @@ prompt_pure_state_setup() {
 prompt_pure_system_report() {
 	setopt localoptions noshwordsplit
 
-	print - "- Zsh: $($SHELL --version) ($SHELL)"
+	local shell=$SHELL
+	if [[ -z $shell ]]; then
+		shell=$commands[zsh]
+	fi
+	print - "- Zsh: $($shell --version) ($shell)"
 	print -n - "- Operating system: "
 	case "$(uname -s)" in
 		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
