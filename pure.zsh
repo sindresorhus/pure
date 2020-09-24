@@ -719,6 +719,7 @@ prompt_pure_system_report() {
 	print - "- zsh-async version: ${ASYNC_VERSION}"
 	print - "- PROMPT: \`$(typeset -p PROMPT)\`"
 	print - "- Colors: \`$(typeset -p prompt_pure_colors)\`"
+	print - "- TERM: \`$(typeset -p TERM)\`"
 	print - "- Virtualenv: \`$(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)\`"
 	print - "- Conda: \`$(typeset -p CONDA_CHANGEPS1)\`"
 
