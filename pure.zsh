@@ -714,7 +714,7 @@ prompt_pure_system_report() {
 
 	print - "- Pure state:"
 	for k v in "${(@kv)prompt_pure_state}"; do
-		print - "    - $k: \`${(q)v}\`"
+		print - "    - $k: \`${(q-)v}\`"
 	done
 	print - "- zsh-async version: ${ASYNC_VERSION}"
 	print - "- PROMPT: \`$(typeset -p PROMPT)\`"
