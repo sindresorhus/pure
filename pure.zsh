@@ -703,11 +703,15 @@ prompt_pure_is_inside_container() {
 prompt_pure_system_report() {
 	setopt localoptions noshwordsplit
 
-	print - "- Zsh: $($SHELL --version) ($SHELL)"
+	local shell=$SHELL
+	if [[ -z $shell ]]; then
+		shell=$commands[zsh]
+	fi
+	print - "- Zsh: $($shell --version) ($shell)"
 	print -n - "- Operating system: "
 	case "$(uname -s)" in
 		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
-		*)	print "$(uname -s) ($(uname -v))";;
+		*)	print "$(uname -s) ($(uname -r) $(uname -v) $(uname -m) $(uname -o))";;
 	esac
 	print - "- Terminal program: ${TERM_PROGRAM:-unknown} (${TERM_PROGRAM_VERSION:-unknown})"
 	print -n - "- Tmux: "
@@ -719,11 +723,12 @@ prompt_pure_system_report() {
 
 	print - "- Pure state:"
 	for k v in "${(@kv)prompt_pure_state}"; do
-		print - "    - $k: \`${(q)v}\`"
+		print - "    - $k: \`${(q-)v}\`"
 	done
-	print - "- zsh-async version: ${ASYNC_VERSION}"
+	print - "- zsh-async version: \`${ASYNC_VERSION}\`"
 	print - "- PROMPT: \`$(typeset -p PROMPT)\`"
 	print - "- Colors: \`$(typeset -p prompt_pure_colors)\`"
+	print - "- TERM: \`$(typeset -p TERM)\`"
 	print - "- Virtualenv: \`$(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)\`"
 	print - "- Conda: \`$(typeset -p CONDA_CHANGEPS1)\`"
 
