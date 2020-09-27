@@ -291,7 +291,7 @@ prompt_pure_async_git_dirty() {
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
 	else
-		test -z "$(command git --no-optional-locks status --porcelain --ignore-submodules -u${untracked_git_mode})"
+		test -z "$(GIT_OPTIONAL_LOCKS=0 command git status --porcelain --ignore-submodules -u${untracked_git_mode})"
 	fi
 
 	return $?
