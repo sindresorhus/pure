@@ -300,19 +300,23 @@ prompt_pure_async_git_dirty() {
 prompt_pure_async_git_fetch() {
 	setopt localoptions noshwordsplit
 
+	local only_upstream=${1:-0}
+
 	# Sets `GIT_TERMINAL_PROMPT=0` to disable authentication prompt for Git fetch (Git 2.3+).
 	export GIT_TERMINAL_PROMPT=0
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
-	local ref
-	ref=$(command git symbolic-ref -q HEAD)
 	local -a remote
-	remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
-
-	if [[ -z $remote[1] ]]; then
-		# No remote specified for this branch, skip fetch.
-		return 97
+	if ((only_upstream)); then
+		local ref
+		ref=$(command git symbolic-ref -q HEAD)
+		# Set remote to only fetch information for the current branch.
+		remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
+		if [[ -z $remote[1] ]]; then
+			# No remote specified for this branch, skip fetch.
+			return 97
+		fi
 	fi
 
 	# Default return code, which indicates Git fetch failure.
@@ -340,8 +344,8 @@ prompt_pure_async_git_fetch() {
 		fi
 	' CHLD
 
-	# Only fetch information for the current branch and avoid
-	# fetching tags or submodules to speed up the process.
+	# Do git fetch and avoid fetching tags or
+	# submodules to speed up the process.
 	command git -c gc.auto=0 fetch \
 		--quiet \
 		--no-tags \
@@ -438,8 +442,9 @@ prompt_pure_async_refresh() {
 
 	# Do not perform `git fetch` if it is disabled or in home folder.
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
-		# Tell the async worker to do a `git fetch`.
-		async_job "prompt_pure" prompt_pure_async_git_fetch
+		zstyle -t :prompt:pure:git:fetch only_upstream
+		local only_upstream=$((? == 0))
+		async_job "prompt_pure" prompt_pure_async_git_fetch $only_upstream
 	fi
 
 	# If dirty checking is sufficiently fast,
