@@ -96,9 +96,15 @@ prompt pure
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
 
+## Zstyle options
+
 Showing git stash status as part of the prompt is not activated by default. To activate this you'll need to opt in via `zstyle`:
 
 `zstyle :prompt:pure:git:stash show yes`
+
+You can set Pure to only `git fetch` the upstream branch of the current local branch. In some cases, this can result in faster updates for Git arrows, but for most users, it's better to leave this setting disabled. You can enable it with:
+
+`zstyle :prompt:pure:git:fetch only_upstream yes`
 
 ## Colors
 
