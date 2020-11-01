@@ -102,7 +102,7 @@ Showing git stash status as part of the prompt is not activated by default. To a
 
 `zstyle :prompt:pure:git:stash show yes`
 
-You can set Pure to only `git fetch` the upstream branch of the current local branch. In some cases this can result in faster updates for git arrows, but for most users it's better to leave this setting disabled. Enable via:
+You can set Pure to only `git fetch` the upstream branch of the current local branch. In some cases, this can result in faster updates for Git arrows, but for most users, it's better to leave this setting disabled. You can enable it with:
 
 `zstyle :prompt:pure:git:fetch only_upstream yes`
 
