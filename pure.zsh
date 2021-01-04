@@ -701,7 +701,8 @@ prompt_pure_state_setup() {
 
 # Return true if executing inside a Docker or LXC container.
 prompt_pure_is_inside_container() {
-	([[ -r /proc/1/cgroup ]] && grep -q -E "(lxc|docker)" /proc/1/cgroup ) \
+	local -r cgroup_file='/proc/1/cgroup'
+	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
 		|| [[ "$container" == "lxc" ]]
 }
 
