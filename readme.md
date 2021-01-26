@@ -219,7 +219,7 @@ Update your `.zshrc` file with the following two lines (order matters). Do not u
 
 ```sh
 antigen bundle mafredri/zsh-async
-antigen bundle sindresorhus/pure
+antigen bundle sindresorhus/pure --branch=main
 ```
 
 ### [antibody](https://github.com/getantibody/antibody)
