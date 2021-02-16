@@ -213,24 +213,6 @@ Add `prompt pure` to your `~/.zpreztorc`.
 
 Add `zmodule sindresorhus/pure --source async.zsh --source pure.zsh` to your `.zimrc` and run `zimfw install`.
 
-### [antigen](https://github.com/zsh-users/antigen)
-
-Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
-
-```sh
-antigen bundle mafredri/zsh-async
-antigen bundle sindresorhus/pure
-```
-
-### [antibody](https://github.com/getantibody/antibody)
-
-Update your `.zshrc` file with the following two lines (order matters):
-
-```sh
-antibody bundle mafredri/zsh-async
-antibody bundle sindresorhus/pure
-```
-
 ### [zplug](https://github.com/zplug/zplug)
 
 Update your `.zshrc` file with the following two lines:
