@@ -57,6 +57,12 @@ $ npm install --global pure-prompt
 
 That's it. Skip to [Getting started](#getting-started).
 
+### [Homebrew](https://brew.sh)
+
+```console
+$ brew install pure
+```
+
 ### Manually
 
 1. Clone this repo somewhere. Here we'll use `$HOME/.zsh/pure`.
