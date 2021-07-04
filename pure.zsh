@@ -222,6 +222,13 @@ prompt_pure_precmd() {
 		export VIRTUAL_ENV_DISABLE_PROMPT=12
 	fi
 
+    # Nix package manager integration.
+    # If this prompt is used from within 'nix shell' - present shell derivation name as
+    # shell name. If derivation name is unset - show 'nix-shell'
+	if [[ -n $IN_NIX_SHELL ]]; then
+		psvar[12]="${name:-nix-shell}"
+	fi
+
 	# Make sure VIM prompt is reset.
 	prompt_pure_reset_prompt_symbol
 
