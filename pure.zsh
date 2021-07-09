@@ -222,9 +222,9 @@ prompt_pure_precmd() {
 		export VIRTUAL_ENV_DISABLE_PROMPT=12
 	fi
 
-    # Nix package manager integration.
-    # If this prompt is used from within 'nix shell' - present shell derivation name as
-    # shell name. If derivation name is unset - show 'nix-shell'
+	# Nix package manager integration. If used from within 'nix shell' - shell name is shown like so:
+	# ~/Projects/flake-utils-plus master
+	# flake-utils-plus ❯
 	if [[ -n $IN_NIX_SHELL ]]; then
 		psvar[12]="${name:-nix-shell}"
 	fi
