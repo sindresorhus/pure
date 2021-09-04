@@ -71,16 +71,16 @@ Can be installed with `npm` or manually. Requires Git 2.15.2+ and ZSH 5.2+. Olde
 
 ### npm
 
-```console
-$ npm install --global pure-prompt
+```sh
+npm install --global pure-prompt
 ```
 
 That's it. Skip to [Getting started](#getting-started).
 
 ### [Homebrew](https://brew.sh)
 
-```console
-$ brew install pure
+```sh
+brew install pure
 ```
 
 ### Manually
