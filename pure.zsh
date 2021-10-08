@@ -225,8 +225,10 @@ prompt_pure_precmd() {
 	# Nix package manager integration. If used from within 'nix shell' - shell name is shown like so:
 	# ~/Projects/flake-utils-plus master
 	# flake-utils-plus ❯
-	if [[ -n $IN_NIX_SHELL ]]; then
-		psvar[12]="${name:-nix-shell}"
+	if zstyle -t ":prompt:pure:environment:nix-shell" show; then
+		if [[ -n $IN_NIX_SHELL ]]; then
+			psvar[12]="${name:-nix-shell}"
+		fi
 	fi
 
 	# Make sure VIM prompt is reset.
