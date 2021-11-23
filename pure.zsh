@@ -175,7 +175,11 @@ prompt_pure_preprompt_render() {
 		$cleaned_ps1
 	)
 
-	PROMPT="${(j..)ps1}"
+    PROMPT=""
+    if ((${(M)#jobstates:#suspended:*} != 0)); then
+      PROMPT+='%F{$prompt_pure_colors[git:dirty]}✦ '
+    fi
+    PROMPT+="${(j..)ps1}"
 
 	# Expand the prompt for future comparision.
 	local expanded_prompt
