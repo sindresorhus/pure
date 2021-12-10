@@ -131,8 +131,11 @@ prompt_pure_preprompt_render() {
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
-        local x
-        for x in ${PURE_PROMPT_ORDER[@]:-user host path git exec_time}; do
+        local x order=("${PURE_PROMPT_ORDER[@]}")
+        if [[ ${#order[@]} -eq 0 ]]; then
+            order=(user host path git exec_time)
+        fi
+        for x in "${order[@]}"; do
             case $x in
                 user)
 	            # Username and machine, if applicable.
