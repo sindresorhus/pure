@@ -136,6 +136,7 @@ prompt_pure_preprompt_render() {
             order=(user host path git exec_time)
         fi
         for x in "${order[@]}"; do
+            echo "$x"
             case $x in
                 user)
 	            # Username and machine, if applicable.
