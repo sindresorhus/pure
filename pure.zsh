@@ -131,6 +131,11 @@ prompt_pure_preprompt_render() {
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
+	# Suspended jobs in background.
+	if ((${(M)#jobstates:#suspended:*} != 0)); then
+		preprompt_parts+='%F{$prompt_pure_colors[suspended_jobs]}✦'
+	fi
+
 	# Username and machine, if applicable.
 	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
 
@@ -175,11 +180,7 @@ prompt_pure_preprompt_render() {
 		$cleaned_ps1
 	)
 
-    PROMPT=""
-    if ((${(M)#jobstates:#suspended:*} != 0)); then
-      PROMPT+='%F{$prompt_pure_colors[git:dirty]}✦ '
-    fi
-    PROMPT+="${(j..)ps1}"
+	PROMPT="${(j..)ps1}"
 
 	# Expand the prompt for future comparision.
 	local expanded_prompt
@@ -816,6 +817,7 @@ prompt_pure_setup() {
 		prompt:error         red
 		prompt:success       magenta
 		prompt:continuation  242
+		suspended_jobs       red
 		user                 242
 		user:root            default
 		virtualenv           242
