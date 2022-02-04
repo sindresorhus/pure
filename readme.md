@@ -104,6 +104,7 @@ Initialize the prompt system (if not so already) and choose `pure`:
 
 ```sh
 # .zshrc
+fpath+=/opt/homebrew/share/zsh/site-functions # necessary if you use M1 mac
 autoload -U promptinit; promptinit
 prompt pure
 ```
