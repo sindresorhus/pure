@@ -286,7 +286,7 @@ prompt_pure_async_vcs_info() {
 
 	local -A info
 	info[pwd]=$PWD
-	info[branch]=$vcs_info_msg_0_
+	info[branch]=${vcs_info_msg_0_//\%/%%}
 	info[top]=$vcs_info_msg_1_
 	info[action]=$vcs_info_msg_2_
 
