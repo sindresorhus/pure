@@ -121,8 +121,7 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
-
-## Zstyle options
+| **`PURE_MONITOR_VARIABLES`**     | An array of environment variables, which are shown in the prompt.                              | `()`           |
 
 Showing git stash status as part of the prompt is not activated by default. To activate this you'll need to opt in via `zstyle`:
 
