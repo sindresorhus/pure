@@ -302,10 +302,13 @@ prompt_pure_async_git_dirty() {
 		untracked_git_mode='normal'
 	fi
 
+	# Prevent e.g. `git status` from refreshing the index as a side effect.
+	export GIT_OPTIONAL_LOCKS=0
+
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
 	else
-		test -z "$(GIT_OPTIONAL_LOCKS=0 command git status --porcelain --ignore-submodules -u${untracked_git_mode})"
+		test -z "$(command git status --porcelain -u${untracked_git_mode})"
 	fi
 
 	return $?
