@@ -83,6 +83,12 @@ That's it. Skip to [Getting started](#getting-started).
 brew install pure
 ```
 
+If you're not using ZSH from Homebrew (`brew install zsh` and `$(brew --prefix)/bin/zsh`), you must also add the site-functions to your `fpath` in `$HOME/.zshrc`:
+
+```sh
+fpath+=("$(brew --prefix)/share/zsh/site-functions")
+```
+
 ### Manually
 
 1. Clone this repo somewhere. Here we'll use `$HOME/.zsh/pure`.
