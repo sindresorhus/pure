@@ -101,7 +101,7 @@ git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
 2. Add the path of the cloned repo to `$fpath` in `$HOME/.zshrc`.
 ```sh
 # .zshrc
-fpath+=$HOME/.zsh/pure
+fpath+=($HOME/.zsh/pure)
 ```
 
 ## Getting started
