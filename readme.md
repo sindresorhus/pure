@@ -293,7 +293,8 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 	- [talal/mimir](https://github.com/talal/mimir) - Pure-inspired prompt in Go with Kubernetes and OpenStack cloud support. Not intended to have feature parity.
 - **PowerShell**
 	- [nickcox/pure-pwsh](https://github.com/nickcox/pure-pwsh/) - PowerShell/PS Core implementation of the Pure prompt.
-
+- **Starship (cross-shell)**
+	- [charitarthchugh/starship-pure](https://github.com/charitarthchugh/starship-pure) - Configuration file for Starship, a cross-shell prompt, that makes it look like Pure
 ## Team
 
 [![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](https://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
