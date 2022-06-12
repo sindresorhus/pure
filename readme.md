@@ -294,7 +294,8 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 - **PowerShell**
 	- [nickcox/pure-pwsh](https://github.com/nickcox/pure-pwsh/) - PowerShell/PS Core implementation of the Pure prompt.
 - **Starship (cross-shell)**
-	- [Pure Preset](https://starship.rs/presets/pure-preset.html) - Configuration file for Starship, a cross-shell prompt, that makes it look like Pure
+	- [Pure Preset](https://starship.rs/presets/pure-preset.html) - Configuration file for Starship, a cross-shell prompt, that makes it look like Pure.
+
 ## Team
 
 [![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](https://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
