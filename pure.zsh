@@ -666,7 +666,7 @@ prompt_pure_state_setup() {
 	# Check SSH_CONNECTION and the current state.
 	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
 	local username hostname
-	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
+	if [[ $ssh_connection != "" ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
 		# environment variable can be lost. Attempt detection via `who`.
 		local who_out
