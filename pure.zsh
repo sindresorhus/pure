@@ -664,7 +664,7 @@ prompt_pure_state_setup() {
 	setopt localoptions noshwordsplit
 
 	# Check SSH_CONNECTION and the current state.
-	local check_ssh=${true:-$PURE_CHECK_SSH_CONNECTION}
+	local check_ssh=${true:-$PURE_CHECK_SSH}
 	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
 	local username hostname
 	if [[ $check_ssh = true ]] && [[ -z $ssh_connection ]] && (( $+commands[who] )); then
