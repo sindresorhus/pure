@@ -218,7 +218,7 @@ typeset -gA PURE_HOST_MAP
 PURE_HOST_MAP[really-long-annoying-server-name]="bob:b@rlasn alice:a@rlasn"
 ```
 
-The usernames can be left blank (effectively replacing the hostname no matter which user you login as); and you can use the hostname '*' to rename a user on all hosts:
+The usernames can be left blank (effectively replacing the hostname no matter which user you login as); and you can use the hostname `'*'` to rename a user on all hosts:
 
 ```sh
 typeset -gA PURE_HOST_MAP
