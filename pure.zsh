@@ -145,7 +145,7 @@ prompt_pure_produce_userhost_to_vars() {
 	typeset -gA PURE_HOST_MAP
 
 	# 'user-to-replace:usethisname@thishostinstead anotheruser:another@replacement'
-	local replacements="$PURE_HOST_MAP[$rawhost]"
+	local replacements="${PURE_HOST_MAP[$rawhost]:-$PURE_HOST_MAP['*']}"
 	if [[ -n "$replacements" ]]; then
 		rawuser=`print -P '%n'`
 
