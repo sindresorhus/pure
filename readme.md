@@ -202,7 +202,7 @@ zstyle :prompt:pure:path color '#FF0000'
 
 ## Hostnames
 
-You can configure the `user@host.blah` portion of the prompt on machines you don't control with the "hostname map". If set, this must be an (associative array)[https://zsh.sourceforge.io/Doc/Release/Parameters.html#Array-Parameters]; that is, you must declare it ahead-of-time with `typeset -gA`:
+You can configure the `user@host.blah` portion of the prompt on machines you don't control with the "hostname map". If set, this must be an [associative array](https://zsh.sourceforge.io/Doc/Release/Parameters.html#Array-Parameters); that is, you must declare it ahead-of-time with `typeset -gA`:
 
 ```sh
 typeset -gA PURE_HOST_MAP
