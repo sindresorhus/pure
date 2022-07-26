@@ -118,9 +118,18 @@ prompt_pure_set_colors() {
 	done
 }
 
+prompt_pure_split_userhost_to_vars() {
+	local userhost=$1 uservar=$2 hostvar=$3
+
+	typeset -T hostuser_scalar="$replacement[2]" userhost '@'
+
+	if [[ -n "$userhost[1]" ]] typeset -g "$uservar"="$userhost[1]"
+	if [[ -n "$userhost[2]" ]] typeset -g "$hostvar"="$userhost[2]"
+}
+
 # This uses %m (hostname) and %n (username) evaluated at setup-time; and if they're found in a user-
 # configured map, replaces them (for the rest of the shell-session) with specified alternative(s).
-prompt_pure_produce_userhost_to_var() {
+prompt_pure_produce_userhost_to_vars() {
 	local uservar=$1 hostvar=$2 rawhost rawuser
 
 	# Fallback to using the traditional prompt-replacement sequences
@@ -135,17 +144,19 @@ prompt_pure_produce_userhost_to_var() {
 	# (... blame zsh for not having nested associative arrays. :P ~ec)
 	typeset -gA PURE_HOST_MAP
 
+	# 'user-to-replace:usethisname@thishostinstead anotheruser:another@replacement'
 	local replacements="$PURE_HOST_MAP[$rawhost]"
 	if [[ -n "$replacements" ]]; then
 		rawuser=`print -P '%n'`
 
 		for r ("$replacements"); do
+			# 'user-to-replace:usethisname@thishostinstead'
 			typeset -T replacement_scalar="$r" replacement ':'
-			if [[ $replacement[1] == $rawuser ]]; then
-				typeset -T hostuser_scalar="$replacement[2]" userhost '@'
 
-				typeset -g "$uservar"="$userhost[1]"
-				typeset -g "$hostvar"="$userhost[2]"
+			if [[ -z $replacement[1] || $replacement[1] == $rawuser ]]; then
+				# 'usethisname@thishostinstead'
+				prompt_pure_split_userhost_to_vars "$replacement[2]" "$uservar" "$hostvar"
+				return
 			fi
 		done
 
@@ -733,7 +744,7 @@ prompt_pure_state_setup() {
 
 
 	typeset -g prompt_pure_user= prompt_pure_host=
-	prompt_pure_produce_userhost_to_var prompt_pure_user prompt_pure_host
+	prompt_pure_produce_userhost_to_vars prompt_pure_user prompt_pure_host
 
 	hostname='%F{$prompt_pure_colors[host]}@'"$prompt_pure_host"'%f'
 
