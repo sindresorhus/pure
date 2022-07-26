@@ -66,7 +66,7 @@ prompt_pure_set_title() {
 
 	# Show hostname if connected via SSH.
 	local hostname=
-	if [[ -n $prompt_pure_state[username] ]]; then
+	if [[ -n $prompt_pure_state[userhost] ]]; then
 		# Expand in-place in case ignore-escape is used.
 		hostname="${(%):-(%m) }"
 	fi
@@ -137,7 +137,7 @@ prompt_pure_preprompt_render() {
 	fi
 
 	# Username and machine, if applicable.
-	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=($prompt_pure_state[username])
+	[[ -n $prompt_pure_state[userhost] ]] && preprompt_parts+=($prompt_pure_state[userhost])
 
 	# Set the path.
 	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
@@ -711,7 +711,7 @@ prompt_pure_state_setup() {
 	typeset -gA prompt_pure_state
 	prompt_pure_state[version]="1.20.1"
 	prompt_pure_state+=(
-		username "$username"
+		userhost "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
