@@ -127,6 +127,7 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
+| **`PURE_HOST_MAP`**              | Used to change the user or hostname shown on SSH targets. (See [Hostnames](#hostnames) below.) |                |
 
 ## Zstyle options
 
@@ -197,6 +198,39 @@ If you can't use such terminal, the module [`zsh/nearcolor`](http://zsh.sourcefo
 # .zshrc
 zmodload zsh/nearcolor
 zstyle :prompt:pure:path color '#FF0000'
+```
+
+## Hostnames
+
+You can configure the `user@host.blah` portion of the prompt on machines you don't control with the "hostname map". If set, this must be an (associative array)[https://zsh.sourceforge.io/Doc/Release/Parameters.html#Array-Parameters]; that is, you must declare it ahead-of-time with `typeset -gA`:
+
+```sh
+typeset -gA PURE_HOST_MAP
+PURE_HOST_MAP[somehost]="..."
+```
+
+Each entry in this array is a hostname on which you wish to configure the naming of. Within that entry, one includes both a username-to-replace, as well as the replacement hostname-and-user. (This layout is optimized for shell-startup performance; blame zsh for a conspicuous lack of nested-associative-arrays. `:P`)
+
+As an example, if we want to replace `bob` and `alice` on `really-long-annoying-server-name`, with `b` and `a` on `rlasn` ...
+
+```sh
+typeset -gA PURE_HOST_MAP
+PURE_HOST_MAP[really-long-annoying-server-name]="bob:b@rlasn alice:a@rlasn"
+```
+
+The usernames can be left blank (effectively replacing the hostname no matter which user you login as); and you can use the hostname '*' to rename a user on all hosts:
+
+```sh
+typeset -gA PURE_HOST_MAP
+
+# Never, ever show me `really-long-annoying-server-name`
+PURE_HOST_MAP[really-long-annoying-server-name]=":@rlasn"
+
+# Shorten my username on our work-machine; but the hostname is fine as-is
+PURE_HOST_MAP[workbox]="harold-washington:ME@"
+
+# Shorten my username anywhere it appears
+PURE_HOST_MAP['*']="elliottcable:ec@"
 ```
 
 ## Example
