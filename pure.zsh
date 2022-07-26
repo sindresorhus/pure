@@ -118,6 +118,40 @@ prompt_pure_set_colors() {
 	done
 }
 
+# This uses %m (hostname) and %n (username) evaluated at setup-time; and if they're found in a user-
+# configured map, replaces them (for the rest of the shell-session) with specified alternative(s).
+prompt_pure_produce_userhost_to_var() {
+	local uservar=$1 hostvar=$2 rawhost rawuser
+
+	# Fallback to using the traditional prompt-replacement sequences
+	typeset -g "$uservar"="%n"
+	typeset -g "$hostvar"="%m"
+
+	rawhost=`print -P '%m'`
+
+	# Each entry has a space-separated list of replacements, each including a colon-separated "from
+	# hostname" and "replacement pair". i.e. the form for a single entry in the associative array is:
+	#   'user-to-replace:usethisname@thishostinstead anotheruser:another@replacement'
+	# (... blame zsh for not having nested associative arrays. :P ~ec)
+	typeset -gA PURE_HOST_MAP
+
+	local replacements="$PURE_HOST_MAP[$rawhost]"
+	if [[ -n "$replacements" ]]; then
+		rawuser=`print -P '%n'`
+
+		for r ("$replacements"); do
+			typeset -T replacement_scalar="$r" replacement ':'
+			if [[ $replacement[1] == $rawuser ]]; then
+				typeset -T hostuser_scalar="$replacement[2]" userhost '@'
+
+				typeset -g "$uservar"="$userhost[1]"
+				typeset -g "$hostvar"="$userhost[2]"
+			fi
+		done
+
+	fi
+}
+
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
@@ -665,7 +699,6 @@ prompt_pure_state_setup() {
 
 	# Check SSH_CONNECTION and the current state.
 	local ssh_connection=${SSH_CONNECTION:-$PROMPT_PURE_SSH_CONNECTION}
-	local username hostname
 	if [[ -z $ssh_connection ]] && (( $+commands[who] )); then
 		# When changing user on a remote system, the $SSH_CONNECTION
 		# environment variable can be lost. Attempt detection via `who`.
@@ -698,20 +731,30 @@ prompt_pure_state_setup() {
 		unset MATCH MBEGIN MEND
 	fi
 
-	hostname='%F{$prompt_pure_colors[host]}@%m%f'
-	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
 
-	# Show `username@host` if inside a container and not in GitHub Codespaces.
-	[[ -z "${CODESPACES}" ]] && prompt_pure_is_inside_container && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+	typeset -g prompt_pure_user= prompt_pure_host=
+	prompt_pure_produce_userhost_to_var prompt_pure_user prompt_pure_host
+
+	hostname='%F{$prompt_pure_colors[host]}@'"$prompt_pure_host"'%f'
+
+	# Show `username@host` if logged in through SSH (or if inside a container .. but not in GitHub
+	# Codespaces.)
+	if [[ -n $ssh_connection ]] || ([[ -z "${CODESPACES}" ]] && prompt_pure_is_inside_container); then
+		username='%F{$prompt_pure_colors[user]}'"$prompt_pure_user"'%f'
+
+		userhost="$username$hostname"
 
 	# Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
+	elif [[ $UID -eq 0 ]]; then
+		username='%F{$prompt_pure_colors[user:root]}'"$prompt_pure_user"'%f'"$hostname"
+
+		userhost="$username$hostname"
+	fi
 
 	typeset -gA prompt_pure_state
 	prompt_pure_state[version]="1.20.1"
 	prompt_pure_state+=(
-		userhost "$username"
+		userhost "$userhost"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
