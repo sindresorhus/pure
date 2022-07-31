@@ -268,6 +268,15 @@ zinit ice compile'(pure|async).zsh' pick'async.zsh' src'pure.zsh'
 zinit light sindresorhus/pure
 ```
 
+### [zi](https://wiki.zshell.dev)
+
+Update your `.zshrc` file with the following two lines (order matters):
+
+```sh
+zi light-mode for @sindresorhus/pure
+```
+
+See [https://wiki.zshell.dev/community/gallery/collection/themes#thp-sindresorhuspure] for more
 ## FAQ
 
 There are currently no FAQs.
