@@ -270,7 +270,7 @@ zinit light sindresorhus/pure
 
 ### [zi](https://wiki.zshell.dev)
 
-Update your `.zshrc` file with the following two lines (order matters):
+Update your `.zshrc` file with the following line:
 
 ```sh
 zi light-mode for @sindresorhus/pure
