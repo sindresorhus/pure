@@ -276,7 +276,7 @@ Update your `.zshrc` file with the following line:
 zi light-mode for @sindresorhus/pure
 ```
 
-See [https://wiki.zshell.dev/community/gallery/collection/themes#thp-sindresorhuspure] for more
+See [ZI Wiki](https://wiki.zshell.dev/community/gallery/collection/themes#thp-sindresorhuspure) for more
 ## FAQ
 
 There are currently no FAQs.
