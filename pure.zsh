@@ -328,9 +328,6 @@ prompt_pure_async_git_fetch() {
 	# sure it uses this zpty instead of corrupting the parent TTY.
 	export GPG_TTY=$TTY
 
-	# Tell the child process to not expect any input from this zpty.
-	exec /dev/null > $TTY
-
 	local -a remote
 	if ((only_upstream)); then
 		local ref
