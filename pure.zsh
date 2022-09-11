@@ -324,12 +324,11 @@ prompt_pure_async_git_fetch() {
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
-	# if gpg-agent is setup to handle ssh keys for git fetch; then
-	# make sure it uses this zpty instead of corrupting the parent tty
-	# solves issue #366
+	# If gpg-agent is set to handle SSH keys for `git fetch`, make
+	# sure it uses this zpty instead of corrupting the parent TTY.
 	export GPG_TTY=$TTY
 
-	# tell the child process to not expect any input from this zpty
+	# Tell the child process to not expect any input from this zpty.
 	exec /dev/null > $TTY
 
 	local -a remote
