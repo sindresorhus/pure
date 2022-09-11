@@ -325,8 +325,10 @@ prompt_pure_async_git_fetch() {
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
 	# If gpg-agent is set to handle SSH keys for `git fetch`, make
-	# sure it uses this zpty instead of corrupting the parent TTY.
-	export GPG_TTY=$TTY
+	# sure it doesn't corrupt the parent TTY.
+	# Setting an empty GPG_TTY forces pinentry-curses to close immediately rather
+	# than stall indefinitely waiting for user input.
+	export GPG_TTY=
 
 	local -a remote
 	if ((only_upstream)); then
