@@ -324,6 +324,12 @@ prompt_pure_async_git_fetch() {
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
+	# If gpg-agent is set to handle SSH keys for `git fetch`, make
+	# sure it doesn't corrupt the parent TTY.
+	# Setting an empty GPG_TTY forces pinentry-curses to close immediately rather
+	# than stall indefinitely waiting for user input.
+	export GPG_TTY=
+
 	local -a remote
 	if ((only_upstream)); then
 		local ref
@@ -710,7 +716,7 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.20.1"
+	prompt_pure_state[version]="1.20.4"
 	prompt_pure_state+=(
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
