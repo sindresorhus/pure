@@ -715,7 +715,7 @@ prompt_pure_state_setup() {
 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.20.4"
+	prompt_pure_state[version]="1.21.0"
 	prompt_pure_state+=(
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
