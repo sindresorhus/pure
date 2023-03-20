@@ -722,12 +722,13 @@ prompt_pure_state_setup() {
 	)
 }
 
-# Return true if executing inside a Docker, LXC or systemd-nspawn container.
+# Return true if executing inside a Docker, OCI, LXC, or systemd-nspawn container.
 prompt_pure_is_inside_container() {
 	local -r cgroup_file='/proc/1/cgroup'
 	local -r nspawn_file='/run/host/container-manager'
 	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
 		|| [[ "$container" == "lxc" ]] \
+		|| [[ "$container" == "oci" ]] \
 		|| [[ -r "$nspawn_file" ]]
 }
 
