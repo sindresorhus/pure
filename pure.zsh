@@ -95,7 +95,7 @@ prompt_pure_preexec() {
 	typeset -g prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
 	# Shows the current directory and executed command in the title while a process is active.
-	prompt_pure_set_title 'ignore-escape' "$PWD:t: $2"
+	prompt_pure_set_title 'expand-prompt' "${PURE_PROMPT_TITLE_ACTIVE:-$PWD:t: $2}" "$@"
 
 	# Disallow Python virtualenv from updating the prompt. Set it to 12 if
 	# untouched by the user to indicate that Pure modified it. Here we use
@@ -205,7 +205,7 @@ prompt_pure_precmd() {
 	unset prompt_pure_cmd_timestamp
 
 	# Shows the full path in the title.
-	prompt_pure_set_title 'expand-prompt' '%~'
+	prompt_pure_set_title 'expand-prompt' "${PURE_PROMPT_TITLE_IDLE:-%~}" "$@"
 
 	# Modify the colors if some have changed..
 	prompt_pure_set_colors
