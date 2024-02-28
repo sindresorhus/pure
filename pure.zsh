@@ -729,6 +729,7 @@ prompt_pure_is_inside_container() {
 	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
 		|| [[ "$container" == "lxc" ]] \
 		|| [[ "$container" == "oci" ]] \
+		|| [[ "$container" == "podman" ]] \
 		|| [[ -r "$nspawn_file" ]]
 }
 
