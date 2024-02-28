@@ -127,6 +127,9 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
+| **`PURE_PROMPT_TITLE_IDLE`**     | Defines the format of the terminal title when a command is not running                         | `%~`           |
+| **`PURE_PROMPT_TITLE_ACTIVE`**   | Defines the format of the terminal title when a command is running                             | `$PWD:t: $2`   |
+| **`PURE_PROMPT_SET_TITLE`**      | Whether to set the terminal title                                                              | `1`            |
 
 ## Zstyle options
 
