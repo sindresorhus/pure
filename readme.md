@@ -259,7 +259,7 @@ zplug mafredri/zsh-async, from:github
 zplug sindresorhus/pure, use:pure.zsh, from:github, as:theme
 ```
 
-### [zinit](https://github.com/zdharma/zinit)
+### [zinit](https://github.com/zdharma-continuum/zinit)
 
 Update your `.zshrc` file with the following two lines (order matters):
 
