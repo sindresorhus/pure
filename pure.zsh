@@ -1,3 +1,4 @@
+# -*- mode: shell-script; indent-tabs-mode: t; sh-basic-offset: 8; sh-indentation: 8; -*-
 # Pure
 # by Sindre Sorhus
 # https://github.com/sindresorhus/pure
@@ -142,6 +143,12 @@ prompt_pure_preprompt_render() {
 	# Set the path.
 	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
 
+	# AWS
+	[[ -n $prompt_pure_aws_account ]] && preprompt_parts+=($prompt_pure_aws_account)
+
+	# K8s
+	[[ -n $prompt_pure_k8s_context ]] && preprompt_parts+=($prompt_pure_k8s_context)
+
 	# Git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
 	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
@@ -213,6 +220,8 @@ prompt_pure_precmd() {
 	# Perform async Git dirty check and fetch.
 	prompt_pure_async_tasks
 
+	prompt_pure_async_tasks_ext
+
 	# Check if we should display the virtual env. We use a sufficiently high
 	# index of psvar (12) here to avoid collisions with user defined entries.
 	psvar[12]=
@@ -247,6 +256,14 @@ prompt_pure_precmd() {
 		print "For more information, see: https://github.com/sindresorhus/pure#oh-my-zsh"
 		unset ZSH_THEME  # Only show this warning once.
 	fi
+}
+
+prompt_pure_async_aws_account() {
+	aws sts get-caller-identity --query '[Arn,Account]' --output text | sed -E 's/^.*\/(.*)\t(.*)$/\1@\2/'
+}
+
+prompt_pure_async_k8s_context() {
+	kubectl config current-context
 }
 
 prompt_pure_async_git_aliases() {
@@ -414,6 +431,10 @@ prompt_pure_async_init() {
 	async_start_worker "prompt_pure" -u -n
 	async_register_callback "prompt_pure" prompt_pure_async_callback
 	async_worker_eval "prompt_pure" prompt_pure_async_renice
+
+	async_start_worker "prompt_pure_ext" -u -n
+	async_register_callback "prompt_pure_ext" prompt_pure_async_callback
+	async_worker_eval "prompt_pure_ext" prompt_pure_async_renice
 }
 
 prompt_pure_async_tasks() {
@@ -449,6 +470,24 @@ prompt_pure_async_tasks() {
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
 
 	prompt_pure_async_refresh
+}
+
+prompt_pure_async_tasks_ext() {
+	async_worker_eval "prompt_pure_ext" buildin cd -q $PWD
+
+	if zstyle -t ":prompt:pure:aws" show && [[ $prev_aws_profile != $AWS_PROFILE || $prev_aws_vault != $AWS_VAULT ]]; then
+		[[ -n $AWS_PROFILE ]] && async_worker_eval "prompt_pure_ext" export AWS_PROFILE=$AWS_PROFILE
+		[[ -n $AWS_VALUT   ]] && async_worker_eval "prompt_pure_ext" export AWS_VAULT=$AWS_VAULT
+		typeset -g prev_aws_profile=$AWS_PROFILE
+		typeset -g prev_aws_vault=$AWS_VAULT
+		async_job "prompt_pure_ext" prompt_pure_async_aws_account
+	fi
+
+	if zstyle -t ":prompt:pure:k8s" show && [[ $prev_kubeconfig != $KUBECONFIG ]]; then
+		typeset -g prev_kubeconfig=$KUBECONFIG
+		[[ -n $KUBECONFIG ]] && async_worker_eval "prompt_pure_ext" export KUBECONFIG=$KUBECONFIG
+		async_job "prompt_pure_ext" prompt_pure_async_k8s_context
+	fi
 }
 
 prompt_pure_async_refresh() {
@@ -516,6 +555,7 @@ prompt_pure_async_callback() {
 				async_stop_worker prompt_pure
 				prompt_pure_async_init   # Reinit the worker.
 				prompt_pure_async_tasks  # Restart all tasks.
+				prompt_pure_async_tasks_ext
 
 				# Reset render state due to restart.
 				unset prompt_pure_async_render_requested
@@ -526,6 +566,7 @@ prompt_pure_async_callback() {
 				# Looks like async_worker_eval failed,
 				# rerun async tasks just in case.
 				prompt_pure_async_tasks
+				prompt_pure_async_tasks_ext
 			fi
 			;;
 		prompt_pure_async_vcs_info)
@@ -621,6 +662,24 @@ prompt_pure_async_callback() {
 			local prev_stash=$prompt_pure_git_stash
 			typeset -g prompt_pure_git_stash=$output
 			[[ $prev_stash != $prompt_pure_git_stash ]] && do_render=1
+			;;
+		prompt_pure_async_aws_account)
+			local prev_aws_account=$prompt_pure_aws_account
+			if (( $code ==0 )); then
+				typeset -g prompt_pure_aws_account="%F{#FF9900}${output}%f"
+			else
+				unset prompt_pure_aws_account
+			fi
+			[[ $prev_aws_account != $prompt_pure_aws_account ]] && do_render=1
+			;;
+		prompt_pure_async_k8s_context)
+			local prev_k8s_context=$prompt_pure_k8s_context
+			if (( $code == 0 )); then
+				typeset -g prompt_pure_k8s_context="%F{#326CE5}${output}%f"
+			else
+				unset prompt_pure_k8s_context
+			fi
+			[[ $prev_k8s_context != $prompt_pure_k8s_context ]] && do_render=1
 			;;
 	esac
 
