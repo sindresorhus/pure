@@ -372,6 +372,7 @@ prompt_pure_async_git_fetch() {
 	command git -c gc.auto=0 fetch \
 		--quiet \
 		--no-tags \
+		--no-prune-tags \
 		--recurse-submodules=no \
 		$remote &>/dev/null &
 	wait $! || return $fail_code
