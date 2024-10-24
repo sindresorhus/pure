@@ -236,6 +236,13 @@ prompt_pure_precmd() {
 		fi
 	fi
 
+	# Guix package manager integration. If used from within 'guix shell'
+	if zstyle -T ":prompt:pure:environment:guix-shell" show; then
+		if [[ -n $GUIX_ENVIRONMENT ]]; then
+			psvar[12]="[env]"
+		fi
+	fi
+	
 	# Make sure VIM prompt is reset.
 	prompt_pure_reset_prompt_symbol
 
