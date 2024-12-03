@@ -98,6 +98,69 @@ You can set Pure to only `git fetch` the upstream branch of the current local br
 
 `zstyle :prompt:pure:environment:nix-shell show no`
 
+Only Git is supported as a vcs by default. To activate more VCS systems you need to add them via `zstyle`:
+`zstyle ':prompt:pure:vcs_info' vcs_list git other-vcs`
+See `zstyle` `:vcs_info:* enable` for more info on the list.
+Extra options like showing arrows and dirty status are supported only for git. You'll need to define extra functions, see Custom VCS Support section below for details.
+
+## Custom VCS Support
+To support custom VCS systems, extra functions should be defined.
+They should be called `prompt_pure_async_${VCS}_${NAME}`, where `${VCS}` is the name of the VCS and `${NAME}` is the name of the function.
+They have to be defined before `pure` is loaded.
+
+See `git` commands in `pure.zsh` for examples.
+
+### `dirty`
+Arguments:
+- value of "${PURE_GIT_UNTRACKED_DIRTY}"
+
+Return code:
+- 0 if non-dirty
+- any other code if repo is dirty
+
+Output: None
+
+### `arrows`
+Arguments: None
+
+Return code:
+- 0 on success
+- any other code on failure
+
+Output:
+```
+<commits-ahead-of-remote>\t<commits-behind-of-remote>
+```
+
+Where `<commits-ahead-of-remote>` is the number of commits ahead of the remote branch, and `<commits-behind-of-remote>` is the number of commits behind the remote branch.
+They're separated by a tab character.
+
+### `fetch`
+Arguments:
+- `1` if `only_upstream` is set, `0` otherwise
+
+Return code:
+- `0` on success
+- `97` if no remote branch is available
+- `98`/`99` if fetch has failed
+- any other code on different failure
+
+Output: same as `arrows`
+
+Be careful not to lock up async worker by asking user for input, see `prompt_pure_async_git_fetch` for an example.
+Since output of `fetch` has to match `arrows`, it's recommended to call `arrows` at the end of `fetch`.
+
+### `stash`
+Arguments: None
+
+Return code:
+- 0 on success
+- any other code on failure
+
+Output:
+- `<number-of-stashes>` if there are stashes
+- empty string if there are no local stashes
+
 ## Colors
 
 As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:
