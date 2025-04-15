@@ -727,10 +727,12 @@ prompt_pure_is_inside_container() {
 	local -r cgroup_file='/proc/1/cgroup'
 	local -r nspawn_file='/run/host/container-manager'
 	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
+	local -r k8s_token_file='/var/run/secrets/kubernetes.io/serviceaccount/token'
 		|| [[ "$container" == "lxc" ]] \
 		|| [[ "$container" == "oci" ]] \
 		|| [[ "$container" == "podman" ]] \
-		|| [[ -r "$nspawn_file" ]]
+		|| [[ -r "$nspawn_file" ]] \
+		|| [[ -f "$k8s_token_file" ]]
 }
 
 prompt_pure_system_report() {
