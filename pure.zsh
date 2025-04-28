@@ -11,7 +11,7 @@
 # %F => color dict
 # %f => reset color
 # %~ => current path
-# %* => time
+# %* => time (same as %D{%H:%M:%S}, see strftime(3))
 # %n => username
 # %m => shortname host
 # %(?..) => prompt conditional - %(condition.true.false)
@@ -130,6 +130,9 @@ prompt_pure_preprompt_render() {
 
 	# Initialize the preprompt array.
 	local -a preprompt_parts
+
+	# Optionally show the time.
+	[[ -n $PURE_PREPROMPT_STRFTIME ]] && preprompt_parts+=('%F{$prompt_pure_colors[time]}%D{'$PURE_PREPROMPT_STRFTIME'}')
 
 	# Suspended jobs in background.
 	if ((${(M)#jobstates:#suspended:*} != 0)); then
@@ -832,6 +835,7 @@ prompt_pure_setup() {
 		prompt:success       magenta
 		prompt:continuation  242
 		suspended_jobs       red
+		time                 white
 		user                 242
 		user:root            default
 		virtualenv           242
