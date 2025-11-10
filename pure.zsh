@@ -133,7 +133,7 @@ prompt_pure_preprompt_render() {
 
 	# Suspended jobs in background.
 	if ((${(M)#jobstates:#suspended:*} != 0)); then
-		preprompt_parts+='%F{$prompt_pure_colors[suspended_jobs]}✦'
+		preprompt_parts+='%F{$prompt_pure_colors[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL:-✦}'
 	fi
 
 	# Username and machine, if applicable.
