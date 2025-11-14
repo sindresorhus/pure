@@ -735,7 +735,7 @@ prompt_pure_is_inside_container() {
 		|| [[ -r "$nspawn_file" ]] \
 		|| [[ -r "$podman_crio_file" ]] \
 		|| [[ -r "$docker_file" ]] \
-		|| [[ -f "$k8s_token_file" ]] \
+		|| [[ -r "$k8s_token_file" ]] \
 		|| [[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker|containerd)* ]]
 }
 
