@@ -729,13 +729,19 @@ prompt_pure_state_setup() {
 
 # Return true if executing inside a Docker, OCI, LXC, or systemd-nspawn container.
 prompt_pure_is_inside_container() {
-	local -r cgroup_file='/proc/1/cgroup'
 	local -r nspawn_file='/run/host/container-manager'
-	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
-		|| [[ "$container" == "lxc" ]] \
+	local -r podman_crio_file='/run/.containerenv'
+	local -r docker_file='/.dockerenv'
+	local -r k8s_token_file='/var/run/secrets/kubernetes.io/serviceaccount/token'
+	local -r cgroup_file='/proc/1/cgroup'
+	[[ "$container" == "lxc" ]] \
 		|| [[ "$container" == "oci" ]] \
 		|| [[ "$container" == "podman" ]] \
-		|| [[ -r "$nspawn_file" ]]
+		|| [[ -r "$nspawn_file" ]] \
+		|| [[ -r "$podman_crio_file" ]] \
+		|| [[ -r "$docker_file" ]] \
+		|| [[ -r "$k8s_token_file" ]] \
+		|| [[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker|containerd)* ]]
 }
 
 prompt_pure_system_report() {
