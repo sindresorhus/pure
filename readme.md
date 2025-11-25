@@ -84,6 +84,7 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 | **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
+| **`PURE_SKIP_INITIAL_NEWLINE`**  | Decides whether to skip printing a newline on initial prompt load.                             | `0`            |
 
 ## Zstyle options
 

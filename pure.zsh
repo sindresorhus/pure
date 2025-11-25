@@ -187,8 +187,14 @@ prompt_pure_preprompt_render() {
 	expanded_prompt="${(S%%)PROMPT}"
 
 	if [[ $1 == precmd ]]; then
-		# Initial newline, for spaciousness.
-		print
+		if [[ $PURE_SKIP_INITIAL_NEWLINE == 1 ]]; then
+			# If the PURE_SKIP_INITIAL_NEWLINE variable is equal to 1,
+			# skip the newline for the first time the prompt is loaded.
+			unset PURE_SKIP_INITIAL_NEWLINE
+		else 
+			# Initial newline, for spaciousness.
+			print
+		fi
 	elif [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
 		# Redraw the prompt.
 		prompt_pure_reset_prompt
