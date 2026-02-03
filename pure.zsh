@@ -253,12 +253,20 @@ prompt_pure_precmd() {
 	fi
 }
 
+prompt_pure_git_exe() {
+	if [[ -n "${PURE_GIT_EXE}" ]]; then
+		"${PURE_GIT_EXE}" "$@";
+	else
+		command git "$@";
+	fi
+}
+
 prompt_pure_async_git_aliases() {
 	setopt localoptions noshwordsplit
 	local -a gitalias pullalias
 
 	# List all aliases and split on newline.
-	gitalias=(${(@f)"$(command git config --get-regexp "^alias\.")"})
+	gitalias=(${(@f)"$(prompt_pure_git_exe config --get-regexp "^alias\.")"})
 	for line in $gitalias; do
 		parts=(${(@)=line})           # Split line on spaces.
 		aliasname=${parts[1]#alias.}  # Grab the name (alias.[name]).
@@ -301,7 +309,7 @@ prompt_pure_async_vcs_info() {
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
 	local untracked_dirty=$1
-	local untracked_git_mode=$(command git config --get status.showUntrackedFiles)
+	local untracked_git_mode=$(prompt_pure_git_exe config --get status.showUntrackedFiles)
 	if [[ "$untracked_git_mode" != 'no' ]]; then
 		untracked_git_mode='normal'
 	fi
@@ -310,9 +318,9 @@ prompt_pure_async_git_dirty() {
 	export GIT_OPTIONAL_LOCKS=0
 
 	if [[ $untracked_dirty = 0 ]]; then
-		command git diff --no-ext-diff --quiet --exit-code
+		prompt_pure_git_exe diff --no-ext-diff --quiet --exit-code
 	else
-		test -z "$(command git status --porcelain -u${untracked_git_mode})"
+		test -z "$(prompt_pure_git_exe status --porcelain -u${untracked_git_mode})"
 	fi
 
 	return $?
@@ -337,9 +345,9 @@ prompt_pure_async_git_fetch() {
 	local -a remote
 	if ((only_upstream)); then
 		local ref
-		ref=$(command git symbolic-ref -q HEAD)
+		ref=$(prompt_pure_git_exe symbolic-ref -q HEAD)
 		# Set remote to only fetch information for the current branch.
-		remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
+		remote=($(prompt_pure_git_exe for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
 		if [[ -z $remote[1] ]]; then
 			# No remote specified for this branch, skip fetch.
 			return 97
@@ -373,7 +381,7 @@ prompt_pure_async_git_fetch() {
 
 	# Do git fetch and avoid fetching tags or
 	# submodules to speed up the process.
-	command git -c gc.auto=0 fetch \
+	prompt_pure_git_exe -c gc.auto=0 fetch \
 		--quiet \
 		--no-tags \
 		--no-prune-tags \
@@ -389,7 +397,7 @@ prompt_pure_async_git_fetch() {
 
 prompt_pure_async_git_arrows() {
 	setopt localoptions noshwordsplit
-	command git rev-list --left-right --count HEAD...@'{u}'
+	prompt_pure_git_exe rev-list --left-right --count HEAD...@'{u}'
 }
 
 prompt_pure_async_git_stash() {
@@ -762,7 +770,7 @@ prompt_pure_system_report() {
 	[[ -n $TMUX ]] && print "yes" || print "no"
 
 	local git_version
-	git_version=($(git --version))  # Remove newlines, if hub is present.
+	git_version=($(prompt_pure_git_exe --version))  # Remove newlines, if hub is present.
 	print - "- Git: $git_version"
 
 	print - "- Pure state:"

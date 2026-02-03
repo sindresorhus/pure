@@ -75,6 +75,7 @@ prompt pure
 | Option                           | Description                                                                                    | Default value  |
 | :------------------------------- | :--------------------------------------------------------------------------------------------- | :------------- |
 | **`PURE_CMD_MAX_EXEC_TIME`**     | The max execution time of a process before its run time is shown when it exits.                | `5` seconds    |
+| **`PURE_GIT_EXE`**               | Custom Git command to use. Useful if you have Git wrappers or aliases you want to use.         | `command git`  |
 | **`PURE_GIT_PULL`**              | Prevents Pure from checking whether the current Git remote has been updated.                   | `1`            |
 | **`PURE_GIT_UNTRACKED_DIRTY`**   | Do not include untracked files in dirtiness check. Mostly useful on large repos (like WebKit). | `1`            |
 | **`PURE_GIT_DELAY_DIRTY_CHECK`** | Time in seconds to delay git dirty checking when `git status` takes > 5 seconds.               | `1800` seconds |
