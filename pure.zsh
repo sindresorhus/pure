@@ -843,8 +843,8 @@ prompt_pure_setup() {
 	# dynamic via variables and psvar[12-20], updated each render
 	# in prompt_pure_preprompt_render. Numbering starts at 12 for
 	# legacy reasons (Pure originally used psvar[12] for virtualenv)
-	# and to avoid collisions with low psvar indices which users or
-	# prompt themes may rely on (e.g. %v expands psvar[1]).
+	# and to avoid collisions with low psvar indices which users
+	# may rely on (e.g. %v expands psvar[1]).
 	#
 	#   psvar[12] = suspended jobs symbol (e.g. ✦)
 	#   psvar[13] = username flag, renders user/host (e.g. user@host)
