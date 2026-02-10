@@ -862,7 +862,7 @@ prompt_pure_setup() {
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
-	PROMPT+='%(13V.${prompt_pure_state[username]} .)'
+	PROMPT+='%(13V.${(e)prompt_pure_state[username]} .)'
 	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
