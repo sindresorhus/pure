@@ -66,7 +66,7 @@ prompt_pure_set_title() {
 
 	# Show hostname if connected via SSH.
 	local hostname=
-	if [[ -n $prompt_pure_state[username] ]]; then
+	if (( psvar[13] )); then
 		# Expand in-place in case ignore-escape is used.
 		hostname="${(%):-(%m) }"
 	fi
@@ -134,9 +134,7 @@ prompt_pure_preprompt_render() {
 	psvar[12]=
 	((${(M)#jobstates:#suspended:*} != 0)) && psvar[12]=${PURE_SUSPENDED_JOBS_SYMBOL:-✦}
 
-	# psvar[13]: Username flag (content rendered via $prompt_pure_state[username]).
-	psvar[13]=
-	[[ -n $prompt_pure_state[username] ]] && psvar[13]=1
+	# psvar[13]: Username flag (set once in prompt_pure_state_setup).
 
 	# psvar[14]: Git branch name.
 	psvar[14]=${prompt_pure_vcs_info[branch]}
@@ -683,21 +681,24 @@ prompt_pure_state_setup() {
 		unset MATCH MBEGIN MEND
 	fi
 
-	hostname='%F{$prompt_pure_colors[host]}@%m%f'
+	local user_color
 	# Show `username@host` if logged in through SSH.
-	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+	[[ -n $ssh_connection ]] && user_color=user
 
 	# Show `username@host` if inside a container and not in GitHub Codespaces.
-	[[ -z "${CODESPACES}" ]] && prompt_pure_is_inside_container && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+	[[ -z "${CODESPACES}" ]] && prompt_pure_is_inside_container && user_color=user
 
 	# Show `username@host` if root, with username in default color.
-	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
+	[[ $UID -eq 0 ]] && user_color=user:root
+
+	# Set psvar[13] flag for username display in PROMPT.
+	[[ -n $user_color ]] && psvar[13]=1
 
 	typeset -gA prompt_pure_state
 	prompt_pure_state[version]="1.27.0"
 	prompt_pure_state+=(
-		username "$username"
-		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
+		user_color "$user_color"
+		prompt	   "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
 
@@ -862,7 +863,7 @@ prompt_pure_setup() {
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
-	PROMPT+='%(13V.${prompt_pure_state[username]} .)'
+	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
 	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
