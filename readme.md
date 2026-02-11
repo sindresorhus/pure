@@ -266,3 +266,6 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 [![Sindre Sorhus](https://github.com/sindresorhus.png?size=100)](https://sindresorhus.com) | [![Mathias Fredriksson](https://github.com/mafredri.png?size=100)](https://github.com/mafredri)
 ---|---
 [Sindre Sorhus](https://github.com/sindresorhus) | [Mathias Fredriksson](https://github.com/mafredri)
+
+---
+_Last updated: 2026/2/11_
