@@ -695,7 +695,7 @@ prompt_pure_state_setup() {
 	[[ -n $user_color ]] && psvar[13]=1
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.27.0"
+	prompt_pure_state[version]="1.27.1"
 	prompt_pure_state+=(
 		user_color "$user_color"
 		prompt	   "${PURE_PROMPT_SYMBOL:-❯}"
