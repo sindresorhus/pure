@@ -56,6 +56,9 @@ prompt_pure_check_cmd_exec_time() {
 prompt_pure_set_title() {
 	setopt localoptions noshwordsplit
 
+	# Allow disabling title management.
+	zstyle -T ":prompt:pure:title" show || return
+
 	# Emacs terminal does not support settings the title.
 	(( ${+EMACS} || ${+INSIDE_EMACS} )) && return
 
