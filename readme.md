@@ -99,6 +99,10 @@ You can set Pure to only `git fetch` the upstream branch of the current local br
 
 `zstyle :prompt:pure:environment:nix-shell show no`
 
+Git integration is enabled by default, you can disable it with:
+
+`zstyle :prompt:pure:git show no`
+
 ## Colors
 
 As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:
