@@ -402,6 +402,10 @@ prompt_pure_async_tasks() {
 	# Update the current working directory of the async worker.
 	async_worker_eval "prompt_pure" builtin cd -q $PWD
 
+	# Sync git environment variables to the async worker.
+	async_worker_eval "prompt_pure" "${${GIT_DIR:+export GIT_DIR=${(q)GIT_DIR}}:-unset GIT_DIR}"
+	async_worker_eval "prompt_pure" "${${GIT_WORK_TREE:+export GIT_WORK_TREE=${(q)GIT_WORK_TREE}}:-unset GIT_WORK_TREE}"
+
 	typeset -gA prompt_pure_vcs_info
 
 	local -H MATCH MBEGIN MEND
