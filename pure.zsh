@@ -158,6 +158,14 @@ prompt_pure_preprompt_render() {
 	# psvar[19]: Command execution time.
 	psvar[19]=${prompt_pure_cmd_exec_time}
 
+	# psvar[21]: Node.js version.
+	psvar[21]=
+	if [[ -n $prompt_pure_node_version ]]; then
+		local node_symbol
+		zstyle -s ":prompt:pure:environment:node_version" symbol node_symbol || node_symbol='⬢'
+		psvar[21]="${node_symbol}${prompt_pure_node_version}"
+	fi
+
 	# Expand the prompt for future comparison.
 	local expanded_prompt
 	expanded_prompt="${(S%%)PROMPT}"
@@ -371,6 +379,25 @@ prompt_pure_async_git_stash() {
 	git rev-list --walk-reflogs --count refs/stash
 }
 
+prompt_pure_check_node_version() {
+	setopt localoptions noshwordsplit
+
+	# Walk up to find package.json (similar to how git detects repos).
+	local dir=$PWD
+	while [[ $dir != "/" ]]; do
+		[[ -f "$dir/package.json" ]] && break
+		dir=${dir:h}
+	done
+
+	local version=
+	if [[ -f "$dir/package.json" ]]; then
+		version=$(command node --version 2>/dev/null) || version=
+		version=${${${version#v}%%.*}//[$'\t\r\n']}
+	fi
+
+	print -r -- "$version"
+}
+
 # Try to lower the priority of the worker so that disk heavy operations
 # like `git status` has less impact on the system responsivity.
 prompt_pure_async_renice() {
@@ -398,6 +425,19 @@ prompt_pure_async_init() {
 
 prompt_pure_async_tasks() {
 	setopt localoptions noshwordsplit
+
+	# Check if Node.js version display is enabled (independent of Git).
+	if zstyle -t ":prompt:pure:environment:node_version" show; then
+		if [[ ${prompt_pure_node_version_pwd-} != $PWD ]] || [[ ${prompt_pure_node_version_path-} != $PATH ]]; then
+			typeset -g prompt_pure_node_version=$(prompt_pure_check_node_version)
+			typeset -g prompt_pure_node_version_pwd=$PWD
+			typeset -g prompt_pure_node_version_path=$PATH
+		fi
+	else
+		unset prompt_pure_node_version
+		unset prompt_pure_node_version_path
+		unset prompt_pure_node_version_pwd
+	fi
 
 	# Check if git integration is enabled (default: yes).
 	if ! zstyle -T ":prompt:pure:git" show; then
@@ -432,8 +472,15 @@ prompt_pure_async_tasks() {
 		# Stop any running async jobs.
 		async_flush_jobs "prompt_pure"
 
-		# Reset Git preprompt variables, switching working tree.
-		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
+		# Reset preprompt variables, switching working tree.
+		unset prompt_pure_git_dirty
+		unset prompt_pure_git_last_dirty_check_timestamp
+		unset prompt_pure_git_arrows
+		unset prompt_pure_git_stash
+		unset prompt_pure_git_fetch_pattern
+		unset prompt_pure_node_version
+		unset prompt_pure_node_version_path
+		unset prompt_pure_node_version_pwd
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
 	fi
@@ -831,6 +878,7 @@ prompt_pure_setup() {
 		git:action           yellow
 		git:dirty            218
 		host                 242
+		node_version         green
 		path                 blue
 		prompt:error         red
 		prompt:success       magenta
@@ -860,7 +908,7 @@ prompt_pure_setup() {
 	typeset -g prompt_pure_git_branch_color=$prompt_pure_colors[git:branch]
 
 	# Construct PROMPT once, both preprompt and prompt line. Kept
-	# dynamic via variables and psvar[12-20], updated each render
+	# dynamic via variables and psvar[12-21], updated each render
 	# in prompt_pure_preprompt_render. Numbering starts at 12 for
 	# legacy reasons (Pure originally used psvar[12] for virtualenv)
 	# and to avoid collisions with low psvar indices which users
@@ -875,10 +923,11 @@ prompt_pure_setup() {
 	#   psvar[18] = git stash flag, renders stash symbol
 	#   psvar[19] = exec time (e.g. 1d 3h 2m 5s)
 	#   psvar[20] = virtualenv/conda/nix-shell name
+	#   psvar[21] = Node.js version (e.g. ⬢22)
 	#
 	# Example output:
 	#   ✦ user@host ~/Code/pure main* rebase ⇣⇡ ≡ 3s
-	#   myenv ❯
+	#   myenv ⬢22 ❯
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
@@ -893,8 +942,9 @@ prompt_pure_setup() {
 	# Newline separating preprompt from prompt.
 	PROMPT+='${prompt_newline}'
 
-	# Prompt line: virtualenv and prompt symbol.
+	# Prompt line: virtualenv, Node.js version, and prompt symbol.
 	PROMPT+='%(20V.%F{$prompt_pure_colors[virtualenv]}%20v%f .)'
+	PROMPT+='%(21V.%F{$prompt_pure_colors[node_version]}%21v%f .)'
 	# Prompt symbol: turns red if the previous command didn't exit with 0.
 	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
 	PROMPT+=$prompt_indicator
