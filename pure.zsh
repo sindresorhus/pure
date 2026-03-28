@@ -841,7 +841,7 @@ prompt_pure_setup() {
 	typeset -g prompt_pure_git_branch_color=$prompt_pure_colors[git:branch]
 
 	# Construct PROMPT once, both preprompt and prompt line. Kept
-	# dynamic via variables and psvar[12-20], updated each render
+	# dynamic via variables and psvar[12-21], updated each render
 	# in prompt_pure_preprompt_render. Numbering starts at 12 for
 	# legacy reasons (Pure originally used psvar[12] for virtualenv)
 	# and to avoid collisions with low psvar indices which users
@@ -856,6 +856,7 @@ prompt_pure_setup() {
 	#   psvar[18] = git stash flag, renders stash symbol
 	#   psvar[19] = exec time (e.g. 1d 3h 2m 5s)
 	#   psvar[20] = virtualenv/conda/nix-shell name
+	#   psvar[21] = current directory
 	#
 	# Example output:
 	#   ✦ user@host ~/Code/pure main* rebase ⇣⇡ ≡ 3s
@@ -864,7 +865,7 @@ prompt_pure_setup() {
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
 	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
-	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
+	PROMPT+='%F{$prompt_pure_colors[path]}%(21V.%21v.%~)%f'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
