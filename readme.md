@@ -99,6 +99,23 @@ You can set Pure to only `git fetch` the upstream branch of the current local br
 
 `zstyle :prompt:pure:environment:nix-shell show no`
 
+## Pre-prompt segments
+
+Pure builds the first prompt line from named segments. After running `prompt pure`, you can add, replace, remove, or reposition segments without forking Pure:
+
+```sh
+# Add a custom segment after the path.
+prompt_pure_add_preprompt_segment context '${PURE_PROMPT_CONTEXT:+ %F{cyan}${PURE_PROMPT_CONTEXT}%f}' after path
+
+# Replace an existing segment.
+prompt_pure_set_preprompt_segment path '%F{${prompt_pure_colors[path]}}%2~%f'
+
+# Remove an existing segment.
+prompt_pure_remove_preprompt_segment git_stash
+```
+
+The default segment order is `suspended_jobs`, `user`, `path`, `git_branch`, `git_action`, `git_arrows`, `git_stash`, and `execution_time`. Segment prompt fragments use normal ZSH prompt expansion and prompt substitution, so values can come from variables or functions updated by your own hooks.
+
 ## Colors
 
 As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:

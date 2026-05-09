@@ -118,6 +118,121 @@ prompt_pure_set_colors() {
 	done
 }
 
+prompt_pure_preprompt_segment_index() {
+	setopt localoptions noshwordsplit
+
+	local name=$1 segment
+	integer index=1
+	for segment in $prompt_pure_preprompt_order; do
+		if [[ $segment == $name ]]; then
+			REPLY=$index
+			return 0
+		fi
+		(( index++ ))
+	done
+
+	REPLY=0
+	return 1
+}
+
+prompt_pure_rebuild_prompt() {
+	setopt localoptions noshwordsplit
+
+	local segment
+	typeset -g PROMPT=
+	for segment in $prompt_pure_preprompt_order; do
+		[[ -n ${prompt_pure_preprompt_segments[$segment]+x} ]] && PROMPT+=$prompt_pure_preprompt_segments[$segment]
+	done
+	PROMPT+='${prompt_newline}'
+	PROMPT+=$prompt_pure_prompt_line
+}
+
+prompt_pure_remove_preprompt_segment() {
+	setopt localoptions noshwordsplit
+
+	local name=$1 rebuild=${2:-}
+	local -a next_order
+	local segment
+	if [[ -z $name ]]; then
+		print -u2 'usage: prompt_pure_remove_preprompt_segment <name>'
+		return 2
+	fi
+
+	unset "prompt_pure_preprompt_segments[$name]"
+	for segment in $prompt_pure_preprompt_order; do
+		[[ $segment == $name ]] || next_order+=($segment)
+	done
+	prompt_pure_preprompt_order=("${next_order[@]}")
+
+	[[ $rebuild == no-rebuild ]] || prompt_pure_rebuild_prompt
+}
+
+prompt_pure_set_preprompt_segment() {
+	setopt localoptions noshwordsplit
+
+	local name=$1 prompt_fragment=$2
+	if (( $# < 2 )) || [[ -z $name ]]; then
+		print -u2 'usage: prompt_pure_set_preprompt_segment <name> <prompt-fragment>'
+		return 2
+	fi
+
+	if ! prompt_pure_preprompt_segment_index $name; then
+		prompt_pure_preprompt_order+=($name)
+	fi
+	prompt_pure_preprompt_segments[$name]=$prompt_fragment
+	prompt_pure_rebuild_prompt
+}
+
+prompt_pure_add_preprompt_segment() {
+	setopt localoptions noshwordsplit
+
+	local name=$1 prompt_fragment=$2 position=${3:-end} anchor=$4
+	local -a next_order
+	local segment inserted=0
+	if (( $# < 2 )) || [[ -z $name ]]; then
+		print -u2 'usage: prompt_pure_add_preprompt_segment <name> <prompt-fragment> [before|after <segment>]'
+		return 2
+	fi
+
+	case $position in
+		before|after)
+			if [[ -z $anchor ]]; then
+				print -u2 'prompt_pure_add_preprompt_segment: before/after requires a segment name'
+				return 2
+			fi
+			if ! prompt_pure_preprompt_segment_index $anchor; then
+				print -u2 "prompt_pure_add_preprompt_segment: unknown segment: $anchor"
+				return 1
+			fi ;;
+		end) ;;
+		*)
+			print -u2 'usage: prompt_pure_add_preprompt_segment <name> <prompt-fragment> [before|after <segment>]'
+			return 2 ;;
+	esac
+
+	prompt_pure_remove_preprompt_segment $name no-rebuild
+	if [[ $position == end ]]; then
+		prompt_pure_preprompt_order+=($name)
+	else
+		for segment in $prompt_pure_preprompt_order; do
+			if [[ $position == before && $segment == $anchor ]]; then
+				next_order+=($name)
+				inserted=1
+			fi
+			next_order+=($segment)
+			if [[ $position == after && $segment == $anchor ]]; then
+				next_order+=($name)
+				inserted=1
+			fi
+		done
+		(( inserted )) || next_order+=($name)
+		prompt_pure_preprompt_order=("${next_order[@]}")
+	fi
+
+	prompt_pure_preprompt_segments[$name]=$prompt_fragment
+	prompt_pure_rebuild_prompt
+}
+
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
@@ -862,23 +977,35 @@ prompt_pure_setup() {
 	#   myenv ❯
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
-	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
-	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
-	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
-	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
-	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
-	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
-	PROMPT+='%(18V. %F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f.)'
-	PROMPT+='%(19V. %F{$prompt_pure_colors[execution_time]}%19v%f.)'
-
-	# Newline separating preprompt from prompt.
-	PROMPT+='${prompt_newline}'
+	typeset -gA prompt_pure_preprompt_segments
+	typeset -ga prompt_pure_preprompt_order
+	prompt_pure_preprompt_order=(
+		suspended_jobs
+		user
+		path
+		git_branch
+		git_action
+		git_arrows
+		git_stash
+		execution_time
+	)
+	prompt_pure_preprompt_segments=(
+		suspended_jobs '%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
+		user '%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
+		path '%F{${prompt_pure_colors[path]}}%~%f'
+		git_branch '%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
+		git_action '%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
+		git_arrows '%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
+		git_stash '%(18V. %F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f.)'
+		execution_time '%(19V. %F{$prompt_pure_colors[execution_time]}%19v%f.)'
+	)
 
 	# Prompt line: virtualenv and prompt symbol.
-	PROMPT+='%(20V.%F{$prompt_pure_colors[virtualenv]}%20v%f .)'
+	typeset -g prompt_pure_prompt_line='%(20V.%F{$prompt_pure_colors[virtualenv]}%20v%f .)'
 	# Prompt symbol: turns red if the previous command didn't exit with 0.
 	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
-	PROMPT+=$prompt_indicator
+	prompt_pure_prompt_line+=$prompt_indicator
+	prompt_pure_rebuild_prompt
 
 	# Indicate continuation prompt by … and use a darker color for it.
 	PROMPT2='%F{$prompt_pure_colors[prompt:continuation]}… %(1_.%_ .%_)%f'$prompt_indicator
