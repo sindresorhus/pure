@@ -118,6 +118,16 @@ prompt_pure_set_colors() {
 	done
 }
 
+prompt_pure_format_path() {
+	setopt localoptions noshwordsplit
+
+	local current_path=${(%):-%~}
+	current_path=${current_path//\%/%%}
+
+	local path_separator="%F{$prompt_pure_colors[path:separator]}/%F{$prompt_pure_colors[path]}"
+	print -nr -- "%F{$prompt_pure_colors[path]}${current_path//\//$path_separator}%f"
+}
+
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
@@ -813,6 +823,7 @@ prompt_pure_setup() {
 		git:dirty            218
 		host                 242
 		path                 blue
+		path:separator       242
 		prompt:error         red
 		prompt:success       magenta
 		prompt:continuation  242
@@ -864,7 +875,7 @@ prompt_pure_setup() {
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
 	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
-	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
+	PROMPT+='$(prompt_pure_format_path)'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
