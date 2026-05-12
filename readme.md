@@ -33,6 +33,12 @@ npm install --global pure-prompt
 
 That's it. Skip to [Getting started](#getting-started).
 
+If `prompt -l` does not list `pure`, add this to your `.zshrc` before `promptinit`:
+
+```sh
+fpath+=("$(npm root -g)/pure-prompt")
+```
+
 ### [Homebrew](https://brew.sh)
 
 ```sh
