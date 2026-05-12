@@ -932,6 +932,10 @@ prompt_pure_setup() {
 	# Guard against (ana)conda changing the PS1 prompt
 	# (we manually insert the env when it's available).
 	export CONDA_CHANGEPS1=no
+
+	# Guard against pyenv-virtualenv changing the PS1 prompt
+	# (we manually insert the env when it's available).
+	export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 }
 
 prompt_pure_setup "$@"
