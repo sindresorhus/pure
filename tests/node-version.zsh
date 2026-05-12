@@ -3,15 +3,19 @@
 source "${0:A:h}/test-helper.zsh"
 
 main() {
-	local base_directory=/tmp/pure-node-version-$$
+	zmodload -F zsh/files b:zf_rm
+
+	local base_directory=$PWD/.ai-temporary/pure-node-version-$$
 	local bin_directory=$base_directory/bin
 	local second_bin_directory=$base_directory/bin-second
 	local project_directory=$base_directory/project
 	local nested_directory=$project_directory/deep/nested
-	local outside_directory=$base_directory/outside
+	local outside_directory=/
 	local counter_path=$base_directory/node-count
 
-	mkdir -p -- "$bin_directory" "$second_bin_directory" "$nested_directory" "$outside_directory"
+	trap "zf_rm -rf -- ${(q)base_directory}" EXIT
+
+	mkdir -p -- "$bin_directory" "$second_bin_directory" "$nested_directory"
 	: > "$project_directory/package.json"
 	: > "$counter_path"
 

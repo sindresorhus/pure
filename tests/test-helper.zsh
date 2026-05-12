@@ -10,10 +10,6 @@ prompt_pure_preprompt_render() {
 	:
 }
 
-node_output() {
-	print -r -- "${1}"$'\t'"${2-}"
-}
-
 assert_equal() {
 	local expected=$1
 	local actual=$2
