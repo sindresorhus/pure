@@ -69,6 +69,11 @@ EOF
 	assert_equal "26" "${prompt_pure_node_version-}" "node version should be refreshed when PATH changes"
 	assert_equal "2" "$(cat "$counter_path")" "node should be resolved again when PATH changes"
 
+	prompt_pure_vcs_info[pwd]=$outside_directory
+	prompt_pure_async_tasks || :
+	assert_equal "26" "${prompt_pure_node_version-}" "node version should survive git working tree state reset"
+	assert_equal "2" "$(cat "$counter_path")" "node should not be resolved again when git working tree state resets"
+
 	zstyle ':prompt:pure:git' show no
 	unset prompt_pure_node_version
 	unset prompt_pure_node_version_path

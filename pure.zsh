@@ -478,9 +478,6 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_arrows
 		unset prompt_pure_git_stash
 		unset prompt_pure_git_fetch_pattern
-		unset prompt_pure_node_version
-		unset prompt_pure_node_version_path
-		unset prompt_pure_node_version_pwd
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
 	fi
