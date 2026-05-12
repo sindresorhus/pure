@@ -396,6 +396,22 @@ prompt_pure_async_init() {
 prompt_pure_async_tasks() {
 	setopt localoptions noshwordsplit
 
+	# Check if git integration is enabled (default: yes).
+	if ! zstyle -T ":prompt:pure:git" show; then
+		# Flush any in-flight async git jobs.
+		if (( ${prompt_pure_async_inited:-0} )); then
+			async_flush_jobs "prompt_pure"
+		fi
+
+		# Clear git state to handle runtime disabling.
+		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
+		prompt_pure_vcs_info[branch]=
+		prompt_pure_vcs_info[top]=
+		prompt_pure_vcs_info[action]=
+		prompt_pure_vcs_info[pwd]=
+		return
+	fi
+
 	# Initialize the async worker.
 	prompt_pure_async_init
 
@@ -414,11 +430,7 @@ prompt_pure_async_tasks() {
 		async_flush_jobs "prompt_pure"
 
 		# Reset Git preprompt variables, switching working tree.
-		unset prompt_pure_git_dirty
-		unset prompt_pure_git_last_dirty_check_timestamp
-		unset prompt_pure_git_arrows
-		unset prompt_pure_git_stash
-		unset prompt_pure_git_fetch_pattern
+		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
 	fi
