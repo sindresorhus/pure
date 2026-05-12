@@ -90,8 +90,7 @@ EOF
 
 	zstyle ':prompt:pure:git' show no
 	unset prompt_pure_node_version
-	unset prompt_pure_node_version_path
-	unset prompt_pure_node_version_pwd
+	unset prompt_pure_node_cache_key
 	prompt_pure_async_tasks || :
 	assert_equal "26" "${prompt_pure_node_version-}" "node version should still be set when git integration is disabled"
 	assert_equal "3" "$(cat "$counter_path")" "node should be resolved when git integration is disabled"

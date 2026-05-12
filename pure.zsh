@@ -428,15 +428,16 @@ prompt_pure_async_tasks() {
 
 	# Check if Node.js version display is enabled (independent of Git).
 	if zstyle -t ":prompt:pure:environment:node_version" show; then
-		if [[ ${prompt_pure_node_version_pwd-} != $PWD ]] || [[ ${prompt_pure_node_version_path-} != $PATH ]]; then
+		# Cache key uses "|" separator so the value is never a valid directory
+		# path, preventing zsh from treating it as a named directory for %~.
+		local node_cache_key="$PWD|$PATH"
+		if [[ ${prompt_pure_node_cache_key-} != "$node_cache_key" ]]; then
 			typeset -g prompt_pure_node_version=$(prompt_pure_check_node_version)
-			typeset -g prompt_pure_node_version_pwd=$PWD
-			typeset -g prompt_pure_node_version_path=$PATH
+			typeset -g prompt_pure_node_cache_key=$node_cache_key
 		fi
 	else
 		unset prompt_pure_node_version
-		unset prompt_pure_node_version_path
-		unset prompt_pure_node_version_pwd
+		unset prompt_pure_node_cache_key
 	fi
 
 	# Check if git integration is enabled (default: yes).
