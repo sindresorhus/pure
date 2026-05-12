@@ -103,6 +103,10 @@ Git integration is enabled by default, you can disable it with:
 
 `zstyle :prompt:pure:git show no`
 
+Automatic terminal title management can be disabled if you want to set your own tab or window titles:
+
+`zstyle :prompt:pure:title show no`
+
 ## Colors
 
 As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:
