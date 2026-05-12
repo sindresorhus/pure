@@ -86,10 +86,10 @@ prompt pure
 | **`PURE_GIT_DELAY_DIRTY_CHECK`** | Time in seconds to delay git dirty checking when `git status` takes > 5 seconds.               | `1800` seconds |
 | **`PURE_PROMPT_SYMBOL`**         | Defines the prompt symbol.                                                                     | `❯`            |
 | **`PURE_PROMPT_VICMD_SYMBOL`**   | Defines the prompt symbol used when the `vicmd` keymap is active (VI-mode).                    | `❮`            |
-| **`PURE_SUSPENDED_JOBS_SYMBOL`** | Defines the symbol that indicates that jobs are running in the background.                     | `✦`            |
+| **`PURE_SUSPENDED_JOBS_SYMBOL`** | Defines the symbol that indicates that jobs are running in the background. Set to empty to disable. | `✦`            |
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
-| **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol.                                                                  | `≡`            |
+| **`PURE_GIT_STASH_SYMBOL`**      | Defines the git stash symbol. Set to empty to disable.                                         | `≡`            |
 
 ## Zstyle options
 

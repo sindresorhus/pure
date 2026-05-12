@@ -135,7 +135,7 @@ prompt_pure_preprompt_render() {
 	#
 	# psvar[12]: Suspended jobs symbol.
 	psvar[12]=
-	((${(M)#jobstates:#suspended:*} != 0)) && psvar[12]=${PURE_SUSPENDED_JOBS_SYMBOL:-✦}
+	((${(M)#jobstates:#suspended:*} != 0)) && psvar[12]=${PURE_SUSPENDED_JOBS_SYMBOL-✦}
 
 	# psvar[13]: Username flag (set once in prompt_pure_state_setup).
 
@@ -151,9 +151,9 @@ prompt_pure_preprompt_render() {
 	# psvar[17]: Git arrows (push/pull).
 	psvar[17]=${prompt_pure_git_arrows}
 
-	# psvar[18]: Git stash flag.
+	# psvar[18]: Git stash symbol.
 	psvar[18]=
-	[[ -n $prompt_pure_git_stash ]] && psvar[18]=1
+	[[ -n $prompt_pure_git_stash ]] && psvar[18]=${PURE_GIT_STASH_SYMBOL-≡}
 
 	# psvar[19]: Command execution time.
 	psvar[19]=${prompt_pure_cmd_exec_time}
@@ -918,7 +918,7 @@ prompt_pure_setup() {
 	#   psvar[15] = git dirty marker, nested inside [14] conditional
 	#   psvar[16] = git action (e.g. rebase, merge)
 	#   psvar[17] = git arrows (e.g. ⇣⇡)
-	#   psvar[18] = git stash flag, renders stash symbol
+	#   psvar[18] = git stash symbol (e.g. ≡)
 	#   psvar[19] = exec time (e.g. 1d 3h 2m 5s)
 	#   psvar[20] = virtualenv/conda/nix-shell name
 	#   psvar[21] = Node.js version (e.g. ⬢22)
@@ -934,7 +934,7 @@ prompt_pure_setup() {
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
-	PROMPT+='%(18V. %F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f.)'
+	PROMPT+='%(18V. %F{$prompt_pure_colors[git:stash]}%18v%f.)'
 	PROMPT+='%(21V. %F{$prompt_pure_colors[node_version]}%21v%f.)'
 	PROMPT+='%(19V. %F{$prompt_pure_colors[execution_time]}%19v%f.)'
 
