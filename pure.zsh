@@ -977,6 +977,10 @@ prompt_pure_setup() {
 	# add colors to highlight essential parts like file and function name.
 	PROMPT4="${ps4_parts[depth]} ${ps4_symbols}${ps4_parts[prompt]}"
 
+	# Pure does not use a right-side prompt. Clear RPROMPT to prevent
+	# frameworks (e.g. Prezto) from leaking a previous theme's RPROMPT.
+	RPROMPT=
+
 	# Guard against Oh My Zsh themes overriding Pure.
 	unset ZSH_THEME
 
