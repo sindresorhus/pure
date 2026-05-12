@@ -95,6 +95,14 @@ You can set Pure to only `git fetch` the upstream branch of the current local br
 
 `zstyle :prompt:pure:git:fetch only_upstream yes`
 
+Node.js version display shows the current major `node` version when inside a directory tree containing a `package.json`. It is not enabled by default. You can enable it with:
+
+`zstyle :prompt:pure:environment:node_version show yes`
+
+You can change the symbol shown before the Node.js version (default `⬢`) with:
+
+`zstyle :prompt:pure:environment:node_version symbol ⬡`
+
 `nix-shell` integration adds the shell name to the prompt when used from within a nix shell. It is enabled by default, you can disable it with:
 
 `zstyle :prompt:pure:environment:nix-shell show no`
@@ -123,6 +131,7 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 - `git:action` (yellow) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
 - `git:dirty` (218) - The asterisk showing the branch is dirty.
 - `host` (242) - The hostname when on a remote machine.
+- `node_version` (green) - The current major Node.js version in directories with `package.json`.
 - `path` (blue) - The current path, for example, `PWD`.
 - `prompt:error` (red) - The `PURE_PROMPT_SYMBOL` when the previous command has *failed*.
 - `prompt:success` (magenta) - The `PURE_PROMPT_SYMBOL` when the previous command has *succeeded*.
@@ -143,13 +152,14 @@ The following diagram shows where each color is applied on the prompt:
 │      │           │          │     │ ┌──────────────── git:action
 │      │           │          │     │ │        ┌─────── git:arrow
 │      │           │          │     │ │        │ ┌───── git:stash
-│      │           │          │     │ │        │ │ ┌─── execution_time
-│      │           │          │     │ │        │ │ │
-zaphod@heartofgold ~/dev/pure master* rebase-i ⇡ ≡ 42s
+│      │           │          │     │ │        │ │ ┌─── node_version
+│      │           │          │     │ │        │ │ │    ┌─── execution_time
+│      │           │          │     │ │        │ │ │    │
+zaphod@heartofgold ~/dev/pure master* rebase-i ⇡ ≡ ⬢22 42s
 venv ❯
 │    │
-│    └───────────────────────────────────────────────── prompt
-└────────────────────────────────────────────────────── virtualenv (or prompt:continuation)
+│    └──────────────────────────────────────────────── prompt
+└───────────────────────────────────────────────────── virtualenv (or prompt:continuation)
 ```
 
 ### RGB colors
