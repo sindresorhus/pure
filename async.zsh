@@ -292,6 +292,18 @@ async_process_results() {
 
 	# Read output from zpty and parse it if available.
 	while zpty -r -t $worker data 2>/dev/null; do
+		if [[ -z $data ]]; then
+			# Empty read indicates a broken zpty fd (EOF without proper close).
+			# This prevents a busy-loop that causes 100% CPU usage.
+			if [[ -n $callback ]]; then
+				$callback '[async]' 2 "" 0 "$0:$LINENO: error: empty read from worker $worker, fd is broken" 0
+			fi
+			# Trap and watcher callers must not leak the recovery status to the shell.
+			if [[ $caller = trap || $caller = watcher ]]; then
+				return 0
+			fi
+			return 1
+		fi
 		ASYNC_PROCESS_BUFFER[$worker]+=$data
 		len=${#ASYNC_PROCESS_BUFFER[$worker]}
 		pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
