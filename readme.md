@@ -152,13 +152,13 @@ The following diagram shows where each color is applied on the prompt:
 │      │           │          │     │ ┌──────────────── git:action
 │      │           │          │     │ │        ┌─────── git:arrow
 │      │           │          │     │ │        │ ┌───── git:stash
-│      │           │          │     │ │        │ │ ┌─── execution_time
-│      │           │          │     │ │        │ │ │
-zaphod@heartofgold ~/dev/pure master* rebase-i ⇡ ≡ 42s
-venv ⬢22 ❯
-│    │       │
-│    │       └──────────────────────────────────────── prompt
-│    └──────────────────────────────────────────────── node_version
+│      │           │          │     │ │        │ │ ┌─── node_version
+│      │           │          │     │ │        │ │ │    ┌─── execution_time
+│      │           │          │     │ │        │ │ │    │
+zaphod@heartofgold ~/dev/pure master* rebase-i ⇡ ≡ ⬢22 42s
+venv ❯
+│    │
+│    └──────────────────────────────────────────────── prompt
 └───────────────────────────────────────────────────── virtualenv (or prompt:continuation)
 ```
 

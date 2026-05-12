@@ -923,8 +923,8 @@ prompt_pure_setup() {
 	#   psvar[21] = Node.js version (e.g. ⬢22)
 	#
 	# Example output:
-	#   ✦ user@host ~/Code/pure main* rebase ⇣⇡ ≡ 3s
-	#   myenv ⬢22 ❯
+	#   ✦ user@host ~/Code/pure main* rebase ⇣⇡ ≡ ⬢22 3s
+	#   myenv ❯
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
@@ -934,14 +934,14 @@ prompt_pure_setup() {
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
 	PROMPT+='%(18V. %F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f.)'
+	PROMPT+='%(21V. %F{$prompt_pure_colors[node_version]}%21v%f.)'
 	PROMPT+='%(19V. %F{$prompt_pure_colors[execution_time]}%19v%f.)'
 
 	# Newline separating preprompt from prompt.
 	PROMPT+='${prompt_newline}'
 
-	# Prompt line: virtualenv, Node.js version, and prompt symbol.
+	# Prompt line: virtualenv and prompt symbol.
 	PROMPT+='%(20V.%F{$prompt_pure_colors[virtualenv]}%20v%f .)'
-	PROMPT+='%(21V.%F{$prompt_pure_colors[node_version]}%21v%f .)'
 	# Prompt symbol: turns red if the previous command didn't exit with 0.
 	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
 	PROMPT+=$prompt_indicator

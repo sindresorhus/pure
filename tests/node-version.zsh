@@ -57,6 +57,16 @@ EOF
 
 	typeset -gA prompt_pure_vcs_info=(pwd '' top '')
 	zstyle ':prompt:pure:environment:node_version' show yes
+	local prompt_layout=$(command zsh -fc 'source ./pure.zsh >/dev/null 2>&1; print -r -- $PROMPT')
+	local before_stash=${prompt_layout%%"%(18V."*}
+	local before_node_version=${prompt_layout%%"%(21V."*}
+	local before_execution_time=${prompt_layout%%"%(19V."*}
+	local before_newline=${prompt_layout%%'${prompt_newline}'*}
+	local before_virtualenv=${prompt_layout%%"%(20V."*}
+	if (( ${#before_stash} >= ${#before_node_version} || ${#before_node_version} >= ${#before_execution_time} || ${#before_execution_time} >= ${#before_newline} || ${#before_newline} >= ${#before_virtualenv} )); then
+		print -u2 -- "Assertion failed: node version should render after git stash and before execution time on the preprompt line"
+		return 1
+	fi
 
 	PATH="$bin_directory:/usr/bin:/bin"
 	builtin cd -q "$nested_directory"
