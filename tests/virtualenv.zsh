@@ -33,6 +33,11 @@ main() {
 	prompt_pure_precmd
 	assert_equal "myenv" "$psvar[20]" "conda env should be shown by default"
 
+	# Conda env with full path should show only the basename.
+	CONDA_DEFAULT_ENV=/path/to/envs/myenv
+	prompt_pure_precmd
+	assert_equal "myenv" "$psvar[20]" "conda env should show basename when set to full path"
+
 	# Conda env should be hidden when virtualenv style is off.
 	zstyle ':prompt:pure:environment:virtualenv' show no
 	prompt_pure_precmd
