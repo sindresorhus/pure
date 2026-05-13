@@ -505,11 +505,14 @@ prompt_pure_async_tasks() {
 	fi
 
 	# Update the current working directory of the async worker.
-	async_worker_eval "prompt_pure" builtin cd -q $PWD
+	# If any call fails (dead worker), bail out. The callback's recovery
+	# mechanism handles restarting; continuing here would print errors
+	# to stderr because the callback gets unregistered during recovery.
+	async_worker_eval "prompt_pure" builtin cd -q $PWD || return
 
 	# Sync git environment variables to the async worker.
-	async_worker_eval "prompt_pure" "${${GIT_DIR:+export GIT_DIR=${(q)GIT_DIR}}:-unset GIT_DIR}"
-	async_worker_eval "prompt_pure" "${${GIT_WORK_TREE:+export GIT_WORK_TREE=${(q)GIT_WORK_TREE}}:-unset GIT_WORK_TREE}"
+	async_worker_eval "prompt_pure" "${${GIT_DIR:+export GIT_DIR=${(q)GIT_DIR}}:-unset GIT_DIR}" || return
+	async_worker_eval "prompt_pure" "${${GIT_WORK_TREE:+export GIT_WORK_TREE=${(q)GIT_WORK_TREE}}:-unset GIT_WORK_TREE}" || return
 
 	typeset -gA prompt_pure_vcs_info
 
@@ -529,7 +532,7 @@ prompt_pure_async_tasks() {
 	fi
 	unset MATCH MBEGIN MEND
 
-	async_job "prompt_pure" prompt_pure_async_vcs_info
+	async_job "prompt_pure" prompt_pure_async_vcs_info || return
 
 	# Only perform tasks inside a Git working tree.
 	[[ -n $prompt_pure_vcs_info[top] ]] || return
@@ -544,16 +547,16 @@ prompt_pure_async_refresh() {
 		# We set the pattern here to avoid redoing the pattern check until the
 		# working tree has changed. Pull and fetch are always valid patterns.
 		typeset -g prompt_pure_git_fetch_pattern="pull|fetch"
-		async_job "prompt_pure" prompt_pure_async_git_aliases
+		async_job "prompt_pure" prompt_pure_async_git_aliases || return
 	fi
 
-	async_job "prompt_pure" prompt_pure_async_git_arrows
+	async_job "prompt_pure" prompt_pure_async_git_arrows || return
 
 	# Do not perform `git fetch` if it is disabled or in home folder.
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
 		zstyle -t :prompt:pure:git:fetch only_upstream
 		local only_upstream=$((? == 0))
-		async_job "prompt_pure" prompt_pure_async_git_fetch $only_upstream
+		async_job "prompt_pure" prompt_pure_async_git_fetch $only_upstream || return
 	fi
 
 	# If dirty checking is sufficiently fast,
@@ -562,12 +565,12 @@ prompt_pure_async_refresh() {
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
 		# Check check if there is anything to pull.
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1}
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} || return
 	fi
 
 	# If stash is enabled, tell async worker to count stashes
 	if zstyle -t ":prompt:pure:git:stash" show; then
-		async_job "prompt_pure" prompt_pure_async_git_stash
+		async_job "prompt_pure" prompt_pure_async_git_stash || return
 	else
 		unset prompt_pure_git_stash
 	fi

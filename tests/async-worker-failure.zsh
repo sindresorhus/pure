@@ -9,6 +9,7 @@ main() {
 	test_callback_no_recursion_on_worker_failure || return
 	test_callback_failed_recovery_clears_git_state || return
 	test_callback_recovery_calls_tasks_on_success || return
+	test_dead_worker_no_stderr_leakage || return
 
 	print -- "async-worker-failure tests passed"
 }
@@ -146,6 +147,66 @@ test_callback_recovery_calls_tasks_on_success() {
 	assert_equal 1 $tasks_called "prompt_pure_async_tasks should be called when recovery succeeds" || return
 
 	unfunction async_start_worker async_stop_worker async_register_callback async_worker_eval prompt_pure_async_tasks
+}
+
+test_dead_worker_no_stderr_leakage() {
+	# Restore prompt_pure_async_tasks (earlier tests unfunction it).
+	source ./pure.zsh >/dev/null 2>&1
+	prompt_pure_preprompt_render() { : }
+
+	# Simulate: worker was previously started but is now dead.
+	# When recovery fails, the remaining async calls in prompt_pure_async_tasks
+	# must not leak error messages to stderr. (GitHub issue #639)
+	typeset -g prompt_pure_async_inited=1
+
+	# Recovery will fail because the worker cannot be restarted.
+	async_start_worker() { return 1 }
+	async_stop_worker() {
+		typeset -gA ASYNC_CALLBACKS
+		unset "ASYNC_CALLBACKS[$1]"
+	}
+	async_register_callback() { : }
+	async_flush_jobs() { : }
+
+	# Register the callback (as prompt_pure_async_init would have done).
+	typeset -gA ASYNC_CALLBACKS
+	ASYNC_CALLBACKS[prompt_pure]="prompt_pure_async_callback"
+
+	# Simulate dead worker behavior: the first call with a registered callback
+	# invokes recovery (which fails and unregisters the callback). Subsequent
+	# calls find no callback and print errors to stderr.
+	async_worker_eval() {
+		local worker=$1; shift
+		typeset -gA ASYNC_CALLBACKS
+		local callback=
+		(( ${+ASYNC_CALLBACKS[$worker]} )) && callback=$ASYNC_CALLBACKS[$worker]
+		if [[ -n $callback ]]; then
+			$callback '[async]' 3 "" 0 "error: no such worker: $worker" 0
+		else
+			print -u2 "async_worker_eval: no such async worker: $worker"
+		fi
+		return 1
+	}
+	async_job() {
+		local worker=$1; shift
+		typeset -gA ASYNC_CALLBACKS
+		local callback=
+		(( ${+ASYNC_CALLBACKS[$worker]} )) && callback=$ASYNC_CALLBACKS[$worker]
+		if [[ -n $callback ]]; then
+			$callback '[async]' 3 "" 0 "error: no such worker: $worker" 0
+		else
+			print -u2 "async_job: no such async worker: $worker"
+		fi
+		return 1
+	}
+
+	local stderr_file=$TMPDIR/pure-test-stderr-$$
+	prompt_pure_async_tasks 2>$stderr_file
+	local stderr_output=$(<$stderr_file 2>/dev/null)
+
+	assert_empty "$stderr_output" "prompt_pure_async_tasks must not leak error messages to stderr when worker is dead" || return
+
+	unfunction async_start_worker async_stop_worker async_register_callback async_flush_jobs async_worker_eval async_job
 }
 
 main "$@"
