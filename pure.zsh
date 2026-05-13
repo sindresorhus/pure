@@ -197,6 +197,14 @@ prompt_pure_preprompt_render() {
 		psvar[21]="${node_symbol}${prompt_pure_node_version}"
 	fi
 
+	# psvar[22]: Custom prefix, psvar[23]: Custom suffix.
+	# Set by the user-defined prompt_pure_precustom function.
+	psvar[22]=
+	psvar[23]=
+	if (( $+functions[prompt_pure_precustom] )); then
+		prompt_pure_precustom
+	fi
+
 	# Expand the prompt for future comparison.
 	local expanded_prompt
 	expanded_prompt="${(S%%)PROMPT}"
@@ -941,7 +949,7 @@ prompt_pure_preview() {
 	fi
 
 	# Sample preprompt with all components visible.
-	print -P "%F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*+%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f"
+	print -P "%F{$c[custom:prefix]}prefix%f %F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*+%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f %F{$c[custom:suffix]}suffix%f"
 	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f"
 	print
 	print -P "%F{$c[prompt:error]}${PURE_PROMPT_SYMBOL:-❯}%f  prompt after error"
@@ -984,6 +992,8 @@ prompt_pure_setup() {
 	# Set the colors.
 	typeset -gA prompt_pure_colors_default prompt_pure_colors
 	prompt_pure_colors_default=(
+		custom:prefix        242
+		custom:suffix        242
 		execution_time       yellow
 		git:arrow            cyan
 		git:stash            cyan
@@ -1038,13 +1048,16 @@ prompt_pure_setup() {
 	#   psvar[19] = exec time (e.g. 1d 3h 2m 5s)
 	#   psvar[20] = virtualenv/conda/nix-shell name
 	#   psvar[21] = Node.js version (e.g. ⬢22)
+	#   psvar[22] = custom prefix (set by prompt_pure_precustom)
+	#   psvar[23] = custom suffix (set by prompt_pure_precustom)
 	#
 	# Example output:
-	#   ✦ user@host ~/Code/pure main*+ rebase ⇣⇡ ≡ ⬢22 3s
+	#   prefix ✦ user@host ~/Code/pure main*+ rebase ⇣⇡ ≡ ⬢22 3s suffix
 	#   myenv ❯
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
-	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
+	PROMPT='%(22V.%F{$prompt_pure_colors[custom:prefix]}%22v%f .)'
+	PROMPT+='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
 	local hostname_part=''
 	if (( prompt_pure_state[show_host] )); then
 		hostname_part='%F{$prompt_pure_colors[host]}@%m%f'
@@ -1058,6 +1071,7 @@ prompt_pure_setup() {
 	PROMPT+='%(18V. %F{$prompt_pure_colors[git:stash]}%18v%f.)'
 	PROMPT+='%(21V. %F{$prompt_pure_colors[node_version]}%21v%f.)'
 	PROMPT+='%(19V. %F{$prompt_pure_colors[execution_time]}%19v%f.)'
+	PROMPT+='%(23V. %F{$prompt_pure_colors[custom:suffix]}%23v%f.)'
 
 	# Newline separating preprompt from prompt.
 	PROMPT+='${prompt_newline}'

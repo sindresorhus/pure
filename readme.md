@@ -133,6 +133,38 @@ Automatic terminal title management can be disabled if you want to set your own 
 
 `zstyle :prompt:pure:title show no`
 
+## Customization
+
+Pure supports a hook function for adding custom content to the prompt. Define a function called `prompt_pure_precustom` in your `.zshrc` (after `prompt pure`) to set custom prefix and suffix segments on the preprompt line:
+
+- `psvar[22]` — Custom prefix, rendered before all built-in segments.
+- `psvar[23]` — Custom suffix, rendered after all built-in segments.
+
+The function is called each time the prompt renders (including async redraws), so avoid slow commands. For expensive operations, cache the result in a `precmd` hook and read the cached value in `prompt_pure_precustom`.
+
+```sh
+# .zshrc
+
+# Cache expensive calls in precmd (runs once per command, not on async redraws).
+my_kube_context=
+my_precmd() {
+	my_kube_context=$(kubectl config current-context 2>/dev/null)
+}
+add-zsh-hook precmd my_precmd
+
+prompt_pure_precustom() {
+	psvar[22]=$my_kube_context
+	psvar[23]=$(date +%H:%M)
+}
+```
+
+The colors can be customized with `zstyle`:
+
+```sh
+zstyle :prompt:pure:custom:prefix color cyan
+zstyle :prompt:pure:custom:suffix color yellow
+```
+
 ## Colors
 
 As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting), color values can be:
@@ -141,6 +173,8 @@ As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-E
 - `#` followed by an RGB triplet in hexadecimal format, for example `#424242`. Only if your terminal supports 24-bit colors (true color) or when the [`zsh/nearcolor` module](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) is loaded.
 
 Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
+- `custom:prefix` (242) - Custom prefix set via `prompt_pure_precustom`.
+- `custom:suffix` (242) - Custom suffix set via `prompt_pure_precustom`.
 - `execution_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
 - `git:stash` (cyan) - For `PURE_GIT_STASH_SYMBOL`.
@@ -162,22 +196,25 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 The following diagram shows where each color is applied on the prompt:
 
 ```
-┌────────────────────────────────────────────────────── user
-│      ┌─────────────────────────────────────────────── host
-│      │           ┌─────────────────────────────────── path
-│      │           │          ┌──────────────────────── git:branch
-│      │           │          │   ┌─────────────────────── git:dirty
-│      │           │          │   │  ┌──────────────────── git:action
-│      │           │          │   │  │        ┌─────────── git:arrow
-│      │           │          │   │  │        │ ┌───────── git:stash
-│      │           │          │   │  │        │ │ ┌─────── node_version
-│      │           │          │   │  │        │ │ │   ┌── execution_time
-│      │           │          │   │  │        │ │ │   │
-zaphod@heartofgold ~/dev/pure main*+ rebase-i ⇡ ≡ ⬢22 42s
+┌──────────────────────────────────────────────────────────────────────── custom:prefix
+│      ┌─────────────────────────────────────────────────────────────────── suspended_jobs
+│      │ ┌───────────────────────────────────────────────────────────────── user
+│      │ │      ┌────────────────────────────────────────────────────────── host
+│      │ │      │           ┌────────────────────────────────────────────── path
+│      │ │      │           │          ┌─────────────────────────────────── git:branch
+│      │ │      │           │          │   ┌─────────────────────────────── git:dirty
+│      │ │      │           │          │   │  ┌──────────────────────────── git:action
+│      │ │      │           │          │   │  │        ┌─────────────────── git:arrow
+│      │ │      │           │          │   │  │        │ ┌───────────────── git:stash
+│      │ │      │           │          │   │  │        │ │ ┌─────────────── node_version
+│      │ │      │           │          │   │  │        │ │ │   ┌─────────── execution_time
+│      │ │      │           │          │   │  │        │ │ │   │   ┌────── custom:suffix
+│      │ │      │           │          │   │  │        │ │ │   │   │
+prefix ✦ zaphod@heartofgold ~/dev/pure main*+ rebase-i ⇡ ≡ ⬢22 42s suffix
 venv ❯
 │    │
-│    └──────────────────────────────────────────────── prompt
-└───────────────────────────────────────────────────── virtualenv (or prompt:continuation)
+│    └───────────────────────────────────────────────────────────────────── prompt
+└────────────────────────────────────────────────────────────────────────── virtualenv (or prompt:continuation)
 ```
 
 ### Preview

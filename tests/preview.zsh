@@ -5,6 +5,8 @@ source "${0:A:h}/test-helper.zsh"
 main() {
 	# Set up colors like prompt_pure_setup would.
 	typeset -gA prompt_pure_colors=(
+		custom:prefix        242
+		custom:suffix        242
 		execution_time       yellow
 		git:arrow            cyan
 		git:stash            cyan
@@ -29,7 +31,7 @@ main() {
 	local output
 	output=$(prompt_pure_preview 2>&1)
 
-	for component in zaphod heartofgold "~/dev/pure" "main" "rebase-i" "42s" "venv" "prompt after error" "continuation prompt" "root" "branch color when data is cached"; do
+	for component in prefix suffix zaphod heartofgold "~/dev/pure" "main" "rebase-i" "42s" "venv" "prompt after error" "continuation prompt" "root" "branch color when data is cached"; do
 		if [[ $output != *"$component"* ]]; then
 			print -u2 "Missing component in preview output: $component"
 			return 1
