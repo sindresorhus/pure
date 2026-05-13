@@ -261,7 +261,13 @@ See the [ZI wiki](https://wiki.zshell.dev/community/gallery/collection/themes#th
 
 ## FAQ
 
-There are currently no FAQs.
+### Prompt is corrupted when using tab completion
+
+If the prompt displays incorrectly during tab completion (ghost characters, misaligned cursor), your shell is likely missing a UTF-8 locale. Pure uses Unicode characters (like `❯`) that require UTF-8 to calculate display width correctly. Add this to your `.zshrc`:
+
+```sh
+export LANG=en_US.UTF-8
+```
 
 See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for previous FAQs.
 
