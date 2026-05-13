@@ -121,6 +121,10 @@ Git integration is enabled by default, you can disable it with:
 
 `zstyle :prompt:pure:git show no`
 
+Path separator dimming makes `/` characters in the path visually dimmer to help distinguish path components. It is not enabled by default. You can enable it with:
+
+`zstyle :prompt:pure:path:separator dim yes`
+
 Automatic terminal title management can be disabled if you want to set your own tab or window titles:
 
 `zstyle :prompt:pure:title show no`

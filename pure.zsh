@@ -121,6 +121,23 @@ prompt_pure_set_colors() {
 	done
 }
 
+prompt_pure_render_dimmed_path() {
+	setopt localoptions noshwordsplit
+
+	# This runs from PROMPT_SUBST so directory changes followed by reset-prompt redraw correctly without precmd.
+	local current_path=${(%):-%~}
+	current_path=${current_path//\%/%%}
+
+	local separator=$'%{\e[2m%}/%{\e[22m%}'
+	# Keep the leading / on absolute paths at full brightness.
+	local prefix=
+	if [[ $current_path == /* ]]; then
+		prefix=/
+		current_path=${current_path:1}
+	fi
+	print -n -r -- "%F{${prompt_pure_colors[path]}}${prefix}${current_path//\//$separator}%f"
+}
+
 prompt_pure_preprompt_render() {
 	setopt localoptions noshwordsplit
 
@@ -925,7 +942,7 @@ prompt_pure_setup() {
 		add-zle-hook-widget zle-keymap-select prompt_pure_update_vim_prompt_widget
 	fi
 
-	# Initialize globals referenced by PROMPT via prompt subst.
+	# Initialize git globals referenced by PROMPT via prompt subst.
 	typeset -gA prompt_pure_vcs_info
 	typeset -g prompt_pure_git_branch_color=$prompt_pure_colors[git:branch]
 
@@ -954,7 +971,12 @@ prompt_pure_setup() {
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
 	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
-	PROMPT+='%F{${prompt_pure_colors[path]}}%~%f'
+	if zstyle -t ':prompt:pure:path:separator' dim; then
+		PROMPT+='$(prompt_pure_render_dimmed_path)'
+	else
+		# Keep the default hot path on native prompt expansion. Command substitution is only needed for dimmed separators.
+		PROMPT+='%F{$prompt_pure_colors[path]}%~%f'
+	fi
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'
