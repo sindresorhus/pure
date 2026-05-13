@@ -232,7 +232,8 @@ prompt_pure_precmd() {
 	psvar[20]=
 	if zstyle -T ":prompt:pure:environment:virtualenv" show; then
 		# Check if a Conda environment is active and display its name.
-		if [[ -n $CONDA_DEFAULT_ENV ]]; then
+		# The 'base' environment is always active and not informative.
+		if [[ -n $CONDA_DEFAULT_ENV ]] && [[ ${CONDA_DEFAULT_ENV:t} != base ]]; then
 			psvar[20]="${${CONDA_DEFAULT_ENV:t}//[$'\t\r\n']}"
 		fi
 		# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
