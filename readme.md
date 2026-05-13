@@ -12,7 +12,7 @@ Most prompts are cluttered, ugly and slow. We wanted something visually pleasing
 
 - Comes with the perfect prompt character.
   Author went through the whole Unicode range to find it.
-- Shows `git` branch and whether it's dirty (with a `*`).
+- Shows `git` branch and whether it's dirty (`*` unstaged, `+` staged, `?` untracked).
 - Indicates when you have unpushed/unpulled `git` commits with up/down arrows. *(Check is done asynchronously!)*
 - Prompt character turns red if the last command didn't exit with `0`.
 - Command execution time will be displayed if it exceeds the set threshold.
@@ -147,7 +147,7 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 - `git:branch` (242) - The name of the current branch when in a Git repository.
 - `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
 - `git:action` (yellow) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
-- `git:dirty` (218) - The asterisk showing the branch is dirty.
+- `git:dirty` (218) - The dirty indicators showing the branch state (`*` unstaged, `+` staged, `?` untracked).
 - `host` (242) - The hostname when on a remote machine.
 - `node_version` (green) - The current major Node.js version in directories with `package.json`.
 - `path` (blue) - The current path, for example, `PWD`.
@@ -166,14 +166,14 @@ The following diagram shows where each color is applied on the prompt:
 │      ┌─────────────────────────────────────────────── host
 │      │           ┌─────────────────────────────────── path
 │      │           │          ┌──────────────────────── git:branch
-│      │           │          │   ┌────────────────────── git:dirty
-│      │           │          │   │ ┌──────────────────── git:action
-│      │           │          │   │ │        ┌─────────── git:arrow
-│      │           │          │   │ │        │ ┌───────── git:stash
-│      │           │          │   │ │        │ │ ┌─────── node_version
-│      │           │          │   │ │        │ │ │   ┌── execution_time
-│      │           │          │   │ │        │ │ │   │
-zaphod@heartofgold ~/dev/pure main* rebase-i ⇡ ≡ ⬢22 42s
+│      │           │          │   ┌─────────────────────── git:dirty
+│      │           │          │   │  ┌──────────────────── git:action
+│      │           │          │   │  │        ┌─────────── git:arrow
+│      │           │          │   │  │        │ ┌───────── git:stash
+│      │           │          │   │  │        │ │ ┌─────── node_version
+│      │           │          │   │  │        │ │ │   ┌── execution_time
+│      │           │          │   │  │        │ │ │   │
+zaphod@heartofgold ~/dev/pure main*+ rebase-i ⇡ ≡ ⬢22 42s
 venv ❯
 │    │
 │    └──────────────────────────────────────────────── prompt
