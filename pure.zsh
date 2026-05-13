@@ -412,13 +412,26 @@ prompt_pure_async_renice() {
 	fi
 }
 
+prompt_pure_clear_git_state() {
+	unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
+	typeset -gA prompt_pure_vcs_info
+	prompt_pure_vcs_info[branch]=
+	prompt_pure_vcs_info[top]=
+	prompt_pure_vcs_info[action]=
+	prompt_pure_vcs_info[pwd]=
+}
+
 prompt_pure_async_init() {
 	typeset -g prompt_pure_async_inited
 	if ((${prompt_pure_async_inited:-0})); then
 		return
 	fi
+	if ! async_start_worker "prompt_pure" -u -n 2>/dev/null; then
+		# Worker failed to start (e.g. zpty permission denied).
+		# Degrade gracefully by skipping async git operations.
+		return 1
+	fi
 	prompt_pure_async_inited=1
-	async_start_worker "prompt_pure" -u -n
 	async_register_callback "prompt_pure" prompt_pure_async_callback
 	async_worker_eval "prompt_pure" prompt_pure_async_renice
 }
@@ -447,17 +460,16 @@ prompt_pure_async_tasks() {
 			async_flush_jobs "prompt_pure"
 		fi
 
-		# Clear git state to handle runtime disabling.
-		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
-		prompt_pure_vcs_info[branch]=
-		prompt_pure_vcs_info[top]=
-		prompt_pure_vcs_info[action]=
-		prompt_pure_vcs_info[pwd]=
+		prompt_pure_clear_git_state
 		return
 	fi
 
-	# Initialize the async worker.
-	prompt_pure_async_init
+	# Initialize the async worker. If it fails (e.g. zpty unavailable),
+	# skip all async tasks and show prompt without git info.
+	if ! prompt_pure_async_init; then
+		prompt_pure_clear_git_state
+		return
+	fi
 
 	# Update the current working directory of the async worker.
 	async_worker_eval "prompt_pure" builtin cd -q $PWD
@@ -544,6 +556,11 @@ prompt_pure_async_callback() {
 	local job=$1 code=$2 output=$3 exec_time=$4 next_pending=$6
 	local do_render=0
 
+	if [[ $job != '[async]' ]] &&
+		(( ! ${prompt_pure_async_inited:-0} )); then
+		return
+	fi
+
 	case $job in
 		\[async])
 			# Handle all the errors that could indicate a crashed
@@ -555,8 +572,13 @@ prompt_pure_async_callback() {
 				#                 and defer the restart?
 				typeset -g prompt_pure_async_inited=0
 				async_stop_worker prompt_pure
-				prompt_pure_async_init   # Reinit the worker.
-				prompt_pure_async_tasks  # Restart all tasks.
+				if prompt_pure_async_init; then
+					prompt_pure_async_tasks  # Restart all tasks.
+				else
+					prompt_pure_clear_git_state
+					do_render=1
+					next_pending=0
+				fi
 
 				# Reset render state due to restart.
 				unset prompt_pure_async_render_requested
@@ -968,7 +990,7 @@ prompt_pure_setup() {
 		prompt 	  '%F{242}>%f '
 	)
 	# Combine the parts with conditional logic. First the `:+` operator is
-	# used to replace `compare` either with `main` or an ampty string. Then
+	# used to replace `compare` either with `main` or an empty string. Then
 	# the `:-` operator is used so that if `compare` becomes an empty
 	# string, it is replaced with `secondary`.
 	local ps4_symbols='${${'${ps4_parts[compare]}':+"'${ps4_parts[main]}'"}:-"'${ps4_parts[secondary]}'"}'
