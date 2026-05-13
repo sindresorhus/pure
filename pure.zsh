@@ -322,11 +322,12 @@ prompt_pure_async_vcs_info() {
 	print -r - ${(@kvq)info}
 }
 
-# Check if a Git repo is dirty and report detailed status.
-# Outputs a markers string: * (unstaged), + (staged), ? (untracked).
+# Fastest possible way to check if a Git repo is dirty.
+# When detailed mode is enabled, outputs markers: * (unstaged), + (staged), ? (untracked).
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
 	local untracked_dirty=$1
+	local detailed=${2:-0}
 	local untracked_git_mode=$(command git config --get status.showUntrackedFiles)
 	if [[ "$untracked_git_mode" != 'no' ]]; then
 		untracked_git_mode='normal'
@@ -334,6 +335,17 @@ prompt_pure_async_git_dirty() {
 
 	# Prevent e.g. `git status` from refreshing the index as a side effect.
 	export GIT_OPTIONAL_LOCKS=0
+
+	if (( ! detailed )); then
+		if [[ $untracked_dirty = 0 ]]; then
+			command git diff --no-ext-diff --quiet --exit-code || return $?
+			command git diff --no-ext-diff --cached --quiet --exit-code
+		else
+			test -z "$(command git status --porcelain -u${untracked_git_mode})"
+		fi
+
+		return
+	fi
 
 	local u_flag
 	if [[ $untracked_dirty = 0 ]]; then
@@ -593,8 +605,10 @@ prompt_pure_async_refresh() {
 	integer time_since_last_dirty_check=$(( EPOCHSECONDS - ${prompt_pure_git_last_dirty_check_timestamp:-0} ))
 	if (( time_since_last_dirty_check > ${PURE_GIT_DELAY_DIRTY_CHECK:-1800} )); then
 		unset prompt_pure_git_last_dirty_check_timestamp
-		# Check check if there is anything to pull.
-		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} || return
+		# Check if the working tree is dirty.
+		zstyle -t ":prompt:pure:git:dirty" detailed
+		local detailed_dirty=$((? == 0))
+		async_job "prompt_pure" prompt_pure_async_git_dirty ${PURE_GIT_UNTRACKED_DIRTY:-1} $detailed_dirty || return
 	fi
 
 	# If stash is enabled, tell async worker to count stashes
@@ -949,7 +963,7 @@ prompt_pure_preview() {
 	fi
 
 	# Sample preprompt with all components visible.
-	print -P "%F{$c[custom:prefix]}prefix%f %F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*+%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f %F{$c[custom:suffix]}suffix%f"
+	print -P "%F{$c[custom:prefix]}prefix%f %F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f %F{$c[custom:suffix]}suffix%f"
 	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f"
 	print
 	print -P "%F{$c[prompt:error]}${PURE_PROMPT_SYMBOL:-❯}%f  prompt after error"
@@ -1041,7 +1055,7 @@ prompt_pure_setup() {
 	#   psvar[12] = suspended jobs symbol (e.g. ✦)
 	#   psvar[13] = username flag, renders user/host (e.g. user@host)
 	#   psvar[14] = git branch
-	#   psvar[15] = git dirty markers (* unstaged, + staged, ? untracked)
+	#   psvar[15] = git dirty marker, nested inside [14] conditional
 	#   psvar[16] = git action (e.g. rebase, merge)
 	#   psvar[17] = git arrows (e.g. ⇣⇡)
 	#   psvar[18] = git stash symbol (e.g. ≡)
@@ -1052,7 +1066,7 @@ prompt_pure_setup() {
 	#   psvar[23] = custom suffix (set by prompt_pure_precustom)
 	#
 	# Example output:
-	#   prefix ✦ user@host ~/Code/pure main*+ rebase ⇣⇡ ≡ ⬢22 3s suffix
+	#   prefix ✦ user@host ~/Code/pure main* rebase ⇣⇡ ≡ ⬢22 3s suffix
 	#   myenv ❯
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
