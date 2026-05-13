@@ -199,19 +199,21 @@ prompt_pure_precmd() {
 
 	# Check if we should display the virtual env (psvar[20]).
 	psvar[20]=
-	# Check if a Conda environment is active and display its name.
-	if [[ -n $CONDA_DEFAULT_ENV ]]; then
-		psvar[20]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
-	fi
-	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
-	# Pure should take back control.
-	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 20 ]]; then
-		if [[ -n $VIRTUAL_ENV_PROMPT ]]; then
-			psvar[20]="${VIRTUAL_ENV_PROMPT}"
-		else
-			psvar[20]="${VIRTUAL_ENV:t}"
+	if zstyle -T ":prompt:pure:environment:virtualenv" show; then
+		# Check if a Conda environment is active and display its name.
+		if [[ -n $CONDA_DEFAULT_ENV ]]; then
+			psvar[20]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
 		fi
-		export VIRTUAL_ENV_DISABLE_PROMPT=20
+		# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
+		# Pure should take back control.
+		if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 20 ]]; then
+			if [[ -n $VIRTUAL_ENV_PROMPT ]]; then
+				psvar[20]="${VIRTUAL_ENV_PROMPT}"
+			else
+				psvar[20]="${VIRTUAL_ENV:t}"
+			fi
+			export VIRTUAL_ENV_DISABLE_PROMPT=20
+		fi
 	fi
 
 	# Nix package manager integration. If used from within 'nix shell' - shell name is shown like so:

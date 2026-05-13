@@ -113,6 +113,10 @@ You can change the symbol shown before the Node.js version (default `⬢`) with:
 
 `zstyle :prompt:pure:environment:nix-shell show no`
 
+Virtualenv integration shows the current Python virtualenv or Conda environment name. It is enabled by default, you can disable it with:
+
+`zstyle :prompt:pure:environment:virtualenv show no`
+
 Git integration is enabled by default, you can disable it with:
 
 `zstyle :prompt:pure:git show no`
