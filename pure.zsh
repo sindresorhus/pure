@@ -67,9 +67,9 @@ prompt_pure_set_title() {
 		/dev/ttyS[0-9]*) return;;
 	esac
 
-	# Show hostname if connected via SSH.
+	# Show hostname if connected via SSH and host display is enabled.
 	local hostname=
-	if (( psvar[13] )); then
+	if (( psvar[13] )) && (( ${prompt_pure_state[show_host]:-1} )); then
 		# Expand in-place in case ignore-escape is used.
 		hostname="${(%):-(%m) }"
 	fi
@@ -817,10 +817,15 @@ prompt_pure_state_setup() {
 	# Set psvar[13] flag for username display in PROMPT.
 	[[ -n $user_color ]] && psvar[13]=1
 
+	# Check if hostname display is enabled (default: yes).
+	local show_host=1
+	zstyle -T ":prompt:pure:host" show || show_host=0
+
 	typeset -gA prompt_pure_state
 	prompt_pure_state[version]="1.27.1"
 	prompt_pure_state+=(
 		user_color "$user_color"
+		show_host  "$show_host"
 		prompt	   "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
@@ -910,15 +915,20 @@ prompt_pure_preview() {
 		path_sample=$(prompt_pure_render_dimmed_path '~/dev/pure')
 	fi
 
+	local host_sample=''
+	if zstyle -T ":prompt:pure:host" show; then
+		host_sample="%F{$c[host]}@heartofgold%f"
+	fi
+
 	# Sample preprompt with all components visible.
-	print -P "%F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f%F{$c[host]}@heartofgold%f ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f"
+	print -P "%F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f"
 	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f"
 	print
 	print -P "%F{$c[prompt:error]}${PURE_PROMPT_SYMBOL:-❯}%f  prompt after error"
 	print; print
 	print -P "%F{$c[git:branch:cached]}main%f  branch color when data is cached"
 	print; print
-	print -P "%F{$c[user:root]}root%f%F{$c[host]}@heartofgold%f  root user"
+	print -P "%F{$c[user:root]}root%f${host_sample}  root user"
 	print; print
 	print -P "%F{$c[prompt:continuation]}… if%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f  continuation prompt"
 }
@@ -1015,7 +1025,11 @@ prompt_pure_setup() {
 	#
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
-	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
+	local hostname_part=''
+	if (( prompt_pure_state[show_host] )); then
+		hostname_part='%F{$prompt_pure_colors[host]}@%m%f'
+	fi
+	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f'"${hostname_part}"' .)'
 	prompt_pure_set_path_separator
 	PROMPT+='${${prompt_pure_path_separator_dimmed:+$(prompt_pure_render_dimmed_path)}:-${prompt_pure_path_segment}}'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'

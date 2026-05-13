@@ -60,6 +60,19 @@ main() {
 		return 1
 	fi
 
+	zstyle ':prompt:pure:host' show no
+	output=$(prompt_pure_preview 2>&1)
+
+	if [[ $output == *'heartofgold'* ]]; then
+		print -u2 "Preview should not show hostname when host display is disabled."
+		return 1
+	fi
+
+	if [[ $output != *'zaphod'* ]]; then
+		print -u2 "Preview should still show username when host display is disabled."
+		return 1
+	fi
+
 	print "preview tests passed."
 }
 

@@ -125,6 +125,10 @@ Path separator dimming makes `/` characters in the path visually dimmer to help 
 
 `zstyle :prompt:pure:path:separator dim yes`
 
+Hostname display is enabled by default when in an SSH session or container. You can disable it while still showing the username with:
+
+`zstyle :prompt:pure:host show no`
+
 Automatic terminal title management can be disabled if you want to set your own tab or window titles:
 
 `zstyle :prompt:pure:title show no`
