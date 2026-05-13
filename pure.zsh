@@ -110,22 +110,36 @@ prompt_pure_preexec() {
 prompt_pure_set_colors() {
 	local color_temp key value
 	for key value in ${(kv)prompt_pure_colors}; do
-		zstyle -t ":prompt:pure:$key" color "$value"
+		zstyle -t ":prompt:pure:$key" color "$value" && continue
 		case $? in
 			1) # The current style is different from the one from zstyle.
 				zstyle -s ":prompt:pure:$key" color color_temp
-				prompt_pure_colors[$key]=$color_temp ;;
+				prompt_pure_colors[${key}]=$color_temp ;;
 			2) # No style is defined.
-				prompt_pure_colors[$key]=$prompt_pure_colors_default[$key] ;;
+				prompt_pure_colors[${key}]=${prompt_pure_colors_default[${key}]} ;;
 		esac
 	done
+
+	prompt_pure_set_path_separator
+
+	return 0
+}
+
+prompt_pure_set_path_separator() {
+	typeset -g prompt_pure_path_segment="%F{${prompt_pure_colors[path]}}%~%f"
+
+	if zstyle -t ':prompt:pure:path:separator' dim; then
+		typeset -g prompt_pure_path_separator_dimmed=1
+	else
+		typeset -g prompt_pure_path_separator_dimmed=
+	fi
 }
 
 prompt_pure_render_dimmed_path() {
 	setopt localoptions noshwordsplit
 
 	# This runs from PROMPT_SUBST so directory changes followed by reset-prompt redraw correctly without precmd.
-	local current_path=${(%):-%~}
+	local current_path=${1:-${(%):-%~}}
 	current_path=${current_path//\%/%%}
 
 	local separator=$'%{\e[2m%}/%{\e[22m%}'
@@ -878,6 +892,33 @@ prompt_pure_system_report() {
 	fi
 }
 
+prompt_pure_preview() {
+	setopt localoptions noshwordsplit
+
+	prompt_pure_set_colors
+
+	local -A c=("${(@kv)prompt_pure_colors}")
+	local node_symbol
+	zstyle -s ":prompt:pure:environment:node_version" symbol node_symbol || node_symbol='⬢'
+
+	local path_sample="%F{$c[path]}~/dev/pure%f"
+	if zstyle -t ':prompt:pure:path:separator' dim; then
+		path_sample=$(prompt_pure_render_dimmed_path '~/dev/pure')
+	fi
+
+	# Sample preprompt with all components visible.
+	print -P "%F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f%F{$c[host]}@heartofgold%f ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f"
+	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f"
+	print
+	print -P "%F{$c[prompt:error]}${PURE_PROMPT_SYMBOL:-❯}%f  prompt after error"
+	print; print
+	print -P "%F{$c[git:branch:cached]}main%f  branch color when data is cached"
+	print; print
+	print -P "%F{$c[user:root]}root%f%F{$c[host]}@heartofgold%f  root user"
+	print; print
+	print -P "%F{$c[prompt:continuation]}… if%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f  continuation prompt"
+}
+
 prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
@@ -971,12 +1012,8 @@ prompt_pure_setup() {
 	# Preprompt line: each %(NV..) section only renders when its psvar is non-empty.
 	PROMPT='%(12V.%F{$prompt_pure_colors[suspended_jobs]}%12v%f .)'
 	PROMPT+='%(13V.%F{$prompt_pure_colors['"${prompt_pure_state[user_color]:-user}"']}%n%f%F{$prompt_pure_colors[host]}@%m%f .)'
-	if zstyle -t ':prompt:pure:path:separator' dim; then
-		PROMPT+='$(prompt_pure_render_dimmed_path)'
-	else
-		# Keep the default hot path on native prompt expansion. Command substitution is only needed for dimmed separators.
-		PROMPT+='%F{$prompt_pure_colors[path]}%~%f'
-	fi
+	prompt_pure_set_path_separator
+	PROMPT+='${${prompt_pure_path_separator_dimmed:+$(prompt_pure_render_dimmed_path)}:-${prompt_pure_path_segment}}'
 	PROMPT+='%(14V. %F{${prompt_pure_git_branch_color}}%14v%(15V.%F{$prompt_pure_colors[git:dirty]}%15v.)%f.)'
 	PROMPT+='%(16V. %F{$prompt_pure_colors[git:action]}%16v%f.)'
 	PROMPT+='%(17V. %F{$prompt_pure_colors[git:arrow]}%17v%f.)'

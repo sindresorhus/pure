@@ -12,12 +12,31 @@ main() {
 		path blue
 	)
 
-	# Disabled by default: path should use plain %~ rendering.
+	# Disabled by default: path should render without dimmed separators.
 	local prompt_layout
 	prompt_layout=$(command zsh -fc 'source ./pure.zsh >/dev/null 2>&1; print -r -- $PROMPT')
-	if [[ $prompt_layout != *'%F{$prompt_pure_colors[path]}%~%f'* || $prompt_layout == *'$(prompt_pure_render_dimmed_path)'* ]]; then
-		print -u2 -- "Assertion failed: default PROMPT should render path without command substitution"
+	if [[ $prompt_layout != *'${prompt_pure_path_segment}'* || $prompt_layout != *'$(prompt_pure_render_dimmed_path)'* ]]; then
+		print -u2 -- "Assertion failed: default PROMPT should support plain and dimmed path rendering"
 		print -u2 -- "Actual: $prompt_layout"
+		return 1
+	fi
+	local expanded_prompt
+	expanded_prompt=$(command zsh -fc 'source ./pure.zsh >/dev/null 2>&1; print -r -- ${(S%%)PROMPT}')
+	local dim=$'\e[2m'
+	local nodim=$'\e[22m'
+	local blue=$'\e[34m'
+	local red=$'\e[31m'
+	local expected_path=${(%):-%~}
+	if [[ $expanded_prompt != *"${blue}${expected_path}"* || $expanded_prompt == *"${dim}/"* || $expanded_prompt == *"${nodim}"* || $expanded_prompt == *'}'* ]]; then
+		print -u2 -- "Assertion failed: default PROMPT should not dim path separators"
+		print -u2 -- "Actual: $expanded_prompt"
+		return 1
+	fi
+
+	expanded_prompt=$(command zsh -fc 'source ./pure.zsh >/dev/null 2>&1; zstyle :prompt:pure:path color red; prompt_pure_set_colors; print -r -- ${(S%%)PROMPT}')
+	if [[ $expanded_prompt != *"${red}${expected_path}"* ]]; then
+		print -u2 -- "Assertion failed: default PROMPT should refresh path color"
+		print -u2 -- "Actual: $expanded_prompt"
 		return 1
 	fi
 
@@ -25,8 +44,6 @@ main() {
 	zstyle ':prompt:pure:path:separator' dim yes
 	local rendered_path
 	rendered_path=$(prompt_pure_render_dimmed_path)
-	local dim=$'\e[2m'
-	local nodim=$'\e[22m'
 	if [[ $rendered_path != *"%{${dim}%}/%{${nodim}%}"* ]]; then
 		print -u2 -- "Assertion failed: separators should use ANSI dim when enabled"
 		print -u2 -- "Actual: $rendered_path"
@@ -100,10 +117,24 @@ main() {
 	fi
 
 	# PROMPT template renders the path dynamically.
-	prompt_layout=$(command zsh -fc 'zstyle ":prompt:pure:path:separator" dim yes; source ./pure.zsh >/dev/null 2>&1; print -r -- $PROMPT')
+	prompt_layout=$(command zsh -fc 'zstyle :prompt:pure:path:separator dim yes; source ./pure.zsh >/dev/null 2>&1; print -r -- $PROMPT')
 	if [[ $prompt_layout != *'$(prompt_pure_render_dimmed_path)'* ]]; then
 		print -u2 -- "Assertion failed: PROMPT should render path dynamically"
 		print -u2 -- "Actual: $prompt_layout"
+		return 1
+	fi
+
+	expanded_prompt=$(command zsh -fc 'zstyle :prompt:pure:path:separator dim yes; source ./pure.zsh >/dev/null 2>&1; print -r -- ${(S%%)PROMPT}')
+	if [[ $expanded_prompt != *"${dim}/"* || $expanded_prompt != *"${nodim}"* || $expanded_prompt == *"$expected_path"* || $expanded_prompt == *'}'* ]]; then
+		print -u2 -- "Assertion failed: expanded PROMPT should dim path separators"
+		print -u2 -- "Actual: $expanded_prompt"
+		return 1
+	fi
+
+	expanded_prompt=$(command zsh -fc 'source ./pure.zsh >/dev/null 2>&1; zstyle :prompt:pure:path:separator dim yes; prompt_pure_set_colors; print -r -- ${(S%%)PROMPT}')
+	if [[ $expanded_prompt != *"${dim}/"* || $expanded_prompt != *"${nodim}"* || $expanded_prompt == *"$expected_path"* || $expanded_prompt == *'}'* ]]; then
+		print -u2 -- "Assertion failed: path separator dimming should update after setup"
+		print -u2 -- "Actual: $expanded_prompt"
 		return 1
 	fi
 
