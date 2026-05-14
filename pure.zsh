@@ -205,19 +205,36 @@ prompt_pure_preprompt_render() {
 		prompt_pure_precustom
 	fi
 
-	# Expand the prompt for future comparison.
-	local expanded_prompt
-	expanded_prompt="${(S%%)PROMPT}"
+	# Build a fingerprint from all dynamic prompt components to detect changes
+	# without expanding PROMPT (which forks a subshell when dimmed path is on).
+	local -a prompt_fingerprint_parts=(
+		"${psvar[12]}"
+		"${psvar[13]}"
+		"${psvar[14]}"
+		"${psvar[15]}"
+		"${psvar[16]}"
+		"${psvar[17]}"
+		"${psvar[18]}"
+		"${psvar[19]}"
+		"${psvar[20]}"
+		"${psvar[21]}"
+		"${psvar[22]}"
+		"${psvar[23]}"
+		"${prompt_pure_state[prompt]}"
+		"${prompt_pure_git_branch_color}"
+		"${PWD}"
+	)
+	local prompt_fingerprint="${(pj:|:)${(@qqq)prompt_fingerprint_parts}}"
 
 	if [[ $1 == precmd ]]; then
 		# Initial newline, for spaciousness.
 		print
-	elif [[ $prompt_pure_last_prompt != $expanded_prompt ]]; then
+	elif [[ $prompt_pure_last_prompt != $prompt_fingerprint ]]; then
 		# Redraw the prompt.
 		prompt_pure_reset_prompt
 	fi
 
-	typeset -g prompt_pure_last_prompt=$expanded_prompt
+	typeset -g prompt_pure_last_prompt=$prompt_fingerprint
 }
 
 prompt_pure_precmd() {
@@ -450,7 +467,7 @@ prompt_pure_async_git_arrows() {
 }
 
 prompt_pure_async_git_stash() {
-	git rev-list --walk-reflogs --count refs/stash
+	command git rev-list --walk-reflogs --count refs/stash
 }
 
 prompt_pure_check_node_version() {
@@ -486,8 +503,37 @@ prompt_pure_async_renice() {
 	fi
 }
 
+prompt_pure_async_worker_sync() {
+	setopt localoptions noshwordsplit
+
+	local sync_token=$1 target_pwd=$2 has_git_dir=$3 git_dir=$4 has_git_work_tree=$5 git_work_tree=$6
+
+	if ! builtin cd -q "$target_pwd"; then
+		builtin cd -q /
+		unset GIT_DIR GIT_WORK_TREE
+		print -r -- "prompt_pure_worker_sync:$sync_token:1"
+		return 1
+	fi
+
+	if (( has_git_dir )); then
+		export GIT_DIR=$git_dir
+	else
+		unset GIT_DIR
+	fi
+
+	if (( has_git_work_tree )); then
+		export GIT_WORK_TREE=$git_work_tree
+	else
+		unset GIT_WORK_TREE
+	fi
+
+	print -r -- "prompt_pure_worker_sync:$sync_token:0"
+}
+
 prompt_pure_clear_git_state() {
 	unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
+	typeset -gA prompt_pure_worker_env=()
+	typeset -gA prompt_pure_worker_env_pending=()
 	typeset -gA prompt_pure_vcs_info
 	prompt_pure_vcs_info[branch]=
 	prompt_pure_vcs_info[top]=
@@ -545,15 +591,35 @@ prompt_pure_async_tasks() {
 		return
 	fi
 
-	# Update the current working directory of the async worker.
-	# If any call fails (dead worker), bail out. The callback's recovery
-	# mechanism handles restarting; continuing here would print errors
-	# to stderr because the callback gets unregistered during recovery.
-	async_worker_eval "prompt_pure" builtin cd -q $PWD || return
-
-	# Sync git environment variables to the async worker.
-	async_worker_eval "prompt_pure" "${${GIT_DIR:+export GIT_DIR=${(q)GIT_DIR}}:-unset GIT_DIR}" || return
-	async_worker_eval "prompt_pure" "${${GIT_WORK_TREE:+export GIT_WORK_TREE=${(q)GIT_WORK_TREE}}:-unset GIT_WORK_TREE}" || return
+	# Sync working directory and git environment variables to the async worker.
+	# Skip if nothing changed since last sync (common case: running commands in same dir).
+	# Uses an associative array to avoid scalar globals triggering AUTO_NAME_DIRS.
+	typeset -gA prompt_pure_worker_env
+	typeset -gA prompt_pure_worker_env_pending
+	local cur_git_dir=${GIT_DIR-__unset__}
+	local cur_git_work_tree=${GIT_WORK_TREE-__unset__}
+	if [[ $PWD != ${prompt_pure_worker_env[pwd]-} ||
+		$cur_git_dir != ${prompt_pure_worker_env[git_dir]-} ||
+		$cur_git_work_tree != ${prompt_pure_worker_env[git_work_tree]-} ]]; then
+		(( ${#prompt_pure_worker_env_pending} )) && return
+		prompt_pure_clear_git_state
+		async_flush_jobs "prompt_pure"
+		typeset -gi prompt_pure_worker_sync_token
+		(( prompt_pure_worker_sync_token++ ))
+		local sync_token=$prompt_pure_worker_sync_token
+		prompt_pure_worker_env_pending[pwd]=$PWD
+		prompt_pure_worker_env_pending[git_dir]=$cur_git_dir
+		prompt_pure_worker_env_pending[git_work_tree]=$cur_git_work_tree
+		prompt_pure_worker_env_pending[token]=$sync_token
+		async_worker_eval "prompt_pure" \
+			prompt_pure_async_worker_sync $sync_token "$PWD" ${+GIT_DIR} "${GIT_DIR-}" ${+GIT_WORK_TREE} "${GIT_WORK_TREE-}" || {
+				if [[ ${prompt_pure_worker_env_pending[token]-} == $sync_token ]]; then
+					typeset -gA prompt_pure_worker_env_pending=()
+				fi
+				return
+			}
+		return
+	fi
 
 	typeset -gA prompt_pure_vcs_info
 
@@ -641,6 +707,12 @@ prompt_pure_async_callback() {
 	fi
 
 	case $job in
+		prompt_pure_async_vcs_info|prompt_pure_async_git_aliases|prompt_pure_async_git_dirty|prompt_pure_async_git_fetch|prompt_pure_async_git_arrows|prompt_pure_async_git_stash)
+			[[ ${prompt_pure_worker_env[pwd]-} == $PWD ]] || return
+			;;
+	esac
+
+	case $job in
 		\[async])
 			# Handle all the errors that could indicate a crashed
 			# async worker. See zsh-async documentation for the
@@ -651,6 +723,8 @@ prompt_pure_async_callback() {
 				#                 and defer the restart?
 				typeset -g prompt_pure_async_inited=0
 				async_stop_worker prompt_pure
+				typeset -gA prompt_pure_worker_env=()
+				typeset -gA prompt_pure_worker_env_pending=()
 				if prompt_pure_async_init; then
 					prompt_pure_async_tasks  # Restart all tasks.
 				else
@@ -664,10 +738,34 @@ prompt_pure_async_callback() {
 			fi
 			;;
 		\[async/eval])
-			if (( code )); then
+			typeset -gA prompt_pure_worker_env_pending
+			local worker_sync_output=${(M)${(f)output}:#prompt_pure_worker_sync:*}
+			local -a worker_sync_result
+			worker_sync_result=("${(@s.:.)worker_sync_output}")
+			if [[ -n $worker_sync_output ]] &&
+				(( ${#prompt_pure_worker_env_pending} )); then
+				[[ $worker_sync_result[2] == ${prompt_pure_worker_env_pending[token]-} ]] || return
+				local worker_sync_status=$worker_sync_result[3]
+				if (( worker_sync_status )); then
+					prompt_pure_clear_git_state
+					do_render=1
+					next_pending=0
+				else
+					typeset -gA prompt_pure_worker_env
+					prompt_pure_worker_env[pwd]=$prompt_pure_worker_env_pending[pwd]
+					prompt_pure_worker_env[git_dir]=$prompt_pure_worker_env_pending[git_dir]
+					prompt_pure_worker_env[git_work_tree]=$prompt_pure_worker_env_pending[git_work_tree]
+					typeset -gA prompt_pure_worker_env_pending=()
+					prompt_pure_async_tasks
+				fi
+			elif (( code )); then
 				# Looks like async_worker_eval failed,
 				# rerun async tasks just in case.
-				prompt_pure_async_tasks
+				typeset -gA prompt_pure_worker_env=()
+				typeset -gA prompt_pure_worker_env_pending=()
+				prompt_pure_clear_git_state
+				do_render=1
+				next_pending=0
 			fi
 			;;
 		prompt_pure_async_vcs_info)

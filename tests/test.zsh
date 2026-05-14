@@ -6,7 +6,7 @@ cd -- "${0:A:h}"
 
 local test_file
 for test_file in *.zsh; do
-	if [[ $test_file == test.zsh || $test_file == test-helper.zsh ]]; then
+	if [[ $test_file == test.zsh || $test_file == test-helper.zsh || $test_file == benchmark.zsh ]]; then
 		continue
 	fi
 

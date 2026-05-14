@@ -15,12 +15,23 @@ typeset -g ASYNC_DEBUG=${ASYNC_DEBUG:-0}
 # Execute commands that can manipulate the environment inside the async worker. Return output via callback.
 _async_eval() {
 	local ASYNC_JOB_NAME
-	# Rename job to _async_eval and redirect all eval output to cat running
-	# in _async_job. Here, stdout and stderr are not separated for
-	# simplicity, this could be improved in the future.
-	{
-		eval "$@"
-	} &> >(ASYNC_JOB_NAME=[async/eval] _async_job 'command -p cat')
+	local ret tmp
+
+	if ! zmodload -F zsh/files b:zf_rm 2>/dev/null; then
+		ASYNC_JOB_NAME=[async/eval] _async_job "return 1"
+		return
+	fi
+
+	if ! tmp=$(command mktemp "${TMPDIR:-/tmp}/zsh-async-eval.XXXXXXXXXX" 2>/dev/null); then
+		ASYNC_JOB_NAME=[async/eval] _async_job "return 1"
+		return
+	fi
+
+	eval "$@" >| "$tmp" 2>&1
+	ret=$?
+
+	ASYNC_JOB_NAME=[async/eval] _async_job "command -p cat ${(q)tmp}; return $ret"
+	zf_rm -f -- "$tmp"
 }
 
 # Wrapper for jobs executed by the async worker, gives output in parseable format with execution time
