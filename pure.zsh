@@ -962,7 +962,7 @@ prompt_pure_state_setup() {
 	zstyle -T ":prompt:pure:host" show || show_host=0
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.27.1"
+	prompt_pure_state[version]="1.28.0"
 	prompt_pure_state+=(
 		user_color "$user_color"
 		show_host  "$show_host"
