@@ -447,7 +447,7 @@ prompt_pure_async_git_fetch() {
 
 	# Do git fetch and avoid fetching tags or
 	# submodules to speed up the process.
-	command git -c gc.auto=0 fetch \
+	command git -c gc.auto=0 -c fetch.prune=false fetch \
 		--quiet \
 		--no-tags \
 		--no-prune-tags \
