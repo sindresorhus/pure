@@ -268,6 +268,18 @@ The [Tomorrow Night Eighties](https://github.com/chriskempson/tomorrow-theme) th
 
 To have commands colorized as seen in the screenshot, install [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting).
 
+### AI coding agents
+
+Most AI coding agents (Claude Code, Codex, …) run commands in a non-interactive shell where Pure's prompt never renders, so its git work never runs there anyway. Agents that render the prompt in an interactive terminal do run it, but you can skip it since `git fetch` can stall in a sandbox and no human sees the prompt. You can gate git integration on the agent marker environment variables in your `.zshrc`:
+
+```zsh
+# Just an example. Add whichever markers apply to the agents you use.
+# Pull requests to expand this list will not be accepted.
+if [[ -n $AI_AGENT$CLAUDECODE$CURSOR_AGENT$GEMINI_CLI$OPENCODE ]]; then
+	zstyle :prompt:pure:git show no
+fi
+```
+
 ## Integration
 
 ### [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
