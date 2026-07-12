@@ -295,8 +295,15 @@ prompt_pure_precmd() {
 	fi
 }
 
+prompt_pure_async_print_generation() {
+	if [[ -n ${PROMPT_PURE_WORKER_GENERATION-} ]]; then
+		print -r -- "$PROMPT_PURE_WORKER_GENERATION"
+	fi
+}
+
 prompt_pure_async_git_aliases() {
 	setopt localoptions noshwordsplit
+	prompt_pure_async_print_generation
 	local -a gitalias pullalias
 
 	# List all aliases and split on newline.
@@ -317,6 +324,7 @@ prompt_pure_async_git_aliases() {
 
 prompt_pure_async_vcs_info() {
 	setopt localoptions noshwordsplit
+	prompt_pure_async_print_generation
 
 	# Configure `vcs_info` inside an async task. This frees up `vcs_info`
 	# to be used or configured as the user pleases.
@@ -343,6 +351,7 @@ prompt_pure_async_vcs_info() {
 # When detailed mode is enabled, outputs markers: * (unstaged), + (staged), ? (untracked).
 prompt_pure_async_git_dirty() {
 	setopt localoptions noshwordsplit
+	prompt_pure_async_print_generation
 	local untracked_dirty=$1
 	local detailed=${2:-0}
 	local untracked_git_mode=$(command git config --get status.showUntrackedFiles)
@@ -394,6 +403,7 @@ prompt_pure_async_git_dirty() {
 
 prompt_pure_async_git_fetch() {
 	setopt localoptions noshwordsplit
+	prompt_pure_async_print_generation
 
 	local only_upstream=${1:-0}
 
@@ -458,15 +468,20 @@ prompt_pure_async_git_fetch() {
 	unsetopt monitor
 
 	# Check arrow status after a successful `git fetch`.
-	prompt_pure_async_git_arrows
+	# Pass 0 to skip generation printing (this function already printed it).
+	prompt_pure_async_git_arrows 0
 }
 
 prompt_pure_async_git_arrows() {
 	setopt localoptions noshwordsplit
+	if (( ${1:-1} )); then
+		prompt_pure_async_print_generation
+	fi
 	command git rev-list --left-right --count HEAD...@'{u}'
 }
 
 prompt_pure_async_git_stash() {
+	prompt_pure_async_print_generation
 	command git rev-list --walk-reflogs --count refs/stash
 }
 
@@ -503,37 +518,9 @@ prompt_pure_async_renice() {
 	fi
 }
 
-prompt_pure_async_worker_sync() {
-	setopt localoptions noshwordsplit
-
-	local sync_token=$1 target_pwd=$2 has_git_dir=$3 git_dir=$4 has_git_work_tree=$5 git_work_tree=$6
-
-	if ! builtin cd -q "$target_pwd"; then
-		builtin cd -q /
-		unset GIT_DIR GIT_WORK_TREE
-		print -r -- "prompt_pure_worker_sync:$sync_token:1"
-		return 1
-	fi
-
-	if (( has_git_dir )); then
-		export GIT_DIR=$git_dir
-	else
-		unset GIT_DIR
-	fi
-
-	if (( has_git_work_tree )); then
-		export GIT_WORK_TREE=$git_work_tree
-	else
-		unset GIT_WORK_TREE
-	fi
-
-	print -r -- "prompt_pure_worker_sync:$sync_token:0"
-}
-
 prompt_pure_clear_git_state() {
 	unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
 	typeset -gA prompt_pure_worker_env=()
-	typeset -gA prompt_pure_worker_env_pending=()
 	typeset -gA prompt_pure_vcs_info
 	prompt_pure_vcs_info[branch]=
 	prompt_pure_vcs_info[top]=
@@ -594,50 +581,72 @@ prompt_pure_async_tasks() {
 	# Sync working directory and git environment variables to the async worker.
 	# Skip if nothing changed since last sync (common case: running commands in same dir).
 	# Uses an associative array to avoid scalar globals triggering AUTO_NAME_DIRS.
+	# The evals are queued fire-and-forget, so the git jobs below run after them
+	# in worker FIFO order, keeping the git info a single async cycle behind a `cd`.
 	typeset -gA prompt_pure_worker_env
-	typeset -gA prompt_pure_worker_env_pending
 	local cur_git_dir=${GIT_DIR-__unset__}
 	local cur_git_work_tree=${GIT_WORK_TREE-__unset__}
-	if [[ $PWD != ${prompt_pure_worker_env[pwd]-} ||
-		$cur_git_dir != ${prompt_pure_worker_env[git_dir]-} ||
+	local working_directory_changed=0
+	if [[ $PWD != ${prompt_pure_worker_env[pwd]-} ]]; then
+		working_directory_changed=1
+	fi
+	local git_environment_changed=0
+	if [[ $cur_git_dir != ${prompt_pure_worker_env[git_dir]-} ||
 		$cur_git_work_tree != ${prompt_pure_worker_env[git_work_tree]-} ]]; then
-		(( ${#prompt_pure_worker_env_pending} )) && return
-		prompt_pure_clear_git_state
-		async_flush_jobs "prompt_pure"
-		typeset -gi prompt_pure_worker_sync_token
-		(( prompt_pure_worker_sync_token++ ))
-		local sync_token=$prompt_pure_worker_sync_token
-		prompt_pure_worker_env_pending[pwd]=$PWD
-		prompt_pure_worker_env_pending[git_dir]=$cur_git_dir
-		prompt_pure_worker_env_pending[git_work_tree]=$cur_git_work_tree
-		prompt_pure_worker_env_pending[token]=$sync_token
-		async_worker_eval "prompt_pure" \
-			prompt_pure_async_worker_sync $sync_token "$PWD" ${+GIT_DIR} "${GIT_DIR-}" ${+GIT_WORK_TREE} "${GIT_WORK_TREE-}" || {
-				if [[ ${prompt_pure_worker_env_pending[token]-} == $sync_token ]]; then
-					typeset -gA prompt_pure_worker_env_pending=()
-				fi
-				return
-			}
-		return
+		git_environment_changed=1
 	fi
 
 	typeset -gA prompt_pure_vcs_info
 
-	local -H MATCH MBEGIN MEND
-	if [[ $PWD != ${prompt_pure_vcs_info[pwd]}* ]]; then
-		# Stop any running async jobs.
-		async_flush_jobs "prompt_pure"
+	local working_tree_changed=0
+	if [[ ${prompt_pure_vcs_info[pwd]} != / &&
+		$PWD != ${prompt_pure_vcs_info[pwd]} &&
+		$PWD != ${prompt_pure_vcs_info[pwd]}/* ]]; then
+		working_tree_changed=1
+	fi
 
-		# Reset preprompt variables, switching working tree.
-		unset prompt_pure_git_dirty
-		unset prompt_pure_git_last_dirty_check_timestamp
-		unset prompt_pure_git_arrows
-		unset prompt_pure_git_stash
-		unset prompt_pure_git_fetch_pattern
+	if [[ $git_environment_changed == 1 ||
+		$working_directory_changed == 1 ||
+		$working_tree_changed == 1 ]]; then
+		# Reset preprompt variables before syncing the new working tree.
+		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
+		prompt_pure_vcs_info[action]=
 	fi
-	unset MATCH MBEGIN MEND
+
+	if [[ $working_directory_changed == 1 ||
+		$git_environment_changed == 1 ]]; then
+		# Cancel any in-flight git jobs from the previous working tree.
+		async_flush_jobs "prompt_pure"
+		typeset -gi prompt_pure_worker_generation
+		(( prompt_pure_worker_generation++ ))
+		local sync_generation=$prompt_pure_worker_generation
+
+		prompt_pure_worker_env[pwd]=$PWD
+		prompt_pure_worker_env[git_dir]=$cur_git_dir
+		prompt_pure_worker_env[git_work_tree]=$cur_git_work_tree
+		prompt_pure_worker_env[generation]=$sync_generation
+		prompt_pure_worker_env[sync_pending]=$sync_generation
+
+		local git_dir_command='unset GIT_DIR'
+		if (( ${+GIT_DIR} )); then
+			git_dir_command="export GIT_DIR=${(q)GIT_DIR}"
+		fi
+
+		local git_work_tree_command='unset GIT_WORK_TREE'
+		if (( ${+GIT_WORK_TREE} )); then
+			git_work_tree_command="export GIT_WORK_TREE=${(q)GIT_WORK_TREE}"
+		fi
+
+		local sync_command="print -r -- ${(q)sync_generation}; builtin cd -q ${(q)PWD} && $git_dir_command && $git_work_tree_command && typeset -g PROMPT_PURE_WORKER_GENERATION=${(q)sync_generation}"
+		if ! async_worker_eval "prompt_pure" "$sync_command"; then
+			if [[ ${prompt_pure_worker_env[sync_pending]-} == $sync_generation ]]; then
+				typeset -gA prompt_pure_worker_env=()
+			fi
+			return
+		fi
+	fi
 
 	async_job "prompt_pure" prompt_pure_async_vcs_info || return
 
@@ -708,6 +717,14 @@ prompt_pure_async_callback() {
 
 	case $job in
 		prompt_pure_async_vcs_info|prompt_pure_async_git_aliases|prompt_pure_async_git_dirty|prompt_pure_async_git_fetch|prompt_pure_async_git_arrows|prompt_pure_async_git_stash)
+			local result_generation=${output%%$'\n'*}
+			if [[ $output == *$'\n'* ]]; then
+				output=${output#*$'\n'}
+			else
+				output=
+			fi
+			[[ $result_generation == ${prompt_pure_worker_env[generation]-} ]] || return
+			[[ -z ${prompt_pure_worker_env[sync_pending]-} ]] || return
 			[[ ${prompt_pure_worker_env[pwd]-} == $PWD ]] || return
 			;;
 	esac
@@ -724,7 +741,6 @@ prompt_pure_async_callback() {
 				typeset -g prompt_pure_async_inited=0
 				async_stop_worker prompt_pure
 				typeset -gA prompt_pure_worker_env=()
-				typeset -gA prompt_pure_worker_env_pending=()
 				if prompt_pure_async_init; then
 					prompt_pure_async_tasks  # Restart all tasks.
 				else
@@ -738,34 +754,15 @@ prompt_pure_async_callback() {
 			fi
 			;;
 		\[async/eval])
-			typeset -gA prompt_pure_worker_env_pending
-			local worker_sync_output=${(M)${(f)output}:#prompt_pure_worker_sync:*}
-			local -a worker_sync_result
-			worker_sync_result=("${(@s.:.)worker_sync_output}")
-			if [[ -n $worker_sync_output ]] &&
-				(( ${#prompt_pure_worker_env_pending} )); then
-				[[ $worker_sync_result[2] == ${prompt_pure_worker_env_pending[token]-} ]] || return
-				local worker_sync_status=$worker_sync_result[3]
-				if (( worker_sync_status )); then
-					prompt_pure_clear_git_state
-					do_render=1
-					next_pending=0
-				else
-					typeset -gA prompt_pure_worker_env
-					prompt_pure_worker_env[pwd]=$prompt_pure_worker_env_pending[pwd]
-					prompt_pure_worker_env[git_dir]=$prompt_pure_worker_env_pending[git_dir]
-					prompt_pure_worker_env[git_work_tree]=$prompt_pure_worker_env_pending[git_work_tree]
-					typeset -gA prompt_pure_worker_env_pending=()
-					prompt_pure_async_tasks
+			local eval_generation=${output%%$'\n'*}
+			local pending_generation=${prompt_pure_worker_env[sync_pending]-}
+			if [[ -n $pending_generation ]]; then
+				if (( code )) &&
+					[[ -z $eval_generation || $eval_generation == $pending_generation ]]; then
+					typeset -gA prompt_pure_worker_env=()
+				elif [[ $eval_generation == $pending_generation ]]; then
+					unset "prompt_pure_worker_env[sync_pending]"
 				fi
-			elif (( code )); then
-				# Looks like async_worker_eval failed,
-				# rerun async tasks just in case.
-				typeset -gA prompt_pure_worker_env=()
-				typeset -gA prompt_pure_worker_env_pending=()
-				prompt_pure_clear_git_state
-				do_render=1
-				next_pending=0
 			fi
 			;;
 		prompt_pure_async_vcs_info)
