@@ -289,17 +289,31 @@ _async_worker() {
 # 	$5 = resulting stderr from execution
 #	$6 = has next result in buffer (0 = buffer empty, 1 = yes)
 #
+_async_clear_process_buffer() {
+	local worker=$1
+	integer fragment_index
+
+	typeset -gA ASYNC_PROCESS_BUFFER ASYNC_PROCESS_BUFFER_FRAGMENTS ASYNC_PROCESS_BUFFER_GENERATIONS
+
+	ASYNC_PROCESS_BUFFER_GENERATIONS[$worker]=$(( ${ASYNC_PROCESS_BUFFER_GENERATIONS[$worker]:-0} + 1 ))
+
+	for (( fragment_index = 1; fragment_index <= ${ASYNC_PROCESS_BUFFER[$worker]:-0}; fragment_index++ )); do
+		unset "ASYNC_PROCESS_BUFFER_FRAGMENTS[${#worker}:$worker:$fragment_index]"
+	done
+	unset "ASYNC_PROCESS_BUFFER[$worker]"
+}
+
 async_process_results() {
 	setopt localoptions unset noshwordsplit noksharrays noposixidentifiers noposixstrings
 
 	local worker=$1
 	local callback=$2
 	local caller=$3
-	local -a items
-	local null=$'\0' data
-	integer -l len pos num_processed has_next
+	local -a items buffer_fragments
+	local null=$'\0' data message
+	integer -l buffer_generation fragment_count fragment_index num_processed has_next
 
-	typeset -gA ASYNC_PROCESS_BUFFER
+	typeset -gA ASYNC_PROCESS_BUFFER ASYNC_PROCESS_BUFFER_FRAGMENTS ASYNC_PROCESS_BUFFER_GENERATIONS
 
 	# Read output from zpty and parse it if available.
 	while zpty -r -t $worker data 2>/dev/null; do
@@ -315,29 +329,38 @@ async_process_results() {
 			fi
 			return 1
 		fi
-		ASYNC_PROCESS_BUFFER[$worker]+=$data
-		len=${#ASYNC_PROCESS_BUFFER[$worker]}
-		pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
 
-		# Keep going until we find a NULL-character.
-		if (( ! len )) || (( pos > len )); then
+		# Queue incomplete reads so the growing message is joined and scanned only once.
+		if [[ $data != *$null* ]]; then
+			fragment_count=$(( ${ASYNC_PROCESS_BUFFER[$worker]:-0} + 1 ))
+			ASYNC_PROCESS_BUFFER[$worker]=$fragment_count
+			ASYNC_PROCESS_BUFFER_FRAGMENTS["${#worker}:$worker:$fragment_count"]=$data
 			continue
 		fi
 
-		while (( pos <= len )); do
-			# Take the content from the beginning, until the NULL-character and
-			# perform shell parsing (z) and unquoting (Q) as an array (@).
-			items=("${(@Q)${(z)ASYNC_PROCESS_BUFFER[$worker][1,$pos-1]}}")
+		fragment_count=${ASYNC_PROCESS_BUFFER[$worker]:-0}
+		for (( fragment_index = 1; fragment_index <= fragment_count; fragment_index++ )); do
+			buffer_fragments+=("${ASYNC_PROCESS_BUFFER_FRAGMENTS["${#worker}:$worker:$fragment_index"]}")
+		done
+		_async_clear_process_buffer $worker
+		buffer_generation=${ASYNC_PROCESS_BUFFER_GENERATIONS[$worker]}
+		data="${(j::)buffer_fragments}$data"
 
-			# Remove the extracted items from the buffer.
-			ASYNC_PROCESS_BUFFER[$worker]=${ASYNC_PROCESS_BUFFER[$worker][$pos+1,$len]}
+		# Process all messages in the buffer, delimited by NULL-characters,
+		# leaving any incomplete remainder for the next read. The message is
+		# located with pattern matching rather than the (i) subscript flag
+		# because the former runs in linear time, while the subscript scan is
+		# quadratic in the buffer size and stalls the shell on large job
+		# results.
+		while [[ $data == *$null* ]]; do
+			# Extract the message and remove it, with its delimiter, from the buffer.
+			message=${data%%$null*}
+			data=${data[${#message}+2,-1]}
 
-			len=${#ASYNC_PROCESS_BUFFER[$worker]}
-			if (( len > 1 )); then
-				pos=${ASYNC_PROCESS_BUFFER[$worker][(i)$null]}  # Get index of NULL-character (delimiter).
-			fi
+			# Perform shell parsing (z) and unquoting (Q) as an array (@).
+			items=("${(@Q)${(z)message}}")
 
-			has_next=$(( len != 0 ))
+			has_next=$(( ${#data} != 0 ))
 			if (( $#items == 5 )); then
 				items+=($has_next)
 				$callback "${(@)items}"  # Send all parsed items to the callback.
@@ -350,7 +373,17 @@ async_process_results() {
 				# name, non-zero exit status and an error message on stderr.
 				$callback "[async]" 1 "" 0 "$0:$LINENO: error: bad format, got ${#items} items (${(q)items})" $has_next
 			fi
+
+			if (( ASYNC_PROCESS_BUFFER_GENERATIONS[$worker] != buffer_generation )); then
+				break 2
+			fi
 		done
+
+		if [[ -n $data ]]; then
+			ASYNC_PROCESS_BUFFER[$worker]=1
+			ASYNC_PROCESS_BUFFER_FRAGMENTS["${#worker}:$worker:1"]=$data
+		fi
+		buffer_fragments=()
 	done
 
 	(( num_processed )) && return 0
@@ -540,8 +573,7 @@ async_flush_jobs() {
 	fi
 
 	# Finally, clear the process buffer in case of partially parsed responses.
-	typeset -gA ASYNC_PROCESS_BUFFER
-	unset "ASYNC_PROCESS_BUFFER[$worker]"
+	_async_clear_process_buffer $worker
 }
 
 #
@@ -654,8 +686,7 @@ async_stop_worker() {
 		zpty -d $worker 2>/dev/null || ret=$?
 
 		# Clear any partial buffers.
-		typeset -gA ASYNC_PROCESS_BUFFER
-		unset "ASYNC_PROCESS_BUFFER[$worker]"
+		_async_clear_process_buffer $worker
 	done
 
 	return $ret
