@@ -62,6 +62,10 @@ prompt_pure_set_title() {
 	# Emacs terminal does not support settings the title.
 	(( ${+EMACS} || ${+INSIDE_EMACS} )) && return
 
+	# Only write the escape when standard output is a terminal, or it would corrupt the output of a non-interactive script that sources Pure and redirects its stdout to a file or a pipe.
+	# $TTY is not a substitute: zsh also sets it from a tty on stdin, so it stays non-empty for `zsh script.zsh > out` run from a terminal.
+	[[ -t 1 ]] || return
+
 	case $TTY in
 		# Don't set title over serial console.
 		/dev/ttyS[0-9]*) return;;
@@ -101,7 +105,8 @@ prompt_pure_preexec() {
 	typeset -g prompt_pure_cmd_timestamp=$EPOCHSECONDS
 
 	# Shows the current directory and executed command in the title while a process is active.
-	prompt_pure_set_title 'ignore-escape' "$PWD:t: $2"
+	# The root directory has no name, so show `/`.
+	prompt_pure_set_title 'ignore-escape' "${${PWD:t}:-/}: $2"
 
 	# Disallow Python virtualenv from updating the prompt. Set it to 20 if
 	# untouched by the user to indicate that Pure modified it. Here we use
