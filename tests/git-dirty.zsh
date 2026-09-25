@@ -17,7 +17,7 @@ trap cleanup EXIT
 
 setup_repo() {
 	cd "$tmpdir"
-	command git init -q
+	command git init -q --template=
 	command git config user.email "test@test.com"
 	command git config user.name "Test"
 	echo "initial" > file.txt
@@ -176,5 +176,65 @@ command git mv renameme.txt renamed.txt
 check_dirty 1 1
 assert_equal 1 $check_code "detailed: renamed staged should return 1"
 assert_equal "+" "$check_output" "detailed: renamed staged should show +"
+
+# `status.showUntrackedFiles` accepts Git boolean spellings, where false means `no`.
+command git commit -q -m "rename"
+echo "untracked" > untracked-config.txt
+for untracked_value in no false off 0 No FALSE; do
+	command git config status.showUntrackedFiles $untracked_value
+	check_dirty 1
+	assert_equal 0 $check_code "untracked with status.showUntrackedFiles=$untracked_value should be clean"
+	check_dirty 1 1
+	assert_equal 0 $check_code "detailed: untracked with status.showUntrackedFiles=$untracked_value should be clean"
+done
+for untracked_value in normal all true 1; do
+	command git config status.showUntrackedFiles $untracked_value
+	check_dirty 1
+	assert_equal 1 $check_code "untracked with status.showUntrackedFiles=$untracked_value should be dirty"
+	check_dirty 1 1
+	assert_equal "?" "$check_output" "detailed: untracked with status.showUntrackedFiles=$untracked_value should show ?"
+done
+command git config --unset status.showUntrackedFiles
+zf_rm -f untracked-config.txt
+
+# Renamed or copied in the worktree (intent-to-add, like ` R` in `git status`) is unstaged.
+echo "rename in worktree" > worktree-rename.txt
+echo "copy in worktree" > worktree-copy.txt
+command git add worktree-rename.txt worktree-copy.txt
+command git commit -q -m "add worktree files"
+command mv worktree-rename.txt worktree-renamed.txt
+command git add -N worktree-renamed.txt
+check_dirty 1 1
+assert_equal "*" "$check_output" "detailed: worktree rename should show *"
+echo "staged" > staged-with-rename.txt
+command git add staged-with-rename.txt
+check_dirty 1 1
+assert_equal "*+" "$check_output" "detailed: worktree rename with staged changes should show *+"
+command git reset -q -- staged-with-rename.txt
+zf_rm -f staged-with-rename.txt
+command git reset -q -- worktree-renamed.txt
+command mv worktree-renamed.txt worktree-rename.txt
+command cp worktree-copy.txt worktree-copied.txt
+command git add -N worktree-copied.txt
+command git config status.renames copies
+check_dirty 1 1
+assert_equal "*" "$check_output" "detailed: worktree copy should show *"
+command git config --unset status.renames
+command git reset -q -- worktree-copied.txt
+zf_rm -f worktree-copied.txt
+
+# Without a work tree (inside `.git`, or a bare repository), Git cannot check for changes, which is not dirty in any mode.
+command git init -q --bare --template= "$tmpdir/bare.git"
+for no_work_tree_directory in "$tmpdir/.git" "$tmpdir/bare.git"; do
+	builtin cd -q "$no_work_tree_directory"
+	for untracked_value in 1 0; do
+		# Git reports that it needs a work tree, which is expected here.
+		check_dirty $untracked_value 2>/dev/null
+		assert_equal 0 $check_code "no work tree (${no_work_tree_directory:t}) should be clean with PURE_GIT_UNTRACKED_DIRTY=$untracked_value"
+		check_dirty $untracked_value 1 2>/dev/null
+		assert_equal 0 $check_code "detailed: no work tree (${no_work_tree_directory:t}) should be clean with PURE_GIT_UNTRACKED_DIRTY=$untracked_value"
+	done
+done
+builtin cd -q "$tmpdir"
 
 print "git-dirty tests passed"

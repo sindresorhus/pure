@@ -358,7 +358,10 @@ prompt_pure_async_git_dirty() {
 	local untracked_dirty=$1
 	local detailed=${2:-0}
 	local untracked_git_mode=$(command git config --get status.showUntrackedFiles)
-	if [[ "$untracked_git_mode" != 'no' ]]; then
+	# Git also accepts any boolean spelling, where false means `no`.
+	if [[ ${(L)untracked_git_mode} == (no|false|off|0) ]]; then
+		untracked_git_mode='no'
+	else
 		untracked_git_mode='normal'
 	fi
 
@@ -367,8 +370,10 @@ prompt_pure_async_git_dirty() {
 
 	if (( ! detailed )); then
 		if [[ $untracked_dirty = 0 ]]; then
-			command git diff --no-ext-diff --quiet --exit-code || return $?
-			command git diff --no-ext-diff --cached --quiet --exit-code
+			command git diff --no-ext-diff --quiet --exit-code &&
+				command git diff --no-ext-diff --cached --quiet --exit-code
+			# Only exit code 1 means changes. Errors, like in a bare repository, are clean, as with `git status` below.
+			return $(( $? == 1 ))
 		else
 			test -z "$(command git status --porcelain -u${untracked_git_mode})"
 		fi
@@ -389,7 +394,8 @@ prompt_pure_async_git_dirty() {
 
 	local has_unstaged=0 has_staged=0 has_untracked=0 line
 	for line in "${(f)output}"; do
-		(( ! has_unstaged )) && [[ ${line[2]} == [MTDUA] ]] && has_unstaged=1
+		# Renamed or copied (R, C) in the second column means an intent-to-add file matched a changed one.
+		(( ! has_unstaged )) && [[ ${line[2]} == [MTDRCUA] ]] && has_unstaged=1
 		(( ! has_staged )) && [[ ${line[1]} == [MTADRCU] ]] && has_staged=1
 		(( ! has_untracked )) && [[ $line == '??'* ]] && has_untracked=1
 		(( has_unstaged + has_staged + has_untracked == 3 )) && break
