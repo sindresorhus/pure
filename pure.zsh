@@ -844,7 +844,7 @@ prompt_pure_async_callback() {
 			# in a different color. To distinguish between a "fresh" and a "cached" result, the
 			# preprompt is rendered before setting this variable. Thus, only upon the next
 			# rendering of the preprompt will the result appear in a different color.
-			(( $exec_time > 5 )) && prompt_pure_git_last_dirty_check_timestamp=$EPOCHSECONDS
+			(( $exec_time > 5 )) && typeset -g prompt_pure_git_last_dirty_check_timestamp=$EPOCHSECONDS
 			;;
 		prompt_pure_async_git_fetch|prompt_pure_async_git_arrows)
 			# `prompt_pure_async_git_fetch` executes `prompt_pure_async_git_arrows`
@@ -1030,6 +1030,7 @@ prompt_pure_system_report() {
 	print - "- Git: $git_version"
 
 	print - "- Pure state:"
+	local k v
 	for k v in "${(@kv)prompt_pure_state}"; do
 		print - "    - $k: \`${(q-)v}\`"
 	done
@@ -1098,7 +1099,8 @@ prompt_pure_setup() {
 	# Prevent percentage showing up if output doesn't end with a newline.
 	export PROMPT_EOL_MARK=''
 
-	prompt_opts=(subst percent)
+	# Use `typeset -g` to set the `promptinit` local when called through it, without creating an undeclared global otherwise.
+	typeset -ga prompt_opts=(subst percent)
 
 	# Borrowed from `promptinit`. Sets the prompt options in case Pure was not
 	# initialized via `promptinit`.
