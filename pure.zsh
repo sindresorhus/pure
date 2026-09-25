@@ -328,9 +328,11 @@ prompt_pure_async_vcs_info() {
 
 	# Configure `vcs_info` inside an async task. This frees up `vcs_info`
 	# to be used or configured as the user pleases.
+	# The worker is a copy of the shell, so first delete the user's styles in it. Their `vcs_info` formats, hooks, and extra checks would change the messages or run slow Git commands. Pure's own jobs get their settings as arguments.
+	zstyle -d
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
-	# Only export four message variables from `vcs_info`.
+	# Only export three message variables from `vcs_info`.
 	zstyle ':vcs_info:*' max-exports 3
 	# Export branch (%b), Git toplevel (%R), action (rebase/cherry-pick) (%a)
 	zstyle ':vcs_info:git*' formats '%b' '%R' '%a'
@@ -340,7 +342,8 @@ prompt_pure_async_vcs_info() {
 
 	local -A info
 	info[pwd]=$PWD
-	info[branch]=${vcs_info_msg_0_//\%/%%}
+	# No `%` escaping needed, the branch is rendered literally through `%14v`.
+	info[branch]=$vcs_info_msg_0_
 	info[top]=$vcs_info_msg_1_
 	info[action]=$vcs_info_msg_2_
 
