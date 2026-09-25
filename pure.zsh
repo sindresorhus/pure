@@ -1020,11 +1020,8 @@ prompt_pure_is_inside_container() {
 prompt_pure_system_report() {
 	setopt localoptions noshwordsplit
 
-	local shell=$SHELL
-	if [[ -z $shell ]]; then
-		shell=$commands[zsh]
-	fi
-	print - "- Zsh: $($shell --version) ($shell)"
+	# Report the running Zsh. `$SHELL` is the login shell, which can be another shell or version.
+	print - "- Zsh: $ZSH_VERSION ($ZSH_PATCHLEVEL)"
 	print -n - "- Operating system: "
 	case "$(uname -s)" in
 		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
@@ -1035,7 +1032,9 @@ prompt_pure_system_report() {
 	[[ -n $TMUX ]] && print "yes" || print "no"
 
 	local git_version
-	git_version=($(git --version))  # Remove newlines, if hub is present.
+	# Git is optional (see `zstyle :prompt:pure:git show no`), so do not leak a shell error into the report when it is not installed.
+	git_version=($(command git --version 2>/dev/null))  # Remove newlines, if hub is present.
+	[[ -n $git_version ]] || git_version=('not installed')
 	print - "- Git: $git_version"
 
 	print - "- Pure state:"
