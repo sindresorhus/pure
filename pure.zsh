@@ -538,13 +538,18 @@ prompt_pure_async_renice() {
 	fi
 }
 
-prompt_pure_clear_git_state() {
+# Reset the Git info shown in the preprompt.
+prompt_pure_reset_git_info() {
 	unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
-	typeset -gA prompt_pure_worker_env=()
 	typeset -gA prompt_pure_vcs_info
 	prompt_pure_vcs_info[branch]=
 	prompt_pure_vcs_info[top]=
 	prompt_pure_vcs_info[action]=
+}
+
+prompt_pure_clear_git_state() {
+	prompt_pure_reset_git_info
+	typeset -gA prompt_pure_worker_env=()
 	prompt_pure_vcs_info[pwd]=
 }
 
@@ -629,10 +634,7 @@ prompt_pure_async_tasks() {
 		$working_directory_changed == 1 ||
 		$working_tree_changed == 1 ]]; then
 		# Reset preprompt variables before syncing the new working tree.
-		unset prompt_pure_git_dirty prompt_pure_git_last_dirty_check_timestamp prompt_pure_git_arrows prompt_pure_git_stash prompt_pure_git_fetch_pattern
-		prompt_pure_vcs_info[branch]=
-		prompt_pure_vcs_info[top]=
-		prompt_pure_vcs_info[action]=
+		prompt_pure_reset_git_info
 	fi
 
 	if [[ $working_directory_changed == 1 ||
