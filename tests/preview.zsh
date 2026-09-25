@@ -75,6 +75,35 @@ main() {
 		return 1
 	fi
 
+	# A color set to the empty string must not corrupt the palette: iterating
+	# the colors must not drop empty values and shift the key/value pairs.
+	typeset -gA prompt_pure_colors=("${(@kv)prompt_pure_colors_default}")
+	zstyle ':prompt:pure:host' color ''
+	local -a default_keys palette_keys
+	default_keys=("${(@k)prompt_pure_colors_default}")
+	local bogus
+	# On the unfixed code the corruption trips `nounset`; relax it so the run
+	# reaches the assertions below and fails with a readable message.
+	set +eu
+	local attempt
+	for attempt in 1 2 3; do
+		prompt_pure_set_colors 2>/dev/null || :
+	done
+	set -eu
+	typeset -A known_colors
+	known_colors=("${(@kv)prompt_pure_colors_default}")
+	palette_keys=("${(@k)prompt_pure_colors}")
+	bogus=()
+	local key
+	for key in "${palette_keys[@]}"; do
+		[[ -n ${known_colors[$key]-} ]] || bogus+=($key)
+	done
+	assert_equal "${#default_keys[@]}" "${#palette_keys[@]}" "an empty color should not add keys to the palette"
+	assert_empty "${(j:, :)bogus}" "an empty color should not add color-value keys to the palette"
+	# The key/value pairing itself must survive: the empty `host` and the zstyle-set `path` color stay attached to their own keys.
+	assert_empty "${prompt_pure_colors[host]}" "an empty color should keep its value on its own key"
+	assert_equal "red" "${prompt_pure_colors[path]}" "a zstyle color should stay on its own key"
+
 	print "preview tests passed."
 }
 
