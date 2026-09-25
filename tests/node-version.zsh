@@ -100,11 +100,53 @@ EOF
 	prompt_pure_async_tasks || :
 	assert_empty "${prompt_pure_node_version-}" "node version should be cleared outside a package.json tree"
 
+	# Creating or removing package.json in the current directory updates the version without changing directory.
+	# The directory is outside the repository, which has its own package.json.
+	local new_project_directory=$(mktemp -d "${TMPDIR:-/tmp}/pure-node-version-project.XXXXXX")
+	trap "zf_rm -rf -- ${(q)base_directory} ${(q)new_project_directory}" EXIT
+	builtin cd -q "$new_project_directory"
+	prompt_pure_async_tasks || :
+	assert_empty "${prompt_pure_node_version-}" "node version should be empty before package.json exists"
+	: > package.json
+	prompt_pure_async_tasks || :
+	assert_equal "26" "${prompt_pure_node_version-}" "node version should be shown after package.json is created"
+	zf_rm package.json
+	prompt_pure_async_tasks || :
+	assert_empty "${prompt_pure_node_version-}" "node version should be cleared after package.json is removed"
+
+	# Moving within the same package does not resolve node again.
+	builtin cd -q "$nested_directory"
+	prompt_pure_async_tasks || :
+	local node_count=$(<"$counter_path")
+	builtin cd -q "$project_directory"
+	prompt_pure_async_tasks || :
+	assert_equal "26" "${prompt_pure_node_version-}" "node version should be kept within the same package"
+	assert_equal "$node_count" "$(<"$counter_path")" "node should not be resolved again within the same package"
+
+	# Without `node`, nothing is shown.
+	local no_node_directory=$base_directory/no-node
+	mkdir -p -- "$no_node_directory"
+	local saved_path=$PATH
+	PATH=$no_node_directory
+	prompt_pure_async_tasks || :
+	PATH=$saved_path
+	assert_empty "${prompt_pure_node_version-}" "node version should be empty when node is not installed"
+
 	zstyle ':prompt:pure:environment:node_version' show no
 	builtin cd -q "$nested_directory"
 	typeset -g prompt_pure_node_version=stale
 	prompt_pure_async_tasks || :
 	assert_empty "${prompt_pure_node_version-}" "node version should stay disabled when the style is off"
+
+	# The version is parsed even when `node` prefixes it with whitespace or a newline (some version-manager shims do).
+	local whitespace_bin_directory=$base_directory/bin-whitespace
+	mkdir -p -- "$whitespace_bin_directory"
+	cat > "$whitespace_bin_directory/node" <<'EOF'
+#!/bin/sh
+printf '\n \tv25.8.0\r\n'
+EOF
+	chmod +x "$whitespace_bin_directory/node"
+	assert_equal "25" "$(PATH="$whitespace_bin_directory:/usr/bin:/bin" prompt_pure_check_node_version)" "leading whitespace and a trailing carriage return should be stripped from the node version"
 
 	print -- "node-version tests passed"
 }

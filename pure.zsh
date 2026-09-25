@@ -508,20 +508,11 @@ prompt_pure_async_git_stash() {
 prompt_pure_check_node_version() {
 	setopt localoptions noshwordsplit
 
-	# Walk up to find package.json (similar to how git detects repos).
-	local dir=$PWD
-	while [[ $dir != "/" ]]; do
-		[[ -f "$dir/package.json" ]] && break
-		dir=${dir:h}
-	done
-
-	local version=
-	if [[ -f "$dir/package.json" ]]; then
-		version=$(command node --version 2>/dev/null) || version=
-		version=${${${version#v}%%.*}//[$'\t\r\n']}
-	fi
-
-	print -r -- "$version"
+	local version
+	version=$(command node --version 2>/dev/null) || version=
+	# Strip whitespace before parsing, so a leading newline (some version-manager shims emit one) does not leave the `v` in the version.
+	version=${version//[[:space:]]/}
+	print -r -- "${${version#v}%%.*}"
 }
 
 # Try to lower the priority of the worker so that disk heavy operations
@@ -573,11 +564,21 @@ prompt_pure_async_tasks() {
 
 	# Check if Node.js version display is enabled (independent of Git).
 	if zstyle -t ":prompt:pure:environment:node_version" show; then
-		# Cache key uses "|" separator so the value is never a valid directory
-		# path, preventing zsh from treating it as a named directory for %~.
-		local node_cache_key="$PWD|$PATH"
+		# Walk up to find package.json (similar to how git detects repos). This runs on every prompt, so creating or removing it is noticed.
+		# The cache key never holds a directory path, which prevents zsh from treating it as a named directory for %~ (AUTO_NAME_DIRS).
+		local package_json=${PWD%/}/package.json
+		while [[ ! -f $package_json && $package_json != /package.json ]]; do
+			package_json=${package_json:h:h}
+			package_json=${package_json%/}/package.json
+		done
+
+		# Only run `node` when the package or PATH changed.
+		local node_cache_key="$package_json|$PATH"
 		if [[ ${prompt_pure_node_cache_key-} != "$node_cache_key" ]]; then
-			typeset -g prompt_pure_node_version=$(prompt_pure_check_node_version)
+			typeset -g prompt_pure_node_version=
+			if [[ -f $package_json ]]; then
+				prompt_pure_node_version=$(prompt_pure_check_node_version)
+			fi
 			typeset -g prompt_pure_node_cache_key=$node_cache_key
 		fi
 	else
