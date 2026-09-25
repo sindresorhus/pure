@@ -945,7 +945,8 @@ prompt_pure_state_setup() {
 			who_out="${(M)who_in:#*[[:space:]]${TTY#/dev/}[[:space:]]*}"
 		fi
 
-		local reIPv6='(([0-9a-fA-F]+:)|:){2,}[0-9a-fA-F]+'  # Simplified, only checks partial pattern.
+		# Simplified, only checks partial pattern. Requires either the `::` compression or at least four groups, so a BusyBox `HH:MM:SS` login time (three groups) is not mistaken for a remote address.
+		local reIPv6='([0-9a-fA-F:]*::[0-9a-fA-F:]*|([0-9a-fA-F]+:){3,}[0-9a-fA-F]+)'
 		local reIPv4='([0-9]{1,3}\.){3}[0-9]+'   # Simplified, allows invalid ranges.
 		# Here we assume two non-consecutive periods represents a
 		# hostname. This matches `foo.bar.baz`, but not `foo.bar`.
