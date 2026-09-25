@@ -917,13 +917,18 @@ prompt_pure_reset_prompt() {
 	zle && zle .reset-prompt
 }
 
+# Store the prompt symbol, escaped so a `%` in it renders literally.
 prompt_pure_reset_prompt_symbol() {
-	prompt_pure_state[prompt]=${PURE_PROMPT_SYMBOL:-❯}
+	prompt_pure_state[prompt]=${${PURE_PROMPT_SYMBOL:-❯}//\%/%%}
 }
 
 prompt_pure_update_vim_prompt_widget() {
 	setopt localoptions noshwordsplit
-	prompt_pure_state[prompt]=${${${KEYMAP/vicmd/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/visual/${PURE_PROMPT_VICMD_SYMBOL:-❮}}/(main|viins)/${PURE_PROMPT_SYMBOL:-❯}}
+	# Any other keymap (like `emacs` or a custom one) uses the regular symbol.
+	case $KEYMAP in
+		vicmd|visual) typeset PURE_PROMPT_SYMBOL=${PURE_PROMPT_VICMD_SYMBOL:-❮};;
+	esac
+	prompt_pure_reset_prompt_symbol
 
 	prompt_pure_reset_prompt
 }
@@ -997,8 +1002,8 @@ prompt_pure_state_setup() {
 	prompt_pure_state+=(
 		user_color "$user_color"
 		show_host  "$show_host"
-		prompt	   "${PURE_PROMPT_SYMBOL:-❯}"
 	)
+	prompt_pure_reset_prompt_symbol
 }
 
 # Return true if executing inside a Docker, OCI, LXC, or systemd-nspawn container.
@@ -1080,6 +1085,7 @@ prompt_pure_preview() {
 	local -A c=("${(@kv)prompt_pure_colors}")
 	local node_symbol
 	zstyle -s ":prompt:pure:environment:node_version" symbol node_symbol || node_symbol='⬢'
+	node_symbol=${node_symbol//\%/%%}
 
 	local path_sample="%F{$c[path]}~/dev/pure%f"
 	if zstyle -t ':prompt:pure:path:separator' dim; then
@@ -1091,17 +1097,23 @@ prompt_pure_preview() {
 		host_sample="%F{$c[host]}@heartofgold%f"
 	fi
 
+	# The symbols are escaped so a `%` in one of them renders literally, like in the real prompt.
+	local symbol=${${PURE_PROMPT_SYMBOL:-❯}//\%/%%}
+	local suspended=${${PURE_SUSPENDED_JOBS_SYMBOL-✦}//\%/%%}
+	local arrows=${${PURE_GIT_DOWN_ARROW:-⇣}//\%/%%}${${PURE_GIT_UP_ARROW:-⇡}//\%/%%}
+	local stash=${${PURE_GIT_STASH_SYMBOL-≡}//\%/%%}
+
 	# Sample preprompt with all components visible.
-	print -P "%F{$c[custom:prefix]}prefix%f %F{$c[suspended_jobs]}${PURE_SUSPENDED_JOBS_SYMBOL-✦}%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}${PURE_GIT_DOWN_ARROW:-⇣}${PURE_GIT_UP_ARROW:-⇡}%f %F{$c[git:stash]}${PURE_GIT_STASH_SYMBOL-≡}%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f %F{$c[custom:suffix]}suffix%f"
-	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f"
+	print -P "%F{$c[custom:prefix]}prefix%f %F{$c[suspended_jobs]}$suspended%f %F{$c[user]}zaphod%f${host_sample} ${path_sample} %F{$c[git:branch]}main%f%F{$c[git:dirty]}*%f %F{$c[git:action]}rebase-i%f %F{$c[git:arrow]}$arrows%f %F{$c[git:stash]}$stash%f %F{$c[node_version]}${node_symbol}22%f %F{$c[execution_time]}42s%f %F{$c[custom:suffix]}suffix%f"
+	print -P "%F{$c[virtualenv]}venv%f %F{$c[prompt:success]}$symbol%f"
 	print
-	print -P "%F{$c[prompt:error]}${PURE_PROMPT_SYMBOL:-❯}%f  prompt after error"
+	print -P "%F{$c[prompt:error]}$symbol%f  prompt after error"
 	print; print
 	print -P "%F{$c[git:branch:cached]}main%f  branch color when data is cached"
 	print; print
 	print -P "%F{$c[user:root]}root%f${host_sample}  root user"
 	print; print
-	print -P "%F{$c[prompt:continuation]}… if%f %F{$c[prompt:success]}${PURE_PROMPT_SYMBOL:-❯}%f  continuation prompt"
+	print -P "%F{$c[prompt:continuation]}… if%f %F{$c[prompt:success]}$symbol%f  continuation prompt"
 }
 
 prompt_pure_setup() {

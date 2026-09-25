@@ -54,6 +54,27 @@ main() {
 
 	assert_equal 1 $prompt_pure_reset_prompt_count "prompt fingerprint should distinguish separators inside custom prompt parts" || return
 
+	# A `%` in the prompt symbol must render literally, not as a prompt escape.
+	# `print -P "$PROMPT"` uses the same expansion as the real ZLE prompt, so a symbol like `a%b` must not be read as a bold escape.
+	# Render in a fresh shell because PURE_PROMPT_SYMBOL is read when Pure sets up the prompt.
+	local symbol rendered
+	# A trailing `%` must not consume the `%f` that resets the color after the symbol.
+	for symbol in 'a%b' '100%' '%F{red}x'; do
+		rendered=$(PURE_PROMPT_SYMBOL=$symbol zsh -fc '
+			zstyle ":prompt:pure:title" show no
+			source ./pure.zsh >/dev/null 2>&1
+			typeset -gA prompt_pure_vcs_info=(branch "" action "")
+			print -P -r -- "$PROMPT"
+		' 2>/dev/null)
+		# Strip color escapes so only the visible symbol text remains.
+		rendered=${rendered//$'\e'\[[0-9;]#m/}
+		if [[ $rendered != *"$symbol"* ]]; then
+			print -u2 -- "Assertion failed: prompt symbol '$symbol' should render literally"
+			print -u2 -- "Rendered: $rendered"
+			return 1
+		fi
+	done
+
 	print -- "prompt-fingerprint tests passed"
 }
 

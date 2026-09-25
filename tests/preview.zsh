@@ -75,15 +75,24 @@ main() {
 		return 1
 	fi
 
-	# A color set to the empty string must not corrupt the palette: iterating
-	# the colors must not drop empty values and shift the key/value pairs.
+	# A `%` in a symbol must render literally, like in the real prompt.
+	zstyle ':prompt:pure:environment:node_version' symbol 'N%b'
+	output=$(PURE_PROMPT_SYMBOL='%b' PURE_SUSPENDED_JOBS_SYMBOL='a%b' PURE_GIT_DOWN_ARROW='100%' PURE_GIT_STASH_SYMBOL='%F{red}' prompt_pure_preview 2>&1)
+
+	for symbol in '%b' 'a%b' '100%' '%F{red}' 'N%b22'; do
+		if [[ $output != *"$symbol"* ]]; then
+			print -u2 -- "Preview did not render the symbol literally: $symbol"
+			return 1
+		fi
+	done
+
+	# A color set to the empty string must not corrupt the palette: iterating the colors must not drop empty values and shift the key/value pairs.
 	typeset -gA prompt_pure_colors=("${(@kv)prompt_pure_colors_default}")
 	zstyle ':prompt:pure:host' color ''
 	local -a default_keys palette_keys
 	default_keys=("${(@k)prompt_pure_colors_default}")
 	local bogus
-	# On the unfixed code the corruption trips `nounset`; relax it so the run
-	# reaches the assertions below and fails with a readable message.
+	# On the unfixed code the palette grows with every call, so call it a few times, and the corruption trips `nounset`: relax it so the run reaches the assertions below and fails with a readable message.
 	set +eu
 	local attempt
 	for attempt in 1 2 3; do
