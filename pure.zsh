@@ -87,8 +87,11 @@ prompt_pure_set_title() {
 prompt_pure_preexec() {
 	if [[ -n $prompt_pure_git_fetch_pattern ]]; then
 		# Detect when Git is performing pull/fetch, including Git aliases.
+		# Alias names are case-insensitive, and `git config` lists them in lowercase.
 		local -H MATCH MBEGIN MEND match mbegin mend
-		if [[ $2 =~ (git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)(\ .*)?$ ]]; then
+		# The subcommand is followed by a space, a shell delimiter (`;`, `&`, `|`, `)`, a newline) or the end of the command line. The pattern lives in a variable because its `]]` would otherwise close the `[[ ]]` test.
+		local fetch_re="(git|hub)\ (.*\ )?($prompt_pure_git_fetch_pattern)([);&|[:space:]].*)?$"
+		if [[ ${(L)2} =~ $fetch_re ]]; then
 			# We must flush the async jobs to cancel our git fetch in order
 			# to avoid conflicts with the user issued pull / fetch.
 			async_flush_jobs 'prompt_pure'
@@ -308,18 +311,16 @@ prompt_pure_async_print_generation() {
 prompt_pure_async_git_aliases() {
 	setopt localoptions noshwordsplit
 	prompt_pure_async_print_generation
-	local -a gitalias pullalias
+	local -a pullalias parts
+	local gitalias
 
-	# List all aliases and split on newline.
-	gitalias=(${(@f)"$(command git config --get-regexp "^alias\.")"})
-	for line in $gitalias; do
-		parts=(${(@)=line})           # Split line on spaces.
-		aliasname=${parts[1]#alias.}  # Grab the name (alias.[name]).
-		shift parts                   # Remove `aliasname`
+	# List all aliases, NUL-separated as `alias.[name]\n[value]`, since values can span multiple lines.
+	for gitalias in ${(0)"$(command git config -z --get-regexp "^alias\.")"}; do
+		parts=(${=gitalias#*$'\n'})  # Split the value on whitespace.
 
 		# Check alias for pull or fetch. Must be exact match.
 		if [[ $parts =~ ^(.*\ )?(pull|fetch)(\ .*)?$ ]]; then
-			pullalias+=($aliasname)
+			pullalias+=(${${gitalias%%$'\n'*}#alias.})
 		fi
 	done
 
