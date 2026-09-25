@@ -266,6 +266,10 @@ prompt_pure_precmd() {
 		if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 20 ]]; then
 			if [[ -n $VIRTUAL_ENV_PROMPT ]]; then
 				psvar[20]="${VIRTUAL_ENV_PROMPT}"
+				# Python 3.11 and 3.12 venvs set it to `(name) `.
+				if [[ $VIRTUAL_ENV_PROMPT == \(*\)\  ]]; then
+					psvar[20]="${VIRTUAL_ENV_PROMPT[2,-3]}"
+				fi
 			else
 				psvar[20]="${VIRTUAL_ENV:t}"
 			fi

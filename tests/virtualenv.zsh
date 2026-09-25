@@ -85,6 +85,17 @@ main() {
 	prompt_pure_precmd
 	assert_equal "custom-prompt" "$psvar[20]" "VIRTUAL_ENV_PROMPT should be preferred"
 
+	# Python 3.11 and 3.12 venvs wrap VIRTUAL_ENV_PROMPT in parentheses with a trailing space.
+	VIRTUAL_ENV_PROMPT="(custom-prompt) "
+	prompt_pure_precmd
+	assert_equal "custom-prompt" "$psvar[20]" "VIRTUAL_ENV_PROMPT parentheses and trailing space should be stripped"
+	VIRTUAL_ENV_PROMPT="(my env) "
+	prompt_pure_precmd
+	assert_equal "my env" "$psvar[20]" "VIRTUAL_ENV_PROMPT with a space in the name should be stripped"
+	VIRTUAL_ENV_PROMPT="my (env) "
+	prompt_pure_precmd
+	assert_equal "my (env) " "$psvar[20]" "VIRTUAL_ENV_PROMPT not wrapped in parentheses should be kept"
+
 	# Third-party VIRTUAL_ENV_DISABLE_PROMPT should be respected (Pure should not override).
 	unset CONDA_DEFAULT_ENV VIRTUAL_ENV_PROMPT
 	VIRTUAL_ENV_DISABLE_PROMPT=1
