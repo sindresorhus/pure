@@ -413,7 +413,12 @@ prompt_pure_async_git_fetch() {
 	# Sets `GIT_TERMINAL_PROMPT=0` to disable authentication prompt for Git fetch (Git 2.3+).
 	export GIT_TERMINAL_PROMPT=0
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
-	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
+	# Keep the user's `core.sshCommand` (like a custom key), since `GIT_SSH_COMMAND` overrides it.
+	local ssh_command=${GIT_SSH_COMMAND:-$(command git config --get core.sshCommand)}
+	# `GIT_SSH` comes after both in Git's order. It is a program that Git passes its own arguments to, so it cannot get batch mode, and password prompts are instead caught by the monitor guard below.
+	if [[ -n $ssh_command || -z $GIT_SSH ]]; then
+		export GIT_SSH_COMMAND="${ssh_command:-ssh} -o BatchMode=yes"
+	fi
 
 	# If gpg-agent is set to handle SSH keys for `git fetch`, make
 	# sure it doesn't corrupt the parent TTY.
@@ -424,9 +429,10 @@ prompt_pure_async_git_fetch() {
 	local -a remote
 	if ((only_upstream)); then
 		local ref
-		ref=$(command git symbolic-ref -q HEAD)
-		# Set remote to only fetch information for the current branch.
-		remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
+		# A detached HEAD has no upstream. Without a ref, `for-each-ref` would list all refs.
+		ref=$(command git symbolic-ref -q HEAD) || return 97
+		# Set remote to only fetch information for the current branch. Use the upstream's ref on the remote, as it can have a different name than the local branch. Both fields are empty without an upstream.
+		remote=($(command git for-each-ref --format='%(upstream:remotename) %(upstream:remoteref)' $ref))
 		if [[ -z $remote[1] ]]; then
 			# No remote specified for this branch, skip fetch.
 			return 97
@@ -672,7 +678,8 @@ prompt_pure_async_refresh() {
 	async_job "prompt_pure" prompt_pure_async_git_arrows || return
 
 	# Do not perform `git fetch` if it is disabled or in home folder.
-	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
+	# Git reports the top-level with symlinks resolved, so resolve HOME too.
+	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != ${HOME:A} ]]; then
 		zstyle -t :prompt:pure:git:fetch only_upstream
 		local only_upstream=$((? == 0))
 		async_job "prompt_pure" prompt_pure_async_git_fetch $only_upstream || return
@@ -792,14 +799,17 @@ prompt_pure_async_callback() {
 			fi
 			unset MATCH MBEGIN MEND
 
-			# The update has a Git top-level set, which means we just entered a new
-			# Git directory. Run the async refresh tasks.
-			[[ -n $info[top] ]] && [[ -z $prompt_pure_vcs_info[top] ]] && prompt_pure_async_refresh
+			# The update has a Git top-level set, which means we just entered a new Git directory.
+			local entered_git_directory=0
+			[[ -n $info[top] ]] && [[ -z $prompt_pure_vcs_info[top] ]] && entered_git_directory=1
 
 			# Always update branch, top-level and stash.
 			prompt_pure_vcs_info[branch]=$info[branch]
 			prompt_pure_vcs_info[top]=$info[top]
 			prompt_pure_vcs_info[action]=$info[action]
+
+			# Run the async refresh tasks after the update, as they read the new top-level (for example, to skip fetching at HOME).
+			(( entered_git_directory )) && prompt_pure_async_refresh
 
 			do_render=1
 			;;
